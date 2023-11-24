@@ -1,8 +1,8 @@
 # EntropyScaling
 
-This is an implementation of a general entropy scaling framework intorduced in
+This is an implementation of the general entropy scaling framework introduced in
 
-S. Schmitt, H. Hasse, S. Stephan, Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State, *Molecular Liquids* (2023) submitted.
+S. Schmitt, H. Hasse, S. Stephan, **Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State**, *Molecular Liquids* (2023) submitted.
 
 ## Installation
 
@@ -10,7 +10,7 @@ To register the module locally, type
 ```julia
 Pkg> add https://github.com/se-schmitt/EntropyScaling
 ```
-in package mode (type `]` to enter to Pkg mode in the REPL).
+in package mode (type `]` in REPL to enter Pkg mode).
 
 Then, the module can be loaded by
 ```julia
@@ -24,19 +24,19 @@ The module provides two main functions: `fit_entropy_scaling` and `call_entropy_
 ### Function `fit_entropy_scaling`
 
 **Input**:
-- `T::Vector{Float64}`: temperature $T$ vector ($[T] = {\rm K}$) 
-- `ϱ::Vector{Float64}`: density $\rho$ vector ($[\rho] = {\rm kg\,m^{-3}}$) 
+- `T::Vector{Float64}`: temperature $T$ vector ${\rm K}$ 
+- `ϱ::Vector{Float64}`: density $\rho$ vector (${\rm kg/m^{3}}$) 
 - `Y::Vector{Float64}`: transport property $Y$ vector, can be
-  - viscosity $\eta$ ($[\eta] = {\rm Pa\,s}$)
-  - thermal conductivity $\lambda$ ($[\lambda] = {\rm W\,m^{-1}\,K^{-1}}$)
-  - self-diffusion coefficient $D$ ($[D] = {\rm m^2\,s^{-1}}$)
+  - viscosity $\eta$ in ${\rm Pa \cdot s}$
+  - thermal conductivity $\lambda$ in ${\rm W / (m K)}$
+  - self-diffusion coefficient $D$ in ${\rm m^2/s}$
 - `prop::String`: property string, either `vis` for Viscosity, `tcn` for thermal conductivity, or `D` for self-diffusion coefficient
-- `sfun::Function`: function to calculate the entropy $s$ ($[s] = {\rm J\,K^{-1}\,mol^{-1}}$) of the form `sfun(T,\rho,x)` (vectorized)
-- `Bfun::Function`: function to calculate the 2nd virial coefficient $B$ ($[B] = {\rm m^3\,mol^{-1}}$) of the form `Bfun(T)` (vectorized)
-- `dBdTfun::Function`: function to calculate the temperature derivative of the 2nd virial coefficient ${\rm d} B / {\rm d} T$ ($[{\rm d} B/{\rm d} T] = {\rm m^3\,mol^{-1}\,K^{-1}}$) of the form `dBdTfun(T)` (vectorized)
-- `Tc::Float64`: critical temperature $T_{\rm c}$ ($[T_{\rm c}] = {\rm K}$)
-- `pc::Float64`: critical pressure $p_{\rm c}$ ($[p_{\rm c}] = {\rm Pa}$)
-- `M::Float64`: molar mass $M$ ($[M] = {\rm kg\,mol^{-1}}$)
+- `sfun::Function`: function to calculate the entropy $s$ in ${\rm J / (K mol)}$ of the form `sfun(T,ϱ,x)` (vectorized)
+- `Bfun::Function`: function to calculate the 2nd virial coefficient $B$ in ${\rm m^3 / mol}$ of the form `Bfun(T)` (vectorized)
+- `dBdTfun::Function`: function to calculate the temperature derivative of the 2nd virial coefficient ${\rm d} B / {\rm d} T$ in ${\rm m^3/(mol K)}$ of the form `dBdTfun(T)` (vectorized)
+- `Tc::Float64`: critical temperature $T_{\rm c}$ in ${\rm K}$
+- `pc::Float64`: critical pressure $p_{\rm c}$ in ${\rm Pa}$
+- `M::Float64`: molar mass $M$ in ${\rm kg / mol}$
 - `i_fit`: vector determining which parameters of the entropy scaling model should be fitted $(\alpha_{0,i}, \alpha_{{\rm ln},i}, \alpha_{1,i}, \alpha_{2,i}, \alpha_{3,i})$ (if not specified: `i_fit=[0,1,1,1,1]`)
 - `m_EOS`: segment number of the applied EOS (if not specified, `m_EOS=1.0`) 
 
@@ -48,24 +48,24 @@ The module provides two main functions: `fit_entropy_scaling` and `call_entropy_
 ### Function `call_entropy_scaling`
 
 **Input**:
-- `T::Vector{Float64}`: temperature $T$ vector ($[T] = {\rm K}$) 
-- `ϱ::Vector{Float64}`: density $\rho$ vector ($[\rho] = {\rm kg\,m^{-3}}$) 
+- `T::Vector{Float64}`: temperature $T$ vector in ${\rm K}$ 
+- `ϱ::Vector{Float64}`: density $\rho$ vector in ${\rm kg/m^3}$
 - `α_par`: Fitted component specific parameters $(\alpha_{0,i}, \alpha_{{\rm ln},i}, \alpha_{1,i}, \alpha_{2,i}, \alpha_{3,i})$
 - `prop::String`: property string, either `vis` for Viscosity, `tcn` for thermal conductivity, or `D` for self-diffusion coefficient
 - `x::Matrix{Float64}`: mole fraction matrix (rows: state points, columns: components)
-- `sfun::Function`: function to calculate the entropy $s$ ($[s] = {\rm J\,K^{-1}\,mol^{-1}}$) of the form `sfun(T,\rho,x)` (vectorized)
-- `Bfun::Vector`: array of functions to calculate the 2nd virial coefficient $B$ ($[B] = {\rm m^3\,mol^{-1}}$) of the form `Bfun(T)` (vectorized)
-- `dBdTfun::Vector`: array of function to calculate the temperature derivative of the 2nd virial coefficient ${\rm d} B / {\rm d} T$ ($[{\rm d} B/{\rm d} T] = {\rm m^3\,mol^{-1}\,K^{-1}}$) of the form `dBdTfun(T)` (vectorized)
-- `Tc::Float64`: vector of critical temperatures $T_{{\rm c},i}$ ($[T_{\rm c}] = {\rm K}$)
-- `pc::Float64`: vector of critical pressures $p_{{\rm c},i}$ ($[p_{\rm c}] = {\rm Pa}$)
-- `M::Float64`: vector of molar masses $M_i$ ($[M] = {\rm kg\,mol^{-1}}$)
-- `m_EOS`: vector of segment numbers of the applied EOS (if not specified, `m_EOS=1.0`) 
+- `sfun::Function`: function to calculate the entropy $s$in ${\rm J / (K mol)}$ of the form `sfun(T,ϱ,x)` (vectorized)
+- `Bfun::Vector`: array of functions to calculate the 2nd virial coefficient $B$ in ${\rm m^3 / mol}$ of the form `Bfun(T)` (vectorized)
+- `dBdTfun::Vector`: array of function to calculate the temperature derivative of the 2nd virial coefficient ${\rm d} B / {\rm d} T$ in ${\rm m^3/(mol K)}$ of the form `dBdTfun(T)` (vectorized)
+- `Tc::Float64`: vector of critical temperatures $T_{{\rm c},i}$ in ${\rm K}$
+- `pc::Float64`: vector of critical pressures $p_{{\rm c},i}$ in ${\rm Pa}$
+- `M::Float64`: vector of molar masses $M_i$ in ${\rm kg/mol}$
+- `m_EOS`: vector of segment numbers of the applied EOS
 
 **Output**:
 - `Y`: calculated transport property $Y$ vector, can be
-  - viscosity $\eta$ ($[\eta] = {\rm Pa\,s}$)
-  - thermal conductivity $\lambda$ ($[\lambda] = {\rm W\,m^{-1}\,K^{-1}}$)
-  - self-diffusion coefficient $D$ ($[D] = {\rm m^2\,s^{-1}}$)
+  - viscosity $\eta$ in ${\rm Pa\,s}$
+  - thermal conductivity $\lambda$ in ${\rm W/ (m K)}$
+  - self-diffusion coefficient $D$ in ${\rm m^2/s}$
 
 ## Example
 
@@ -88,7 +88,7 @@ state = dat[:,findfirst(header.=="state")]                      # -
 ref = dat[:,findfirst(header.=="shortref")]                     # -
 ```
 
-Next, the PR EOS is provided with the parameters for methane. Note that no EOS are implemented in this repository. They have to be taken from elsewhere. The densities are implcitly calculated from the EOS function.
+Next, the PR EOS is provided with the parameters for methane. No EOS are implemented in this repository. The EOS calculations have to be done externally.
 ```julia
 # Parameters for methane
 Tc = 190.4                                                      # K
