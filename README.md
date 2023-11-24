@@ -1,7 +1,5 @@
 # EntropyScaling
 
-[![Build Status](https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml/badge.svg?branch=master)](https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml?query=branch%3Amaster)
-
 This is an implementation of a general entropy scaling framework intorduced in
 
 S. Schmitt, H. Hasse, S. Stephan, Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State, *Molecular Liquids* (2023) submitted.
