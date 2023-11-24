@@ -37,7 +37,7 @@ end
 α_CH₄, ηˢ, s = fit_entropy_scaling(T_exp, ϱ_exp, η_exp, "vis"; sfun=s_PR, Bfun=B_PR, dBdTfun=dBdT_PR, Tc=Tc, pc=pc, M=M)
 
 # Plot results
-figure()
+figure(figsize=(6,4))
 xs = [0.:0.01:1.1*maximum(s);]
 plot(xs,EntropyScaling.fun_es(xs,α_CH₄;prop="vis"),"k-",zorder=0)
 scat=scatter(s,log.(ηˢ),c=T_exp,marker="o",s=15,zorder=10)
@@ -48,12 +48,12 @@ cb = colorbar(scat)
 cb.ax.set_title(L"T\,/\,{\rm K}",fontsize=10)
 tight_layout()
 
-# Calculation of isotherms
+# Calculation of the viscosity along isotherms
 what_ref = ref .== "Hellemans et al. (1970) [A]" .&& T_exp .< 140.0
 T_iso = unique(T_exp[what_ref])
 
 # Plot experimental data
-figure()
+figure(figsize=(6,4))
 scatter(p_exp[what_ref],η_exp[what_ref].*1e3,marker="o",c=T_exp[what_ref],facecolor="white",s=15.0)
 cb = colorbar()
 cb.ax.set_title(L"T\,/\,{\rm K}",fontsize=10)
