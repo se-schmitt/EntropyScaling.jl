@@ -47,8 +47,6 @@ function call_entropy_scaling(  T::Vector{Float64},
         Y = @. Y⁺ * ϱN^(-1/3)*sqrt(R*T/(x*M))  / (-s_conf/R)^(2/3)
     end
 
-    @exfiltrate
-
     return Y
 end
 

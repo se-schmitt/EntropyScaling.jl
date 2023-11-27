@@ -1,14 +1,10 @@
 module EntropyScaling
 
 # Load public modules
-using DelimitedFiles
 using LsqFit
 using NLsolve
 using Optim
-using PrettyTables
 using Statistics
-
-using Infiltrator
 
 # Definition of Constants
 kB = 1.380649e-23
