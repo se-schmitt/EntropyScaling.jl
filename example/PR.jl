@@ -35,8 +35,5 @@ function PR(Tc, pc, ω, M)
     # 2nd virial coefficient
     B_PR(T) = @. b - a*α(T)/(R*T)                                   # m³ mol⁻¹
 
-    # Temperature deriviative of 2nd virial coefficient
-    dBdT_PR(T) = @. a*α(T)/(R*T^2) - a*dαdT(T)/(R*T)                # m³ mol⁻¹ K⁻¹
-
-    return p_PR, s_PR, B_PR, dBdT_PR
+    return p_PR, s_PR, B_PR
 end

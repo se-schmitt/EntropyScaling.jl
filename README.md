@@ -30,7 +30,7 @@ The module provides two main functions: `fit_entropy_scaling` and `call_entropy_
   - viscosity $\eta$ in ${\rm Pa \cdot s}$
   - thermal conductivity $\lambda$ in ${\rm W / (m K)}$
   - self-diffusion coefficient $D$ in ${\rm m^2/s}$
-- `prop::String`: property string, either `vis` for Viscosity, `tcn` for thermal conductivity, or `D` for self-diffusion coefficient
+- `prop::String`: property string, either `vis` for viscosity, `tcn` for thermal conductivity, or `D` for self-diffusion coefficient
 - `sfun::Function`: function to calculate the entropy $s$ in ${\rm J / (K mol)}$ of the form `sfun(T,ϱ,x)` (vectorized)
 - `Bfun::Function`: function to calculate the 2nd virial coefficient $B$ in ${\rm m^3 / mol}$ of the form `Bfun(T)` (vectorized)
 - `dBdTfun::Function`: function to calculate the temperature derivative of the 2nd virial coefficient ${\rm d} B / {\rm d} T$ in ${\rm m^3/(mol K)}$ of the form `dBdTfun(T)` (vectorized)
@@ -129,7 +129,7 @@ cb = colorbar(scat)
 cb.ax.set_title(L"T\,/\,{\rm K}",fontsize=10)
 tight_layout()
 ```
-![](example/scaling.png)
+![](example/scaling.svg)
 
 At the end, the application of the adjusted parameters is demonstrated by computing muliple isotherms and comparing them to experimental data.
 ```julia
@@ -165,7 +165,7 @@ xlabel(L"p\;/\;{\rm MPa}",fontsize=10)
 ylabel(L"\eta\;/\;{\rm mPa\,s}",fontsize=10)
 tight_layout()
 ```
-![](example/isotherms.png)
+![](example/isotherms.svg)
 
 ## Cite
 
@@ -173,13 +173,13 @@ tight_layout()
 @article{entropy_scaling_framework_2023,
     title={Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State},
     author={Sebastian Schmitt, Hans Hasse, and Simon Stephan},
-    journal={},
+    journal={Journal of Molecular Liquids},
     volume={},
     number={},
     pages={},
     year={2023},
     publisher={},
-    doi={},
-    url={}
+    doi={10.1016/j.molliq.2023.123811},
+    url={https://doi.org/10.1016/j.molliq.2023.123811}
 }
 ```

@@ -20,7 +20,7 @@ M = 0.016043                                                    # kg mol⁻¹
 
 # Load PR equation of state functions
 include("PR.jl")
-(p_PR, s_PR, B_PR, dBdT_PR) = PR(Tc, pc, ω, M)
+(p_PR, s_PR, B_PR) = PR(Tc, pc, ω, M)
 
 # Implicit calculation of density
 ϱ_exp = Float64[]
@@ -34,7 +34,7 @@ for (i,state_i) in enumerate(state)
 end
 
 # Fit entropy scaling
-α_CH₄, ηˢ, s = fit_entropy_scaling(T_exp, ϱ_exp, η_exp, "vis"; sfun=s_PR, Bfun=B_PR, dBdTfun=dBdT_PR, Tc=Tc, pc=pc, M=M)
+α_CH₄, ηˢ, s = fit_entropy_scaling(T_exp, ϱ_exp, η_exp, "vis"; sfun=s_PR, Bfun=B_PR, Tc=Tc, pc=pc, M=M)
 
 # Plot results
 figure(figsize=(6,4))
@@ -68,7 +68,7 @@ for Ti in T_iso
     for pj in pi push!(ϱi,find_zeros(x -> p_PR(Ti,x,1.0) - pj*1e6,0,M/(0.07780*EntropyScaling.R*Tc/pc ))[end]) end
     
     # Calculate and plot isotherm
-    η_i = call_entropy_scaling(repeat([Ti], length(pi)), ϱi, [α_CH₄], "vis"; sfun=s_PR, Bfun=[B_PR], dBdTfun=[dBdT_PR], Tc=[Tc], pc=[pc], M=[M])
+    η_i = call_entropy_scaling(repeat([Ti], length(pi)), ϱi, [α_CH₄], "vis"; sfun=s_PR, Bfun=[B_PR], Tc=[Tc], pc=[pc], M=[M])
     plot(pi,η_i.*1e3,"-",c=coli,linewidth=1.0)
 end
 plot(NaN,NaN,"-k",label="Entropy scaling")

@@ -1,4 +1,29 @@
 # Main function to call entropy scaling
+"""
+`call_entropy_scaling(T, ϱ, α_par, prop; x, sfun, Bfun, dBdTfun, Tc, pc, M, m_EOS)`
+
+Function to calculate transport properties using entropy scaling.
+
+---
+
+Input:
+- `T::Vector{Float64}`: Temperature in K
+- `ϱ::Vector{Float64}`: Density in kg/m³
+- `α_par::Vector{Vector{Float64}}`: Component-specific parameters α₀ - α₄
+- `prop::String`: Transport property (`vis`, `tcn`, or `dif`)
+- Keyword arguments:
+    - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
+    - `sfun::Function`: Function to calculate entropy in SI units (J K⁻¹ mol⁻¹) (`sfun(T,ϱ,x)`)
+    - `Bfun::Vector`: Functions to calculate 2nd virial coefficient of the pure components in m³ mol⁻¹ (`Bfun(T)`)
+    - `dBdTfun::Vector`: Functions to calculate temperature derivative of 2nd virial coefficient of the pure components in m³ mol⁻¹ K⁻¹ (`dBdTfun(T)`) (optional, calculated by automatic differentiation from `Bfun` otherwise)
+    - `Tc::Vector{Float64}`: Critical temperatures of the pure components in K
+    - `pc::Vector{Float64}`: Critical pressures of the pure components in Pa
+    - `M::Vector{Float64}`: Molar masses of the pure components in kg mol⁻¹
+    - `m_EOS::Vector{Float64}`: Segment numbers of the pure components (if not specified, `m_EOS=ones(length(α_par))`)
+
+Output:
+- `Y::Vector{Float64}`: Transport property (η, λ, or D) in SI units (Pa s, W m⁻¹ K⁻¹, or m² s⁻¹)
+"""
 function call_entropy_scaling(  T::Vector{Float64}, 
                                 ϱ::Vector{Float64},
                                 α_par::Vector{Vector{Float64}},

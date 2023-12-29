@@ -1,4 +1,31 @@
 # Main function to fit entropy scaling parameters
+"""
+`fit_entropy_scaling(T, ϱ, Y, prop; sfun, Bfun, dBdTfun, Tc, pc, M, i_fit, m_EOS)`
+
+Function to fit component-specific entropy scaling parameters for transport properties.
+
+---
+
+Input:
+- `T::Vector{Float64}`: Temperature in K
+- `ϱ::Vector{Float64}`: Density in kg/m³
+- `Y::Vector{Float64}`: Transport property (η, λ, or D) in SI units (Pa s, W m⁻¹ K⁻¹, or m² s⁻¹)
+- `prop::String`: Transport property (`vis`, `tcn`, or `dif`)
+- Keyword arguments:
+    - `sfun::Function`: Function to calculate entropy in SI units (J K⁻¹ mol⁻¹) (`sfun(T,ϱ,x)`)
+    - `Bfun::Function`: Function to calculate 2nd virial coefficient in m³ mol⁻¹ (`Bfun(T)`)
+    - `dBdTfun::Function`: Function to calculate temperature derivative of 2nd virial coefficient in m³ mol⁻¹ K⁻¹ (`dBdTfun(T)`) (optional, calculated by automatic differentiation from `Bfun` otherwise)
+    - `Tc::Float64`: Critical temperature in K
+    - `pc::Float64`: Critical pressure in Pa
+    - `M::Float64`: Molar mass in kg mol⁻¹
+    - `i_fit::Vector{Int64}`: Vector to specify which parameters should be fitted (default: `i_fit=[0,1,1,1,1]`) [length: 5]
+    - `m_EOS::Float64`: segment number of the applied EOS (if not specified, `m_EOS=1.0`) 
+
+Output:
+- `α_par::Vector{Float64}`: Fitted component specific parameters α₀ - α₄
+- `Yˢ::Vector{Float64}`: CE-scaled transport property (dimensionless), either ηˢ, λˢ, or Dˢ
+- `s::Vector{Float64}`: Reduced configurational entropy (dimensionless)
+"""
 function fit_entropy_scaling(   T::Vector{Float64}, 
                                 ϱ::Vector{Float64}, 
                                 Y::Vector{Float64}, 
