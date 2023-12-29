@@ -4,7 +4,9 @@ function call_entropy_scaling(  T::Vector{Float64},
                                 α_par::Vector{Vector{Float64}},
                                 prop::String; 
                                 x::Matrix{Float64}=ones(length(T),1),
-                                sfun::Function, Bfun::Vector, dBdTfun::Vector, 
+                                sfun::Function, 
+                                Bfun::Vector, 
+                                dBdTfun::Vector=[(x -> @. ForwardDiff.derivative(f,x)) for f in Bfun], 
                                 Tc::Vector{Float64}, pc::Vector{Float64}, M::Vector{Float64},
                                 m_EOS=ones(length(α_par)))
     

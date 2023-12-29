@@ -3,7 +3,9 @@ function fit_entropy_scaling(   T::Vector{Float64},
                                 ϱ::Vector{Float64}, 
                                 Y::Vector{Float64}, 
                                 prop::String; 
-                                sfun::Function, Bfun::Function, dBdTfun::Function, 
+                                sfun::Function, 
+                                Bfun::Function, 
+                                dBdTfun::Function=(x -> @. ForwardDiff.derivative(Bfun,x)), 
                                 Tc::Float64, pc::Float64, M::Float64,
                                 i_fit=[0,1,1,1,1], m_EOS=1.0)
 

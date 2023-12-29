@@ -5,6 +5,7 @@ using LsqFit
 using NLsolve
 using Optim
 using Statistics
+using ForwardDiff
 
 # Definition of Constants
 kB = 1.380649e-23
