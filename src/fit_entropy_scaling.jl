@@ -20,6 +20,7 @@ Input:
     - `M::Float64`: Molar mass in kg mol⁻¹
     - `i_fit::Vector{Int64}`: Vector to specify which parameters should be fitted (default: `i_fit=[0,1,1,1,1]`) [length: 5]
     - `m_EOS::Float64`: segment number of the applied EOS (if not specified, `m_EOS=1.0`) 
+    - `solute::Dict{Symbol,Float64}`: Dict with solute properties `:M` (molar mass), `Tc` (critical temperature), and `:pc` (critical pressure) (optional, only relevant for `prop="dif"`)
 
 Output:
 - `α_par::Vector{Float64}`: Fitted component specific parameters α₀ - α₄
@@ -34,7 +35,8 @@ function fit_entropy_scaling(   T::Vector{Float64},
                                 Bfun::Function, 
                                 dBdTfun::Function=(x -> @. ForwardDiff.derivative(Bfun,x)), 
                                 Tc::Float64, pc::Float64, M::Float64,
-                                i_fit=[0,1,1,1,1], m_EOS=1.0)
+                                i_fit=[0,1,1,1,1], m_EOS=1.0,
+                                solute::Dict{Symbol,FLoat64}=Dict{Symbol,Float64}())
 
     # Calculation of entropy
     s_conf = sfun(T,ϱ,ones(length(T),1))
@@ -56,7 +58,7 @@ function fit_entropy_scaling(   T::Vector{Float64},
     end
 
     # Calculation of scaled Chapman-Enskog (CE) transport properties and its minimum
-    (Y_CE⁺, min_Y_CE⁺) = CE_scaled(T, Tc, pc, prop, Bfun, dBdTfun)
+    (Y_CE⁺, min_Y_CE⁺) = CE_scaled(T, Tc, pc, prop, Bfun, dBdTfun; M=M, solute=solute)
 
     # CE-scaled transport properties
     Yˢ = (W(s)./Y_CE⁺ .+ (1.0 .- W(s))./min_Y_CE⁺) .* Y⁺

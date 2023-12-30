@@ -1,7 +1,7 @@
 # Functions to calculate the scaled Chapman-Enskog (CE) transport properties
 
 # Function to calculate scaled CE transport properties
-function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B::Function, dBdT::Function)
+function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B::Function, dBdT::Function; M::Float64=NaN, solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}())
     # Critical temperature and pressure of the LJ fluid
     Tc_LJ = 1.321
     pc_LJ = 0.129
@@ -9,11 +9,21 @@ function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B
     # Apply correspondenve principle to calculate LJ parameters
     ε_CE = kB.*Tc./Tc_LJ
     σ_CE = (pc_LJ./pc.*ε_CE).^(1/3)
+    if prop == "dif" && !isempty(solute)
+        ε_CE_sol = kB.*solute[:Tc]./Tc_LJ
+        σ_CE_sol = (pc_LJ./solute[:pc].*ε_CE).^(1/3)
+        ε_CE = sqrt(ε_CE * ε_CE_sol)
+        σ_CE = (σ_CE + σ_CE_sol) / 2
+    end
 
     # Scaled transport property
     f =     prop == "vis" ? 5/16 :
             prop == "tcn" ? 75/64 :
             prop == "dif" ? 3/8 : error("'prop' must be 'vis', 'tcn', or 'dif'!")
+    if prop == "dif" && !isempty(solute)
+        M_AB = 2/(1/M + 1/solute[:M])
+        f *= sqrt(M_AB / M)
+    end
     Ω(T) =  prop == "vis" ? Ω_22(T) :
             prop == "tcn" ? Ω_22(T) :
             prop == "dif" ? Ω_11(T) : error("'prop' must be 'vis', 'tcn', or 'dif'!")

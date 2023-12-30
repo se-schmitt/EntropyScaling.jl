@@ -10,7 +10,7 @@ Input:
 - `T::Vector{Float64}`: Temperature in K
 - `ϱ::Vector{Float64}`: Density in kg/m³
 - `α_par::Vector{Vector{Float64}}`: Component-specific parameters α₀ - α₄
-- `prop::String`: Transport property (`vis`, `tcn`, or `dif`)
+- `prop::String`: Transport property (`vis`, `tcn`, `selfdif` (`N ≤ 2`), or `mutdif` (`N ≤ 2`))
 - Keyword arguments:
     - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
     - `sfun::Function`: Function to calculate entropy in SI units (J K⁻¹ mol⁻¹) (`sfun(T,ϱ,x)`)
@@ -51,8 +51,13 @@ function call_entropy_scaling(  T::Vector{Float64},
         push!(Y_CE⁺_all,Y_CE⁺_i)
         push!(min_Y_CE⁺_all,[min_Y_CE⁺_i])
     end
-    Y_CE⁺ = mix_Wilke(Y_CE⁺_all, x, M)
-    min_Y_CE⁺ = mix_Wilke(repeat.(min_Y_CE⁺_all,length(T)), x, M)
+    if prop in ["vis","tcn"]
+        Y_CE⁺ = mix_Wilke(Y_CE⁺_all, x, M)
+        min_Y_CE⁺ = mix_Wilke(repeat.(min_Y_CE⁺_all,length(T)), x, M)
+    else
+        Y_CE⁺ = mix_Darken(Y_CE⁺_all, x)
+        min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
+    end
 
     # Calculate of transport property
     α_mix = mix_es_parameters(α_par, x)
@@ -106,7 +111,7 @@ function mix_es_parameters(α_par::Vector{Vector{Float64}}, x::Matrix{Float64})
     return α_mix
 end
 
-# Mixing rule of Wilke 
+# Mixing rule from Wilke (1950) [DOI: 10.1063/1.1747673] and Mason and Saxena (1958) [DOI: 10.1063/1.1724352]
 function mix_Wilke(Y, x, M)
     Y_mix = zeros(length(Y[1]))
     for i in eachindex(Y)
@@ -117,4 +122,13 @@ function mix_Wilke(Y, x, M)
         Y_mix += x[:,i].*Y[i] ./ xΦ
     end
     return Y_mix
+end
+
+# Mixing rule from Miller and Carman (1961) [DOI: 10.1039/TF9615702143]
+function mix_Darken(D, x)
+    Dinv = zeros(length(D[1]))
+    for i in eachindex(D)
+        Dinv += x[:,i]./D[i]
+    end
+    return 1.0 ./ Dinv
 end
