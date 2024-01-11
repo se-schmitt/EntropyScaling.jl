@@ -1,6 +1,6 @@
 # EntropyScaling
 
-This is an implementation of the general entropy scaling framework introduced in
+This is an implementation of the entropy scaling framework introduced in
 
 [S. Schmitt, H. Hasse, S. Stephan, **Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State**, *Journal of Molecular Liquids* 395 (2024) 123811.](https://doi.org/10.1016/j.molliq.2023.123811)
 
