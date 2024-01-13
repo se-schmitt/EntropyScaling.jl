@@ -1,6 +1,6 @@
 # Main function to fit entropy scaling parameters
 """
-`fit_entropy_scaling(T, ϱ, Y, prop; sfun, Bfun, dBdTfun, Tc, pc, M, i_fit, m_EOS)`
+`fit_entropy_scaling(T, ϱ, Y, prop; sfun, Bfun, dBdTfun, Tc, pc, M, i_fit, m_EOS, solute)`
 
 Function to fit component-specific entropy scaling parameters for transport properties.
 
@@ -20,7 +20,7 @@ Input:
     - `M::Float64`: Molar mass in kg mol⁻¹
     - `i_fit::Vector{Int64}`: Vector to specify which parameters should be fitted (default: `i_fit=[0,1,1,1,1]`) [length: 5]
     - `m_EOS::Float64`: segment number of the applied EOS (if not specified, `m_EOS=1.0`) 
-    - `solute::Dict{Symbol,Float64}`: Dict with solute properties `:M` (molar mass), `Tc` (critical temperature), and `:pc` (critical pressure) (optional, only relevant for `prop="dif"`)
+    - `solute::Dict{Symbol,Float64}`: Dict with solute properties `:M` (molar mass), `:Tc` (critical temperature), and `:pc` (critical pressure) (optional, only relevant for `prop="dif"`)
 
 Output:
 - `α_par::Vector{Float64}`: Fitted component specific parameters α₀ - α₄
@@ -36,7 +36,7 @@ function fit_entropy_scaling(   T::Vector{Float64},
                                 dBdTfun::Function=(x -> @. ForwardDiff.derivative(Bfun,x)), 
                                 Tc::Float64, pc::Float64, M::Float64,
                                 i_fit=[0,1,1,1,1], m_EOS=1.0,
-                                solute::Dict{Symbol,FLoat64}=Dict{Symbol,Float64}())
+                                solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}())
 
     # Calculation of entropy
     s_conf = sfun(T,ϱ,ones(length(T),1))
@@ -49,6 +49,9 @@ function fit_entropy_scaling(   T::Vector{Float64},
         Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)  
     end
     if prop == "dif"
+        if !isempty(solute)
+            M = 2/(1/M + 1/solute[:M])
+        end
         Yʳ = @. Y * sqrt(M / (NA * kB * T)) * ϱN^(1/3)
         Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)  
     end
@@ -58,7 +61,7 @@ function fit_entropy_scaling(   T::Vector{Float64},
     end
 
     # Calculation of scaled Chapman-Enskog (CE) transport properties and its minimum
-    (Y_CE⁺, min_Y_CE⁺) = CE_scaled(T, Tc, pc, prop, Bfun, dBdTfun; M=M, solute=solute)
+    (Y_CE⁺, min_Y_CE⁺) = CE_scaled(T, Tc, pc, prop, Bfun, dBdTfun; solute=solute)
 
     # CE-scaled transport properties
     Yˢ = (W(s)./Y_CE⁺ .+ (1.0 .- W(s))./min_Y_CE⁺) .* Y⁺

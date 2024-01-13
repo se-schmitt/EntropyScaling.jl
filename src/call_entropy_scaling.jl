@@ -10,7 +10,7 @@ Input:
 - `T::Vector{Float64}`: Temperature in K
 - `ϱ::Vector{Float64}`: Density in kg/m³
 - `α_par::Vector{Vector{Float64}}`: Component-specific parameters α₀ - α₄
-- `prop::String`: Transport property (`vis`, `tcn`, `selfdif` (`N ≤ 2`), or `mutdif` (`N ≤ 2`))
+- `prop::String`: Transport property (`vis`, `tcn`, `dif` (`N = 1`), `selfdif` (`N = 2`), or `mutdif` (`N = 2`))
 - Keyword arguments:
     - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
     - `sfun::Function`: Function to calculate entropy in SI units (J K⁻¹ mol⁻¹) (`sfun(T,ϱ,x)`)
@@ -33,10 +33,24 @@ function call_entropy_scaling(  T::Vector{Float64},
                                 Bfun::Vector, 
                                 dBdTfun::Vector=[(x -> @. ForwardDiff.derivative(f,x)) for f in Bfun], 
                                 Tc::Vector{Float64}, pc::Vector{Float64}, M::Vector{Float64},
-                                m_EOS=ones(length(α_par)))
+                                m_EOS=ones(length(α_par)),
+                                difcomp::Int64=1)
     
     # Check input
-    check_input_call(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
+    check_input(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
+
+    # Calculation of number density
+    ϱN = ϱ ./ (x * M) .* NA                                 # [ϱN] = 1/m³
+
+    # Overwrrite reference masses for diffusion coefficient
+    if prop in ["selfdif","mutdif"]
+        Mref = 2.0 ./ (1.0 ./ M[1] .+ 1.0 ./ M[2])
+        if prop == "mutdif" 
+            M = [Mref, Mref]
+        else prop == "selfdif"
+            M[3-difcomp] = Mref
+        end
+    end
 
     # Calculation of entropy
     s_conf = sfun(T,ϱ,x)
@@ -59,7 +73,7 @@ function call_entropy_scaling(  T::Vector{Float64},
         min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
     end
 
-    # Calculate of transport property
+    # Calculation of transport property
     α_mix = mix_es_parameters(α_par, x)
     Y_fit = fun_es(s, α_mix; prop=prop)
     if prop in ["vis","dif"]
@@ -70,7 +84,6 @@ function call_entropy_scaling(  T::Vector{Float64},
 
     # Unscale transport property
     Y⁺ = Yˢ ./ (W(s)./Y_CE⁺ .+ (1.0 .- W(s))./min_Y_CE⁺)
-    ϱN = ϱ ./ (x * M) .* NA                                 # [ϱN] = 1/m³
     if prop == "vis"
         Y = @. Y⁺ * ϱN^(2/3)*sqrt((x*M)*T*kB/NA) / (-s_conf/R)^(2/3)     
     elseif prop == "tcn"
@@ -83,10 +96,14 @@ function call_entropy_scaling(  T::Vector{Float64},
 end
 
 # Function to check input
-function check_input_call(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
+function check_input(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
     # Check property value
-    if !(prop in ["vis","tcn","dif"])
-        error("Property must be 'vis', 'tcn', or 'dif'.")
+    if !(prop in ["vis","tcn","dif","selfdif","mutdif"])
+        error("Property must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'.")
+    end
+
+    if prop in ["selfdif","mutdif"] && !(length(M) == 2)
+        error("Number of components must be 2 for properties 'selfdif' and 'mutdif'.")
     end
 
     # Check equal number of state points
