@@ -24,7 +24,7 @@ function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B
     Ω(T) =  prop == "vis" ? Ω_22(T) :
             prop == "tcn" ? Ω_22(T) :
             prop == "dif" ? Ω_11(T) : error("'prop' must be 'vis', 'tcn', or 'dif'!")
-    Y_CE⁺(T) = f  / (σ_CE^2 * Ω(T/ε_CE*kB)) * ((T[1]*dBdT(T)+B(T))/NA)^(2/3)
+    Y_CE⁺(T) = f  / (√(π) * σ_CE^2 * Ω(T/ε_CE*kB)) * ((T[1]*dBdT(T)+B(T))/NA)^(2/3)
 
     # Calculate minimum of Y_CE⁺
     TB = nlsolve(x -> B(x[1]),[0.6*Tc]).zero[1]        # Boyle temperature

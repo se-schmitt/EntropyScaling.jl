@@ -60,7 +60,7 @@ function call_entropy_scaling(  T::Vector{Float64},
     # Calculation of scaled Chapman-Enskog (CE) transport properties and its minimum
     Y_CE⁺_all = []
     min_Y_CE⁺_all = []
-    for i in size(x,2)
+    for i in 1:size(x,2)
         (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(T, Tc[i], pc[i], prop, Bfun[i], dBdTfun[i])
         push!(Y_CE⁺_all,Y_CE⁺_i)
         push!(min_Y_CE⁺_all,[min_Y_CE⁺_i])
@@ -85,11 +85,11 @@ function call_entropy_scaling(  T::Vector{Float64},
     # Unscale transport property
     Y⁺ = Yˢ ./ (W(s)./Y_CE⁺ .+ (1.0 .- W(s))./min_Y_CE⁺)
     if prop == "vis"
-        Y = @. Y⁺ * ϱN^(2/3)*sqrt((x*M)*T*kB/NA) / (-s_conf/R)^(2/3)     
+        Y = Y⁺ .* ϱN.^(2/3).*sqrt.((x*M).*T*kB/NA) ./ (-s_conf/R).^(2/3)     
     elseif prop == "tcn"
-        Y = @. Y⁺ * ϱN^(2/3)*kB*sqrt(R*T/(x*M)) / (-s_conf/R)^(2/3)
+        Y = Y⁺ .* ϱN.^(2/3).*kB.*sqrt.(R*T./(x*M)) ./ (-s_conf/R).^(2/3)
     elseif prop == "dif"
-        Y = @. Y⁺ * ϱN^(-1/3)*sqrt(R*T/(x*M))  / (-s_conf/R)^(2/3)
+        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*M)) ./ (-s_conf/R).^(2/3)
     end
 
     return Y

@@ -1,8 +1,8 @@
 # EntropyScaling
 
-This is an implementation of the general entropy scaling framework introduced in
+This is an implementation of the entropy scaling framework introduced in
 
-S. Schmitt, H. Hasse, S. Stephan, **Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State**, *Molecular Liquids* (2023) submitted.
+[S. Schmitt, H. Hasse, S. Stephan, **Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State**, *Journal of Molecular Liquids* 395 (2024) 123811.](https://doi.org/10.1016/j.molliq.2023.123811)
 
 ## Installation
 
@@ -174,11 +174,9 @@ tight_layout()
     title={Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State},
     author={Sebastian Schmitt, Hans Hasse, and Simon Stephan},
     journal={Journal of Molecular Liquids},
-    volume={},
-    number={},
-    pages={},
-    year={2023},
-    publisher={},
+    volume={395},
+    pages={123811},
+    year={2024},
     doi={10.1016/j.molliq.2023.123811},
     url={https://doi.org/10.1016/j.molliq.2023.123811}
 }
