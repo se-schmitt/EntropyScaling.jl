@@ -9,9 +9,9 @@ function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B
     # Apply correspondenve principle to calculate LJ parameters
     ε_CE = kB.*Tc./Tc_LJ
     σ_CE = (pc_LJ./pc.*ε_CE).^(1/3)
-    if prop == "dif" && !isempty(solute)
+    if prop in ["dif","selfdif","mutdif"] && !isempty(solute)
         ε_CE_sol = kB.*solute[:Tc]./Tc_LJ
-        σ_CE_sol = (pc_LJ./solute[:pc].*ε_CE).^(1/3)
+        σ_CE_sol = (pc_LJ./solute[:pc].*ε_CE_sol).^(1/3)
         ε_CE = sqrt(ε_CE * ε_CE_sol)
         σ_CE = (σ_CE + σ_CE_sol) / 2
     end
@@ -19,11 +19,11 @@ function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B
     # Scaled transport property
     f =     prop == "vis" ? 5/16 :
             prop == "tcn" ? 75/64 :
-            prop == "dif" ? 3/8 : error("'prop' must be 'vis', 'tcn', or 'dif'!")
+            prop in ["dif","selfdif","mutdif"] ? 3/8 : error("'prop' must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'!")
             
     Ω(T) =  prop == "vis" ? Ω_22(T) :
             prop == "tcn" ? Ω_22(T) :
-            prop == "dif" ? Ω_11(T) : error("'prop' must be 'vis', 'tcn', or 'dif'!")
+            prop in ["dif","selfdif","mutdif"] ? Ω_11(T) : error("'prop' must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'!")
     Y_CE⁺(T) = f  / (√(π) * σ_CE^2 * Ω(T/ε_CE*kB)) * ((T[1]*dBdT(T)+B(T))/NA)^(2/3)
 
     # Calculate minimum of Y_CE⁺

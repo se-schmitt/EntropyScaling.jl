@@ -34,7 +34,7 @@ function call_entropy_scaling(  T::Vector{Float64},
                                 dBdTfun::Vector=[(x -> @. ForwardDiff.derivative(f,x)) for f in Bfun], 
                                 Tc::Vector{Float64}, pc::Vector{Float64}, M::Vector{Float64},
                                 m_EOS=ones(length(α_par)),
-                                difcomp::Int64=1)
+                                difcomp::Int64=0)
     
     # Check input
     check_input(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
@@ -43,12 +43,16 @@ function call_entropy_scaling(  T::Vector{Float64},
     ϱN = ϱ ./ (x * M) .* NA                                 # [ϱN] = 1/m³
 
     # Overwrrite reference masses for diffusion coefficient
+    M_ref = copy(M)
     if prop in ["selfdif","mutdif"]
-        Mref = 2.0 ./ (1.0 ./ M[1] .+ 1.0 ./ M[2])
+        M_dif = 2.0 ./ (1.0 ./ M[1] .+ 1.0 ./ M[2])
         if prop == "mutdif" 
-            M = [Mref, Mref]
+            M_ref = repeat([M_dif],2)
         else prop == "selfdif"
-            M[3-difcomp] = Mref
+            if difcomp ∉ [1,2]
+                error("Specify component for self-diffusion coefficient calculation (`difcomp ∈ {1,2}`).")
+            end
+            M_ref[3-difcomp] = M_dif
         end
     end
 
@@ -61,7 +65,12 @@ function call_entropy_scaling(  T::Vector{Float64},
     Y_CE⁺_all = []
     min_Y_CE⁺_all = []
     for i in 1:size(x,2)
-        (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(T, Tc[i], pc[i], prop, Bfun[i], dBdTfun[i])
+        solute = Dict{Symbol,Float64}()
+        if prop == "mutdif" || (prop == "selfdif" && i != difcomp)
+            solute[:Tc] = Tc[3-i]
+            solute[:pc] = pc[3-i]
+        end
+        (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(T, Tc[i], pc[i], prop, Bfun[i], dBdTfun[i], solute=solute)
         push!(Y_CE⁺_all,Y_CE⁺_i)
         push!(min_Y_CE⁺_all,[min_Y_CE⁺_i])
     end
@@ -76,7 +85,7 @@ function call_entropy_scaling(  T::Vector{Float64},
     # Calculation of transport property
     α_mix = mix_es_parameters(α_par, x)
     Y_fit = fun_es(s, α_mix; prop=prop)
-    if prop in ["vis","dif"]
+    if prop in ["vis","dif","selfdif","mutdif"]
         Yˢ = exp.(Y_fit)
     else
         Yˢ = Y_fit
@@ -88,8 +97,8 @@ function call_entropy_scaling(  T::Vector{Float64},
         Y = Y⁺ .* ϱN.^(2/3).*sqrt.((x*M).*T*kB/NA) ./ (-s_conf/R).^(2/3)     
     elseif prop == "tcn"
         Y = Y⁺ .* ϱN.^(2/3).*kB.*sqrt.(R*T./(x*M)) ./ (-s_conf/R).^(2/3)
-    elseif prop == "dif"
-        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*M)) ./ (-s_conf/R).^(2/3)
+    elseif prop in ["dif","selfdif","mutdif"]
+        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*M_ref)) ./ (-s_conf/R).^(2/3)
     end
 
     return Y

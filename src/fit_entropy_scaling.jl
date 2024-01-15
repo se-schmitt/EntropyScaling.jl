@@ -44,18 +44,16 @@ function fit_entropy_scaling(   T::Vector{Float64},
     
     # Modified Rosenfeld scaling
     ϱN = ϱ ./ M .* NA                                               # [ϱN] = 1/m³
+    if prop == "dif" && !isempty(solute)
+        M = 2/(1/M + 1/solute[:M])
+    end
     if prop == "vis"
         Yʳ = @. Y / (ϱN^(2/3) * sqrt(M / NA * kB * T))
         Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)  
-    end
-    if prop == "dif"
-        if !isempty(solute)
-            M = 2/(1/M + 1/solute[:M])
-        end
+    elseif prop == "dif"
         Yʳ = @. Y * sqrt(M / (NA * kB * T)) * ϱN^(1/3)
         Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)  
-    end
-    if prop == "tcn"
+    elseif prop == "tcn"
         Yʳ = @. Y / (ϱN^(2/3) * kB) * sqrt(M / (T * kB * NA)) 
         Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)    
     end
