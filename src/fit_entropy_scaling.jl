@@ -34,7 +34,14 @@ function fit_entropy_scaling(   T::Vector{Float64},
                                 Bfun::Function, 
                                 dBdTfun::Function=(x -> @. ForwardDiff.derivative(Bfun,x)), 
                                 Tc::Float64, pc::Float64, M::Float64,
-                                i_fit=[0,1,1,1,1], m_EOS=1.0)
+                                i_fit=[0,1,1,1,1], m_EOS=1.0,
+                                reduced=false)
+
+    if reduced
+        global (kB,NA,R) = (1.0,1.0,1.0)
+    elseif (kB,NA,R) == (1.0,1.0,1.0)
+        global (kB,NA,R) = get_kBNAR()
+    end
 
     # Calculation of entropy
     s_conf = sfun(T,ϱ,ones(length(T),1))

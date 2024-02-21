@@ -33,10 +33,17 @@ function call_entropy_scaling(  T::Vector{Float64},
                                 Bfun::Vector, 
                                 dBdTfun::Vector=[(x -> @. ForwardDiff.derivative(f,x)) for f in Bfun], 
                                 Tc::Vector{Float64}, pc::Vector{Float64}, M::Vector{Float64},
-                                m_EOS=ones(length(α_par)))
+                                m_EOS=ones(length(α_par)),
+                                reduced=false)
     
     # Check input
     check_input_call(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
+
+    if reduced
+        global (kB,NA,R) = (1.0,1.0,1.0)
+    elseif (kB,NA,R) == (1.0,1.0,1.0)
+        global (kB,NA,R) = get_kBNAR()
+    end
 
     # Calculation of entropy
     s_conf = sfun(T,ϱ,x)

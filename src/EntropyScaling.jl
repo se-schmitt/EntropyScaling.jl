@@ -8,9 +8,8 @@ using Statistics
 using ForwardDiff
 
 # Definition of Constants
-kB = 1.380649e-23
-NA = 6.02214076e23
-R = kB*NA
+get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))
+(kB, NA, R) = get_kBNA()
 
 # Include files
 include("fit_entropy_scaling.jl")
