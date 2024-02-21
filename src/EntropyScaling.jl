@@ -9,7 +9,7 @@ using ForwardDiff
 
 # Definition of Constants
 get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))
-(kB, NA, R) = get_kBNA()
+(kB, NA, R) = get_kBNAR()
 
 # Include files
 include("fit_entropy_scaling.jl")
@@ -18,7 +18,9 @@ include("correlation_fun.jl")
 include("zero_density_limit.jl")
 
 # Include extensions
-include("../ext/mictherm_ext.jl")
+if :MATLAB in names(Main, imported=true)
+    include("../ext/mictherm_ext.jl")
+end
 
 # Export
 export fit_entropy_scaling, call_entropy_scaling
