@@ -18,6 +18,9 @@ include("call_entropy_scaling.jl")
 include("correlation_fun.jl")
 include("zero_density_limit.jl")
 
+# Include extensions
+include("../ext/mictherm_ext.jl")
+
 # Export
 export fit_entropy_scaling, call_entropy_scaling
 
