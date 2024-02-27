@@ -32,7 +32,7 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
                                 prop::String; 
                                 x::Matrix{Float64}=ones(length(T),1),
                                 reduced=false,
-                                difcomp::Int64=0))
+                                difcomp::Int64=0)
     
     # Check input
     check_input_call(T, ϱ, x, prop)
@@ -103,7 +103,7 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
     elseif prop == "tcn"
         Y = Y⁺ .* ϱN.^(2/3).*kB.*sqrt.(R*T./(x*m.M)) ./ (-s_conf/R).^(2/3)
     elseif prop in ["dif","selfdif","mutdif"]
-        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*m.M_ref)) ./ (-s_conf/R).^(2/3)
+        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*M_ref)) ./ (-s_conf/R).^(2/3)
     end
 
     return Y

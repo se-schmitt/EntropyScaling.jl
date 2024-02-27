@@ -78,7 +78,8 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
                                 ϱ::Vector{Float64}, 
                                 Y::Vector{Float64}, 
                                 prop::String; 
-                                i_fit=[0,1,1,1,1])
+                                i_fit=[0,1,1,1,1],
+                                solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}())
     # Set MicTherm path
     eval_string("addpath(genpath('$(model.path)'));")
     mat"warning off;"
@@ -94,7 +95,7 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
 
     modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun[1], :dBdTfun=>dBdTfun[1], :Tc=>Tc[1], :pc=>pc[1], :M=>M[1], :m_EOS=>m[1])
 
-    return fit_entropy_scaling(modelDict, T, ϱ, Y, prop; i_fit=i_fit, reduced=model.unit=="reduced")
+    return fit_entropy_scaling(modelDict, T, ϱ, Y, prop; i_fit=i_fit, reduced=model.unit=="reduced", solute=solute)
 end
 
 # Wrapper for the function `call_entropy_scaling` to be used with MicTherm
@@ -102,7 +103,8 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
                                 T::Vector{Float64}, 
                                 ϱ::Vector{Float64},
                                 prop::String; 
-                                x::Matrix{Float64}=ones(length(T),1))
+                                x::Matrix{Float64}=ones(length(T),1),
+                                difcomp::Int64=0)
     
     # Set MicTherm path
     eval_string("addpath(genpath('$(model.path)'))")
@@ -119,7 +121,7 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
 
     modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun, :dBdTfun=>dBdTfun, :Tc=>Tc, :pc=>pc, :M=>M, :m_EOS=>m, :α=>model.α)
 
-    return call_entropy_scaling(modelDict, T, ϱ, prop; x=x, reduced=model.unit=="reduced")
+    return call_entropy_scaling(modelDict, T, ϱ, prop; x=x, reduced=model.unit=="reduced", difcomp=difcomp)
 end
 
 # Function to create argumentsstring for Initialization
