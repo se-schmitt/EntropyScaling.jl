@@ -18,11 +18,17 @@ include("correlation_fun.jl")
 include("zero_density_limit.jl")
 
 # Include extensions
-if :MATLAB in names(Main, imported=true)
-    include("../ext/mictherm_ext.jl")
+if !isdefined(Base,:get_extension)
+    include("../ext/MicthermExt.jl")
 end
 
 # Export
 export fit_entropy_scaling, call_entropy_scaling
+
+# Export extension functions
+# MicthermExt
+export MicThermParam
+function MicThermParam end
+abstract type MicThermParamType end
 
 end

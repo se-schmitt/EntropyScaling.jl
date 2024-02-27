@@ -1,9 +1,12 @@
+module MicthermExt
+
 # Extension provides wrapper for functions call_entropy_scaling and fit_entropy_scaling to be coupled with the MicTherm package
 
-using MATLAB
+using EntropyScaling, MATLAB
+const ES = EntropyScaling
 
 # MicTherm parameter struct
-struct MicThermParam
+struct MicThermParam <: ES.MicThermParamType
     name::Vector{String}
     eos::String
     polar::Union{String,Missing}
@@ -27,29 +30,42 @@ struct MicThermParam
     type_AB::Union{Vector{String},Missing}
     κ_AB::Union{Vector{Float64},Missing}
     ε_AB::Union{Vector{Float64},Missing}
+    α::Union{Vector{Float64},Missing}
     source::Union{Vector{String},Missing}
     path::String
 end
 
 """
-`MicThermParam(ParamDict::NamedTuple)`
+`MicThermParam(ParamDict::Dict{Symbol,Any})`
 
 Constructor for MicThermParam struct
 
 - Mandatory input parameters: `:name`, `:eos`, `:path`, `:unit`
-- Optional input parameters: `:polar`, `:assoc`, `:M`, `:m`, `:σ`, `:ε`, `:ξ`, `:Tcm`, `:pcm`, `:λr`, `:λa`, `:TStar`, `:vStar`, `:μ`, `:N_μ`, `:Q`, `:N_Q`, `:type_AB`, `:κ_AB`, `:ε_AB`, `:source`
+- Optional input parameters: `α[_η/_λ/_D]`, `:polar`, `:assoc`, `:M`, `:m`, `:σ`, `:ε`, `:ξ`, `:Tcm`, `:pcm`, `:λr`, `:λa`, `:TStar`, `:vStar`, `:μ`, `:N_μ`, `:Q`, `:N_Q`, `:type_AB`, `:κ_AB`, `:ε_AB`, `:source`
 
 Examplet for constructing a MicThermParam struct:
-```julia
-d = (name=["hexane", "heptane"], eos="PC_SAFT", path="/path/to/MicTherm", unit="SI", M=[86.18, 100.21], m=[3.0576,3.4831], σ=[3.7983,3.8049], ε=[236.77,238.4], source=["10.1021/ie0003887"])
+```julia-repl
+d = Dict(:name=>["hexane", "heptane"], :eos=>"PC_SAFT", :path=>"/path/to/MicTherm", :unit=>"SI", :M=>[86.18, 100.21], :m=>[3.0576,3.4831], :σ=>[3.7983,3.8049], :ε=>[236.77,238.4], :source=>["10.1021/ie0003887"])
 model = MicThermParam(d)
 ```
 """
-function MicThermParam(ParamDict::NamedTuple)
+function ES.MicThermParam(ParamDict_ori::Dict{Symbol,Any}; prop=nothing, is_fit=false)
+    ParamDict = deepcopy(ParamDict_ori)
+
     # Check Dict
-    mandatory_input = [:name, :eos, :path]
+    mandatory_input = [:name, :eos, :path, :unit]
     for f in mandatory_input
         if !(f in keys(ParamDict))  error("Mandatory input parameter $f is missing.") end
+    end
+
+    # Set α
+    if !(:α in keys(ParamDict)) && !is_fit
+        sym = prop == "vis" ? :α_η : prop == "tcn" ? :α_λ : prop == "dif" ? :α_D : nothing
+        if !isnothing(prop) && sym in keys(ParamDict)
+            ParamDict[:α] = ParamDict[sym]
+        else
+            error("Field `:α` missing in Dict `ParamDict`$(isnothing(prop) ? "" : " (alternatively provide `:$(sym)`)").")
+        end
     end
 
     fields = fieldnames(MicThermParam)
@@ -57,35 +73,36 @@ function MicThermParam(ParamDict::NamedTuple)
 end
 
 # Wrapper for the function `fit_entropy_scaling` to be used with MicTherm
-function fit_entropy_scaling(   T::Vector{Float64}, 
+function ES.fit_entropy_scaling(model::ES.MicThermParamType,
+                                T::Vector{Float64}, 
                                 ϱ::Vector{Float64}, 
                                 Y::Vector{Float64}, 
                                 prop::String; 
-                                model::MicThermParam,
                                 i_fit=[0,1,1,1,1])
     # Set MicTherm path
-    eval_string("addpath(genpath('$(model.path)'))")
-    mat"warning off"
+    eval_string("addpath(genpath('$(model.path)'));")
+    mat"warning off;"
 
     # Create function handles
     (sfun, Bfun, dBdTfun) = get_MicTherm_fun(model)
 
     # Calculate critical temperature and pressure
     (Tc, pc, ϱc) = calc_crit_MicTherm(model)
-
+    
     m = ismissing(model.m) ? ones(length(model.name)) : model.m
     M = model.unit == "reduced" ? model.M : model.M./1e3
 
-    return fit_entropy_scaling(T, ϱ, Y, prop; sfun=sfun, Bfun=Bfun[1], dBdTfun=dBdTfun[1], Tc=Tc[1], pc=pc[1], M=M, i_fit=i_fit, m_EOS=m)
+    modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun[1], :dBdTfun=>dBdTfun[1], :Tc=>Tc[1], :pc=>pc[1], :M=>M[1], :m_EOS=>m[1])
+
+    return fit_entropy_scaling(modelDict, T, ϱ, Y, prop; i_fit=i_fit, reduced=model.unit=="reduced")
 end
 
 # Wrapper for the function `call_entropy_scaling` to be used with MicTherm
-function call_entropy_scaling(  T::Vector{Float64}, 
+function ES.call_entropy_scaling(model::ES.MicThermParamType,
+                                T::Vector{Float64}, 
                                 ϱ::Vector{Float64},
-                                α_par::Vector{Vector{Float64}},
                                 prop::String; 
-                                x::Matrix{Float64}=ones(length(T),1),
-                                model::MicThermParam)
+                                x::Matrix{Float64}=ones(length(T),1))
     
     # Set MicTherm path
     eval_string("addpath(genpath('$(model.path)'))")
@@ -100,7 +117,9 @@ function call_entropy_scaling(  T::Vector{Float64},
     m = ismissing(model.m) ? ones(length(model.name)) : model.m
     M = model.unit == "reduced" ? model.M : model.M./1e3
 
-    return call_entropy_scaling(T, ϱ, α_par, prop; x=x, sfun=sfun, Bfun=Bfun, dBdTfun=dBdTfun, Tc=Tc, pc=pc, M=M, m_EOS=m)
+    modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun, :dBdTfun=>dBdTfun, :Tc=>Tc, :pc=>pc, :M=>M, :m_EOS=>m, :α=>model.α)
+
+    return call_entropy_scaling(modelDict, T, ϱ, prop; x=x, reduced=model.unit=="reduced")
 end
 
 # Function to create argumentsstring for Initialization
@@ -170,36 +189,54 @@ function get_initialization_string(p::MicThermParam; comp=0)
     return out
 end
 
+function set_param(p,field,str,i)
+    if ismissing(getfield(p,field))
+        error("Field $(field) is missing!")
+    else
+        return ", '$(string(str)) = $(getfield(p,field)[i])'"
+    end
+end
+
 # Function to provide function objectives from MicTherm
 function get_MicTherm_fun(model)
     # Set conversion factors
     if model.unit == "reduced"
         Bconv = 1
+        ϱconv = 1
+        h = 1e-3
     elseif model.unit == "SI"
         Bconv = 1e-3
+        ϱconv = model.M
+        h = 1e-1
     end
 
     # Configurational entropy
     sfun(T,ϱ,x) = 
-    (   eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = sRes');");
-        mat"[$names , ~ , $values] = IO_API( 'initialized', $ϱ, $T, [], $x );";                    
-        return values[:,findfirst(names .== "sRes")[2]] )
+    (   index = T isa Number ? 1 : 1:length(T);
+        Mmix = x * model.M;
+        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = sRes');");
+        mat"[$names , ~ , $values] = IO_API( 'initialized', $(ϱ./Mmix), $T, [], $x );";                    
+        return values[index,findfirst(names[:] .== "sRes")] )
 
     # Second virial coefficient
     Bfun = [T ->
-        (   eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
-            mat"[$names , ~ , $values] = IO_API( 'initialized', $(ones(size(T))), $T, [], $(ones(size(T))) );";                    
-            return values[:,findfirst(names .== "B")[2] .* Bconv] 
+        (   index = T isa Number ? 1 : 1:length(T);
+            x = T isa Number ? 1.0 : ones(size(T));
+            eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
+            mat"[$names , ~ , $values] = IO_API( 'initialized', $x, $T, [], $x );";                    
+            return values[index,findfirst(names[:] .== "B")] .* Bconv 
         )
         for i in eachindex(model.name) ]
     
     # Derivative of second virial coefficient
     dBdTfun = [T -> 
-        (   eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
-            mat"[$names , ~ , $values_h] = IO_API( 'initialized', $(ones(size(T))), $(T.+h/2), [], $(ones(size(T))) );";
-            mat"[$names , ~ , $values_l] = IO_API( 'initialized', $(ones(size(T))), $(T.-h/2), [], $(ones(size(T))) );";
-            B_h = values_h[:,findfirst(name .== "B")[2]];
-            B_l = values_l[:,findfirst(name .== "B")[2]];
+        (   index = T isa Number ? 1 : 1:length(T);
+            x = T isa Number ? 1.0 : ones(size(T));
+            eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
+            mat"[$names , ~ , $values_h] = IO_API( 'initialized', $x, $(T.+h/2), [], $x );";
+            mat"[$names , ~ , $values_l] = IO_API( 'initialized', $x, $(T.-h/2), [], $x );";
+            B_h = values_h[index,findfirst(names[:] .== "B")];
+            B_l = values_l[index,findfirst(names[:] .== "B")];
             return (B_h .- B_l) ./ h .* Bconv
         )
         for i in eachindex(model.name) ]
@@ -215,19 +252,21 @@ function calc_crit_MicTherm(model)
         ϱconv = 1
     elseif model.unit == "SI"
         pconv = 1e6
-        ϱconv = 1.0./model.M
+        ϱconv = model.M
     end
 
     Tc = Float64[]
     pc = Float64[]
     ϱc = Float64[]
     for i in 1:length(model.name)
-        eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = VLE', 'dT = 100' )")
-        mat"[$name_VLE , ~ , $values_VLE] = IO_API( 'initialized', [], [], [], [] )"
-        mat"close all"
-        push!(Tc,values_VLE[1,findfirst(name_VLE .== "T_VLE")[2]])          # K or reduced
-        push!(pc,values_VLE[1,findfirst(name_VLE .== "p_VLE")[2]]*pconv)    # Pa or reduced
-        push!(ϱc,values_VLE[1,findfirst(name_VLE .== "rho_L")[2]]*ϱconv)    # kg/m³ or reduced
+        eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = VLE', 'dT = 100' );")
+        mat"[$name_VLE , ~ , $values_VLE] = IO_API( 'initialized', [], [], [], [] );"
+        mat"close all;"
+        push!(Tc,values_VLE[1,findfirst(name_VLE[:] .== "T_VLE")])          # K or reduced
+        push!(pc,values_VLE[1,findfirst(name_VLE[:] .== "p_VLE")]*pconv)    # Pa or reduced
+        push!(ϱc,values_VLE[1,findfirst(name_VLE[:] .== "rhoL")]*ϱconv[i])     # kg/m³ or reduced
     end
     return (Tc, pc, ϱc)
+end
+
 end
