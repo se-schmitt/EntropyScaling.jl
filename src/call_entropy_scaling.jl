@@ -1,18 +1,13 @@
 # Main function to call entropy scaling
 """
-`call_entropy_scaling(T, ϱ, α_par, prop; x, sfun, Bfun, dBdTfun, Tc, pc, M, m_EOS)`
+`call_entropy_scaling(model, T, ϱ, prop; x, reduced)`
 
 Function to calculate transport properties using entropy scaling.
 
 ---
 
 Input:
-- `T::Vector{Float64}`: Temperature in K
-- `ϱ::Vector{Float64}`: Density in kg/m³
-- `α_par::Vector{Vector{Float64}}`: Component-specific parameters α₀ - α₄
-- `prop::String`: Transport property (`vis`, `tcn`, or `dif`)
-- Keyword arguments:
-    - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
+- `model::Dict{Symbol,Any}`: Dict with model parameters with keys:
     - `sfun::Function`: Function to calculate entropy in SI units (J K⁻¹ mol⁻¹) (`sfun(T,ϱ,x)`)
     - `Bfun::Vector`: Functions to calculate 2nd virial coefficient of the pure components in m³ mol⁻¹ (`Bfun(T)`)
     - `dBdTfun::Vector`: Functions to calculate temperature derivative of 2nd virial coefficient of the pure components in m³ mol⁻¹ K⁻¹ (`dBdTfun(T)`) (optional, calculated by automatic differentiation from `Bfun` otherwise)
@@ -20,24 +15,27 @@ Input:
     - `pc::Vector{Float64}`: Critical pressures of the pure components in Pa
     - `M::Vector{Float64}`: Molar masses of the pure components in kg mol⁻¹
     - `m_EOS::Vector{Float64}`: Segment numbers of the pure components (if not specified, `m_EOS=ones(length(α_par))`)
+    - `α::Vector{Vector{Float64}}`: Component-specific parameters α₀ - α₄
+- `T::Vector{Float64}`: Temperature in K
+- `ϱ::Vector{Float64}`: Density in kg/m³
+- `prop::String`: Transport property (`vis`, `tcn`, or `dif`)
+- Keyword arguments:
+    - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
+    - `reduced::Bool`: Using LJ reduced units (default: `reduced=false`)
 
 Output:
 - `Y::Vector{Float64}`: Transport property (η, λ, or D) in SI units (Pa s, W m⁻¹ K⁻¹, or m² s⁻¹)
 """
-function call_entropy_scaling(  T::Vector{Float64}, 
+function call_entropy_scaling(  model::Dict{Symbol,Any},
+                                T::Vector{Float64}, 
                                 ϱ::Vector{Float64},
-                                α_par::Vector{Vector{Float64}},
                                 prop::String; 
                                 x::Matrix{Float64}=ones(length(T),1),
-                                sfun::Function, 
-                                Bfun::Vector, 
-                                dBdTfun::Vector=[(x -> @. ForwardDiff.derivative(f,x)) for f in Bfun], 
-                                Tc::Vector{Float64}, pc::Vector{Float64}, M::Vector{Float64},
-                                m_EOS=ones(length(α_par)),
                                 reduced=false)
     
     # Check input
-    check_input_call(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
+    check_input_call(T, ϱ, x, prop)
+    m = get_model(model, prop, size(x,2))
 
     if reduced
         global (kB,NA,R) = (1.0,1.0,1.0)
@@ -46,23 +44,23 @@ function call_entropy_scaling(  T::Vector{Float64},
     end
 
     # Calculation of entropy
-    s_conf = sfun(T,ϱ,x)
-    m_mix = x * m_EOS
+    s_conf = m.sfun(T,ϱ,x)
+    m_mix = x * m.m_EOS
     s = -s_conf ./ R ./ m_mix
 
     # Calculation of scaled Chapman-Enskog (CE) transport properties and its minimum
     Y_CE⁺_all = []
     min_Y_CE⁺_all = []
     for i in 1:size(x,2)
-        (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(T, Tc[i], pc[i], prop, Bfun[i], dBdTfun[i])
+        (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(T, m.Tc[i], m.pc[i], prop, m.Bfun[i], m.dBdTfun[i])
         push!(Y_CE⁺_all,Y_CE⁺_i)
         push!(min_Y_CE⁺_all,[min_Y_CE⁺_i])
     end
-    Y_CE⁺ = mix_Wilke(Y_CE⁺_all, x, M)
-    min_Y_CE⁺ = mix_Wilke(repeat.(min_Y_CE⁺_all,length(T)), x, M)
+    Y_CE⁺ = mix_Wilke(Y_CE⁺_all, x, m.M)
+    min_Y_CE⁺ = mix_Wilke(repeat.(min_Y_CE⁺_all,length(T)), x, m.M)
 
     # Calculate of transport property
-    α_mix = mix_es_parameters(α_par, x)
+    α_mix = mix_es_parameters(m.α, x)
     Y_fit = fun_es(s, α_mix; prop=prop)
     if prop in ["vis","dif"]
         Yˢ = exp.(Y_fit)
@@ -72,21 +70,21 @@ function call_entropy_scaling(  T::Vector{Float64},
 
     # Unscale transport property
     Y⁺ = Yˢ ./ (W(s)./Y_CE⁺ .+ (1.0 .- W(s))./min_Y_CE⁺)
-    ϱN = ϱ ./ (x * M) .* NA                                 # [ϱN] = 1/m³
-    M_mix = x * M
+    ϱN = ϱ ./ (x * m.M) .* NA                                 # [ϱN] = 1/m³
+    M_mix = x * m.M
     if prop == "vis"
-        Y = Y⁺ .* ϱN.^(2/3).*sqrt.((x*M).*T*kB/NA) ./ (-s_conf/R).^(2/3)     
+        Y = Y⁺ .* ϱN.^(2/3).*sqrt.((x*m.M).*T*kB/NA) ./ (-s_conf/R).^(2/3)     
     elseif prop == "tcn"
-        Y = Y⁺ .* ϱN.^(2/3).*kB.*sqrt.(R*T./(x*M)) ./ (-s_conf/R).^(2/3)
+        Y = Y⁺ .* ϱN.^(2/3).*kB.*sqrt.(R*T./(x*m.M)) ./ (-s_conf/R).^(2/3)
     elseif prop == "dif"
-        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*M)) ./ (-s_conf/R).^(2/3)
+        Y = Y⁺ .* ϱN.^(-1/3).*sqrt.(R*T./(x*m.M)) ./ (-s_conf/R).^(2/3)
     end
 
     return Y
 end
 
 # Function to check input
-function check_input_call(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EOS)
+function check_input_call(T, ϱ, x, prop)
     # Check property value
     if !(prop in ["vis","tcn","dif"])
         error("Property must be 'vis', 'tcn', or 'dif'.")
@@ -96,11 +94,59 @@ function check_input_call(T, ϱ, x, α_par, prop, Bfun, dBdTfun, Tc, pc, M, m_EO
     if !(length(T) == length(ϱ) == size(x,1))
         error("Length of T, ϱ, and x (# state points) must be equal.")
     end
-    
-    # Check equal number of components
-    if !(size(x,2) == length(α_par) == length(Bfun) == length(dBdTfun) == length(Tc) == length(pc) == length(M) == length(m_EOS))
-        error("Number of components in  must be equal.")
+end
+
+# Function to check input model
+function get_model(model_ori, prop, Ncomp; is_fit=false)
+    model = deepcopy(model_ori)
+
+    # Check mandatory keys
+    required = [:sfun,:Bfun,:Tc,:pc,:M]
+    if !all(in.(required,Ref(keys(model))))
+        error("Fields missing in NamedTuple `model`: $(join(required[(!).(in.(required,keys(model)))], ", ")).")
     end
+    if !haskey(model,:α) && !is_fit
+        sym = prop == "vis" ? :α_η : prop == "tcn" ? :α_λ : prop == "dif" ? :α_D : []
+        if haskey(model,sym)
+            model[:α] = model[sym]
+        else
+            error("Field `$(sym)` missing in NamedTuple `model`.")
+        end
+    end
+
+    # Check and set optional keys
+    # dBdTfun
+    if !haskey(model,:dBdTfun)
+        Bfun = deepcopy(model[:Bfun])
+        if isa(Bfun,Function)
+            model[:dBdTfun] = x -> ForwardDiff.derivative.(Bfun,x)
+        else
+            model[:dBdTfun] = [x -> ForwardDiff.derivative.(f,x) for f in Bfun]
+        end
+    end
+    # m_EOS
+    if !haskey(model,:m_EOS)
+        model[:m_EOS] = ones(length(model[:M]))
+    end
+
+    # Check and set vector keys
+    if !is_fit
+        vector_keys = [:Bfun,:dBdTfun,:Tc,:pc,:M,:m_EOS,:α]
+        if Ncomp == 1
+            for k in vector_keys
+                if any(isa.(Ref(model[k]),[Function,Number]))
+                    model[k] = [model[k]]
+                elseif k == :α && isa(model[k],Vector{Float64})
+                    model[k] = [model[k]]
+                end
+            end
+        end
+        if (!).(all(length.([model[k] for k in vector_keys]) .== Ncomp))
+            error("Lengths of fields in Dict `model` must be equal.")
+        end
+    end
+
+    return (; model...)
 end
 
 # Function to calculate paramters of mixture
