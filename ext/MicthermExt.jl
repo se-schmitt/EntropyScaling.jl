@@ -85,7 +85,7 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
     mat"warning off;"
 
     # Create function handles
-    (sfun, Bfun, dBdTfun) = get_MicTherm_fun(model)
+    (sfun, Bfun, dBdTfun, _, _) = get_MicTherm_fun(model)
 
     # Calculate critical temperature and pressure
     (Tc, pc, ϱc) = calc_crit_MicTherm(model)
@@ -94,6 +94,10 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
     M = model.unit == "reduced" ? model.M : model.M./1e3
 
     modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun[1], :dBdTfun=>dBdTfun[1], :Tc=>Tc[1], :pc=>pc[1], :M=>M[1], :m_EOS=>m[1])
+    if model.unit == "reduced"
+        modelDict[:σ] = model.σ[1]
+        modelDict[:ε] = model.ε[1]
+    end
 
     return fit_entropy_scaling(modelDict, T, ϱ, Y, prop; i_fit=i_fit, reduced=model.unit=="reduced", solute=solute)
 end
@@ -111,7 +115,7 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
     mat"warning off"
     
     # Create function handles
-    (sfun, Bfun, dBdTfun) = get_MicTherm_fun(model)
+    (sfun, Bfun, dBdTfun, Bmixfun, dBdTmixfun) = get_MicTherm_fun(model)
 
     # Calculate critical temperature and pressure
     (Tc, pc, ϱc) = calc_crit_MicTherm(model)
@@ -119,7 +123,7 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
     m = ismissing(model.m) ? ones(length(model.name)) : model.m
     M = model.unit == "reduced" ? model.M : model.M./1e3
 
-    modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun, :dBdTfun=>dBdTfun, :Tc=>Tc, :pc=>pc, :M=>M, :m_EOS=>m, :α=>model.α)
+    modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun, :dBdTfun=>dBdTfun, :Bmixfun=>Bmixfun, :dBdTmixfun=>dBdTmixfun, :Tc=>Tc, :pc=>pc, :M=>M, :m_EOS=>m, :α=>model.α)
 
     return call_entropy_scaling(modelDict, T, ϱ, prop; x=x, reduced=model.unit=="reduced", difcomp=difcomp)
 end
@@ -225,19 +229,30 @@ function get_MicTherm_fun(model)
         return values[index,findfirst(names[:] .== "sRes")] )
 
     # Second virial coefficient
-    Bfun = [(T; x=ones(length(T),1)) ->
+    Bfun = [T ->
         (   index = T isa Number ? 1 : 1:length(T);
-            ϱ = ones(size(T));
+            ϱ = T isa Number ? 1.0 : ones(length(T));
+            x = T isa Number ? 1.0 : ones(length(T),1);
             eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
             mat"[$names , ~ , $values] = IO_API( 'initialized', $ϱ, $T, [], $x );";                    
             return values[index,findfirst(names[:] .== "B")] .* Bconv 
         )
         for i in eachindex(model.name) ]
+
+    # Second virial coefficient of mixture
+    Bmixfun(T,x) = 
+    (   index = T isa Number ? 1 : 1:length(T);
+        ϱ = T isa Number ? 1.0 : ones(length(T));
+        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
+        mat"[$names , ~ , $values] = IO_API( 'initialized', $ϱ, $T, [], $x );";                    
+        return values[index,findfirst(names[:] .== "B")] .* Bconv 
+    )
     
     # Derivative of second virial coefficient
-    dBdTfun = [(T; x=ones(length(T),1)) -> 
+    dBdTfun = [T -> 
         (   index = T isa Number ? 1 : 1:length(T);
-            ϱ = ones(size(T));
+            ϱ = T isa Number ? 1.0 : ones(length(T));
+            x = T isa Number ? 1.0 : ones(length(T),1);
             eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
             mat"[$names , ~ , $values_h] = IO_API( 'initialized', $ϱ, $(T.+h/2), [], $x );";
             mat"[$names , ~ , $values_l] = IO_API( 'initialized', $ϱ, $(T.-h/2), [], $x );";
@@ -247,7 +262,19 @@ function get_MicTherm_fun(model)
         )
         for i in eachindex(model.name) ]
     
-    return sfun, Bfun, dBdTfun
+    # Derivative of second virial coefficient of mixture
+    dBdTmixfun(T,x) = 
+    (   index = T isa Number ? 1 : 1:length(T);
+        ϱ = T isa Number ? 1.0 : ones(length(T));
+        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
+        mat"[$names , ~ , $values_h] = IO_API( 'initialized', $ϱ, $(T.+h/2), [], $x );";
+        mat"[$names , ~ , $values_l] = IO_API( 'initialized', $ϱ, $(T.-h/2), [], $x );";
+        B_h = values_h[index,findfirst(names[:] .== "B")];
+        B_l = values_l[index,findfirst(names[:] .== "B")];
+        return (B_h .- B_l) ./ h .* Bconv
+    )
+    
+    return sfun, Bfun, dBdTfun, Bmixfun, dBdTmixfun
 end 
 
 # Function to calculate critical point by MicTherm
