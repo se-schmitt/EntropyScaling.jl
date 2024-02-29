@@ -75,15 +75,18 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
             solute[:Tc] = Tc[3-i]
             solute[:pc] = pc[3-i]
         end
-        (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(T, m.Tc[i], m.pc[i], prop, m.Bfun[i], m.dBdTfun[i], solute=solute)
+        (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(split_m(m)[i], T, prop; solute=solute, reduced=reduced)
         push!(Y_CE⁺_all,Y_CE⁺_i)
         push!(min_Y_CE⁺_all,[min_Y_CE⁺_i])
     end
     if prop in ["vis","tcn"]
         Y_CE⁺ = mix_Wilke(Y_CE⁺_all, x, m.M)
         min_Y_CE⁺ = mix_Wilke(repeat.(min_Y_CE⁺_all,length(T)), x, m.M)
-    else
+    elseif prop in ["dif","selfdif"]
         Y_CE⁺ = mix_Darken(Y_CE⁺_all, x)
+        min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
+    elseif prop in ["mutdif"]
+        Y_CE⁺, _ = CE_scaled(m, T, prop; x=x, reduced=reduced)
         min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
     end
 
@@ -127,7 +130,7 @@ function check_input_call(T, ϱ, x, prop)
 end
 
 # Function to check input model
-function get_model(model_ori, prop, Ncomp; is_fit=false)
+function get_model(model_ori, prop, Ncomp; is_fit=false, reduced=false)
     model = deepcopy(model_ori)
 
     # Check mandatory keys
@@ -154,10 +157,13 @@ function get_model(model_ori, prop, Ncomp; is_fit=false)
             model[:dBdTfun] = [x -> ForwardDiff.derivative.(f,x) for f in Bfun]
         end
     end
-    # m_EOS
+    # EOS parameters
     if !haskey(model,:m_EOS)
         model[:m_EOS] = ones(length(model[:M]))
     end
+    if reduced && any(!haskey.(Ref(model),[:ε,:σ]))
+        error("Fields `ε` and `σ` must be specified in `model` for reduced units.")
+    end        
 
     # Check and set vector keys
     if !is_fit
@@ -210,4 +216,25 @@ function mix_Darken(D, x)
         Dinv += x[:,i]./D[i]
     end
     return 1.0 ./ Dinv
+end
+
+# Function to split the model
+function split_m(m)
+    Ncomp = length(m[:Tc])
+    required = [:Bfun, :dBdTfun,:Tc,:pc]
+    optional = [:Bmixfun, :dBdTmixfun, :ε, :σ]
+    ms = Vector{NamedTuple}(undef,Ncomp)
+    for i in 1:Ncomp
+        id = Dict{Symbol,Any}()
+        for k in required
+            id[k] = m[k][i]
+        end
+        for k in optional
+            if haskey(m,k)
+                id[k] = m[k]
+            end
+        end
+        ms[i] = (;id...)
+    end
+    return ms
 end

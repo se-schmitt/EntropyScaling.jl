@@ -69,7 +69,7 @@ function fit_entropy_scaling(   model::Dict{Symbol,Any},
     end
 
     # Calculation of scaled Chapman-Enskog (CE) transport properties and its minimum
-    (Y_CE⁺, min_Y_CE⁺) = CE_scaled(T, m.Tc, m.pc, prop, m.Bfun, m.dBdTfun; solute=solute)
+    (Y_CE⁺, min_Y_CE⁺) = CE_scaled(m, T, prop; solute=solute, reduced=reduced)
 
     # CE-scaled transport properties
     Yˢ = (W(s)./Y_CE⁺ .+ (1.0 .- W(s))./min_Y_CE⁺) .* Y⁺

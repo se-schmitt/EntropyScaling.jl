@@ -1,20 +1,9 @@
 # Functions to calculate the scaled Chapman-Enskog (CE) transport properties
 
 # Function to calculate scaled CE transport properties
-function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B::Function, dBdT::Function; solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}())
-    # Critical temperature and pressure of the LJ fluid
-    Tc_LJ = 1.321
-    pc_LJ = 0.129
-
-    # Apply correspondenve principle to calculate LJ parameters
-    ε_CE = kB.*Tc./Tc_LJ
-    σ_CE = (pc_LJ./pc.*ε_CE).^(1/3)
-    if prop in ["dif","selfdif","mutdif"] && !isempty(solute)
-        ε_CE_sol = kB.*solute[:Tc]./Tc_LJ
-        σ_CE_sol = (pc_LJ./solute[:pc].*ε_CE_sol).^(1/3)
-        ε_CE = sqrt(ε_CE * ε_CE_sol)
-        σ_CE = (σ_CE + σ_CE_sol) / 2
-    end
+function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}(), reduced::Bool=false)
+    # Calculate LJ parameters
+    σ_CE, ε_CE = calc_σε(m, prop; solute=solute, reduced=reduced)
 
     # Scaled transport property
     f =     prop == "vis" ? 5/16 :
@@ -24,23 +13,78 @@ function CE_scaled(T::Vector{Float64}, Tc::Float64, pc::Float64, prop::String, B
     Ω(T) =  prop == "vis" ? Ω_22(T) :
             prop == "tcn" ? Ω_22(T) :
             prop in ["dif","selfdif","mutdif"] ? Ω_11(T) : error("'prop' must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'!")
-    Y_CE⁺(T) = f  / (√(π) * σ_CE^2 * Ω(T/ε_CE*kB)) * ((T[1]*dBdT(T)+B(T))/NA)^(2/3)
+    TdBdT_B(T,x) = isempty(x) ? ((T*m.dBdTfun(T)+m.Bfun(T))/NA)^(2/3) :
+                                ((T*m.dBdTmixfun(T,x)+m.Bmixfun(T,x))/NA)^(2/3)
+
+    Y_CE⁺(T,x) = f  / (√(π) * σ_CE^2 * Ω(T/ε_CE*kB)) * TdBdT_B(T,x)
 
     # Calculate minimum of Y_CE⁺
-    TB = nlsolve(x -> B(x[1]),[0.6*Tc]).zero[1]        # Boyle temperature
     min_Y_CE⁺ = NaN
-    try 
-        min_Y_CE⁺ = optimize(x -> Y_CE⁺(x[1]),[TB],NewtonTrustRegion()).minimum
-    catch e
-        if isa(e,DomainError)
-            @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
-            min_Y_CE⁺ = fun_η₀⁺(0.6*T_B)
-        else
-            throw(e)
+    if isempty(x)
+        TB = nlsolve(x -> m.Bfun(x[1]),[0.6*m.Tc]).zero[1]        # Boyle temperature
+        try 
+            min_Y_CE⁺ = optimize(y -> Y_CE⁺(y[1],x),[TB],NewtonTrustRegion()).minimum
+        catch e
+            if isa(e,DomainError)
+                @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
+                min_Y_CE⁺ = fun_η₀⁺(0.6*T_B)
+            else
+                throw(e)
+            end
+        end
+
+        return Y_CE⁺.(T,Ref(x)), min_Y_CE⁺
+    else
+        TB = [nlsolve(y -> Bmixfun(y[1],[z 1-z]),[0.6*mean(m.Tc)]).zero[1] for z in x[:,1]]        # Boyle temperature (x dependent)
+        try 
+            min_Y_CE⁺ = [optimize(y -> Y_CE⁺(y[1],z),[TB[i]],NewtonTrustRegion()).minimum for (i,z) in enumerate(x)]
+        catch e
+            if isa(e,DomainError)
+                @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
+                min_Y_CE⁺ = [fun_η₀⁺(0.6*T_B[i]) for i in 1:length(x)]
+            else
+                throw(e)
+            end
+        end
+
+        return [Y_CE⁺(T[i],x[i,:]) for i in eachindex(T)], min_Y_CE⁺
+    end
+end
+
+function calc_σε(m, prop; solute=Dict{Symbol,Float64}(), reduced=false)
+    # Critical temperature and pressure of the LJ fluid from Stephan et al. (2019) [DOI: 10.1021/acs.jcim.9b00620]
+    Tc_LJ = 1.321
+    pc_LJ = 0.129
+
+    if reduced
+        # Take LJ parameters from model
+        σ_CE = m.σ
+        ε_CE = m.ε
+        if !isempty(solute)
+            ε_CE = sqrt(ε_CE * solute[:ε])
+            σ_CE = (σ_CE + solute[:σ]) / 2
+        end
+    else
+        # Apply correspondence principle to calculate LJ parameters
+        ε_CE = kB.*m.Tc./Tc_LJ
+        σ_CE = (pc_LJ./m.pc.*ε_CE).^(1/3)
+        if prop in ["dif"] && !isempty(solute)
+            ε_CE_sol = kB.*solute[:Tc]./Tc_LJ
+            σ_CE_sol = (pc_LJ./solute[:pc].*ε_CE_sol).^(1/3)
+            ε_CE = sqrt(ε_CE * ε_CE_sol)
+            σ_CE = (σ_CE + σ_CE_sol) / 2
         end
     end
 
-    return Y_CE⁺.(T), min_Y_CE⁺
+    # Calculate LJ parameters of mixture
+    if all(length.([σ_CE, ε_CE]) .== 2)
+        σ_CE = mean(σ_CE)
+        ε_CE = geomean(ε_CE)
+    elseif any(length.([σ_CE, ε_CE]) .≥ 2)
+        error("Both σ_CE and ε_CE must be either scalar or 2-element vectors.")
+    end
+
+    return σ_CE, ε_CE
 end
 
 # Collision integrals from Kim and Monroe (2014) [DOI: 10.1016/j.jcp.2014.05.018]

@@ -4,7 +4,7 @@ module EntropyScaling
 using LsqFit
 using NLsolve
 using Optim
-using Statistics
+using StatsBase
 using ForwardDiff
 
 # Definition of Constants
