@@ -152,13 +152,17 @@ function get_initialization_string(p::MicThermParam; comp=0)
 
         # EOS specific
         if lowercase(p.eos) in ["pc_saft","kolafanezbeda","saft_vr_mie","backone","stephan","soft_saft","pets"]
-            out *= string(set_param.(Ref(p),[:m,:σ,:ε],["chainlength_$j","sigma_$j","epsilon_$j"],i)...)
+            out *= string(set_param.(Ref(p),[:σ,:ε],["sigma_$j","epsilon_$j"],i)...)
         elseif lowercase(p.eos) in ["scpa"]
             out *= string(set_param.(Ref(p),[:Tcm,:pcm],["Tcm_$j","pcm_$j"],i)...)
         elseif lowercase(p.eos) in ["pactplusb"]
             out *= string(set_param.(Ref(p),[:vStar,:TStar,:vStar,:TStar],["vStar_$j","TStar_$j","sigma_$j","epsilon_$j"],i)...)
         else
             error("Either (σ, ϵ, m) or (Tcm, pcm) or (vTStar, vStar) should be defined!")
+        end
+
+        if lowercase(p.eos) in ["pc_saft","saft_vr_mie","backone","soft_saft"]
+            out *= set_param.(Ref(p),:m,"chainlength_$j",i)
         end
         
         if lowercase(p.eos) in ["saft_vr_mie"]
@@ -184,8 +188,8 @@ function get_initialization_string(p::MicThermParam; comp=0)
     end
 
     # Mixing parameter
-    if N_comp == 2 & !ismissing(p.ξ)
-        out *= ", 'Xsi_12 = $(ξ[1])'"
+    if N_comp == 2 && !ismissing(p.ξ)
+        out *= set_param(p,:ξ,"Xsi_12",1)
     end
 
     return out
