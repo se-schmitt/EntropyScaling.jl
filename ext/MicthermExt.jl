@@ -225,22 +225,22 @@ function get_MicTherm_fun(model)
         return values[index,findfirst(names[:] .== "sRes")] )
 
     # Second virial coefficient
-    Bfun = [T ->
+    Bfun = [(T; x=ones(length(T),1)) ->
         (   index = T isa Number ? 1 : 1:length(T);
-            x = T isa Number ? 1.0 : ones(size(T));
+            ϱ = ones(size(T));
             eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
-            mat"[$names , ~ , $values] = IO_API( 'initialized', $x, $T, [], $x );";                    
+            mat"[$names , ~ , $values] = IO_API( 'initialized', $ϱ, $T, [], $x );";                    
             return values[index,findfirst(names[:] .== "B")] .* Bconv 
         )
         for i in eachindex(model.name) ]
     
     # Derivative of second virial coefficient
-    dBdTfun = [T -> 
+    dBdTfun = [(T; x=ones(length(T),1)) -> 
         (   index = T isa Number ? 1 : 1:length(T);
-            x = T isa Number ? 1.0 : ones(size(T));
-            eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
-            mat"[$names , ~ , $values_h] = IO_API( 'initialized', $x, $(T.+h/2), [], $x );";
-            mat"[$names , ~ , $values_l] = IO_API( 'initialized', $x, $(T.-h/2), [], $x );";
+            ϱ = ones(size(T));
+            eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = B');");
+            mat"[$names , ~ , $values_h] = IO_API( 'initialized', $ϱ, $(T.+h/2), [], $x );";
+            mat"[$names , ~ , $values_l] = IO_API( 'initialized', $ϱ, $(T.-h/2), [], $x );";
             B_h = values_h[index,findfirst(names[:] .== "B")];
             B_l = values_l[index,findfirst(names[:] .== "B")];
             return (B_h .- B_l) ./ h .* Bconv
