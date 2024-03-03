@@ -231,7 +231,11 @@ function split_m(m)
         end
         for k in optional
             if haskey(m,k)
-                id[k] = m[k]
+                if k in [:ε,:σ]
+                    id[k] = m[k][i]
+                else
+                    id[k] = m[k]
+                end
             end
         end
         ms[i] = (;id...)

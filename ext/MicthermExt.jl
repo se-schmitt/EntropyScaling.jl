@@ -59,12 +59,10 @@ function ES.MicThermParam(ParamDict_ori::Dict{Symbol,Any}; prop=nothing, is_fit=
     end
 
     # Set α
-    if !(:α in keys(ParamDict)) && !is_fit
+    if !(:α in keys(ParamDict))
         sym = prop == "vis" ? :α_η : prop == "tcn" ? :α_λ : prop == "dif" ? :α_D : nothing
         if !isnothing(prop) && sym in keys(ParamDict)
             ParamDict[:α] = ParamDict[sym]
-        else
-            error("Field `:α` missing in Dict `ParamDict`$(isnothing(prop) ? "" : " (alternatively provide `:$(sym)`)").")
         end
     end
 
@@ -85,7 +83,7 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
     mat"warning off;"
 
     # Create function handles
-    (sfun, Bfun, dBdTfun, _, _) = get_MicTherm_fun(model)
+    fs = get_MicTherm_fun(model)
 
     # Calculate critical temperature and pressure
     (Tc, pc, ϱc) = calc_crit_MicTherm(model)
@@ -93,7 +91,7 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
     m = ismissing(model.m) ? ones(length(model.name)) : model.m
     M = model.unit == "reduced" ? model.M : model.M./1e3
 
-    modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun[1], :dBdTfun=>dBdTfun[1], :Tc=>Tc[1], :pc=>pc[1], :M=>M[1], :m_EOS=>m[1])
+    modelDict = Dict(:sfun=>fs.sfun, :Bfun=>fs.Bfun[1], :dBdTfun=>fs.dBdTfun[1], :Tc=>Tc[1], :pc=>pc[1], :M=>M[1], :m_EOS=>m[1])
     if model.unit == "reduced"
         modelDict[:σ] = model.σ[1]
         modelDict[:ε] = model.ε[1]
@@ -115,7 +113,7 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
     mat"warning off"
     
     # Create function handles
-    (sfun, Bfun, dBdTfun, Bmixfun, dBdTmixfun) = get_MicTherm_fun(model)
+    fs = get_MicTherm_fun(model)
 
     # Calculate critical temperature and pressure
     (Tc, pc, ϱc) = calc_crit_MicTherm(model)
@@ -123,7 +121,11 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
     m = ismissing(model.m) ? ones(length(model.name)) : model.m
     M = model.unit == "reduced" ? model.M : model.M./1e3
 
-    modelDict = Dict(:sfun=>sfun, :Bfun=>Bfun, :dBdTfun=>dBdTfun, :Bmixfun=>Bmixfun, :dBdTmixfun=>dBdTmixfun, :Tc=>Tc, :pc=>pc, :M=>M, :m_EOS=>m, :α=>model.α)
+    modelDict = Dict(:sfun=>fs.sfun, :Bfun=>fs.Bfun, :dBdTfun=>fs.dBdTfun, :Bmixfun=>fs.Bmixfun, :dBdTmixfun=>fs.dBdTmixfun, :Tc=>Tc, :pc=>pc, :M=>M, :m_EOS=>m, :α=>model.α)
+    if model.unit == "reduced"
+        modelDict[:σ] = model.σ
+        modelDict[:ε] = model.ε
+    end
 
     return call_entropy_scaling(modelDict, T, ϱ, prop; x=x, reduced=model.unit=="reduced", difcomp=difcomp)
 end
@@ -273,8 +275,33 @@ function get_MicTherm_fun(model)
         B_l = values_l[index,findfirst(names[:] .== "B")];
         return (B_h .- B_l) ./ h .* Bconv
     )
+
+    # Pressure
+    pfun(T,ϱ; x=ones(length(T),1)) = 
+    (   index = T isa Number ? 1 : 1:length(T);
+        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = p');");
+        mat"[$names , ~ , $values] = IO_API( 'initialized', $ϱ, $T, [], $x );";                    
+        return values[index,findfirst(names[:] .== "p")] 
+    )
+
+    # Density
+    ϱfun(T,p; x=ones(length(T),1), states=repeat(["L"],length(T))) = 
+    (   index = T isa Number ? 1 : 1:length(T)
+        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = rho');")
+        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $p, $x );"
+        ϱ_all = values[index,findfirst(names[:] .== "rho")]
+        nr = values[index,findfirst(names[:] .== "Nr")]
+        ϱ = NaN*ones(length(T))
+        for i in eachindex(T)
+            what_i = nr .== i
+            ϱ[i] = states[i] == "L" ? maximum(ϱ_all[what_i]) : minimum(ϱ_all[what_i])
+        end
+        return ϱ[index]
+    )
+
+    funs = (;sfun=sfun, Bfun=Bfun, dBdTfun=dBdTfun, Bmixfun=Bmixfun, dBdTmixfun=dBdTmixfun, pfun=pfun, ϱfun=ϱfun)
     
-    return sfun, Bfun, dBdTfun, Bmixfun, dBdTmixfun
+    return funs
 end 
 
 # Function to calculate critical point by MicTherm
@@ -283,16 +310,18 @@ function calc_crit_MicTherm(model)
     if model.unit == "reduced"
         pconv = 1
         ϱconv = 1
+        ΔT = 0.1
     elseif model.unit == "SI"
         pconv = 1e6
         ϱconv = model.M
+        ΔT = 100
     end
 
     Tc = Float64[]
     pc = Float64[]
     ϱc = Float64[]
     for i in 1:length(model.name)
-        eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = VLE', 'dT = 100' );")
+        eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = VLE', 'dT = $(ΔT)' );")
         mat"[$name_VLE , ~ , $values_VLE] = IO_API( 'initialized', [], [], [], [] );"
         mat"close all;"
         push!(Tc,values_VLE[1,findfirst(name_VLE[:] .== "T_VLE")])          # K or reduced
