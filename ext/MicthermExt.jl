@@ -286,16 +286,16 @@ function get_MicTherm_fun(model)
 
     # Density
     ϱfun(T,p; x=ones(length(T),1), states=repeat(["L"],length(T))) = 
-    (   index = T isa Number ? 1 : 1:length(T)
-        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = rho');")
-        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $p, $x );"
-        ϱ_all = values[index,findfirst(names[:] .== "rho")]
-        nr = values[index,findfirst(names[:] .== "Nr")]
-        ϱ = NaN*ones(length(T))
-        for i in eachindex(T)
-            what_i = nr .== i
-            ϱ[i] = states[i] == "L" ? maximum(ϱ_all[what_i]) : minimum(ϱ_all[what_i])
-        end
+    (   index = T isa Number ? 1 : 1:length(T);
+        eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = rho');");
+        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $p, $x );";
+        ϱ_all = values[:,findfirst(names[:] .== "rho")];
+        nr = values[:,findfirst(names[:] .== "Nr")];
+        ϱ = NaN*ones(length(T));
+        for i in eachindex(T);
+            what_i = nr .== i;
+            ϱ[i] = states[i] == "L" ? maximum(ϱ_all[what_i]) : minimum(ϱ_all[what_i]);
+        end;
         return ϱ[index]
     )
 
