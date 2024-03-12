@@ -1,6 +1,6 @@
 module MicthermExt
 
-# Extension provides wrapper for functions call_entropy_scaling and fit_entropy_scaling to be coupled with the MicTherm package
+# Extension providing wrappers for functions `call_entropy_scaling` and `fit_entropy_scaling` to be coupled with the `MicTherm` (LINK) package
 
 using EntropyScaling, MATLAB
 const ES = EntropyScaling
@@ -49,7 +49,7 @@ d = Dict(:name=>["hexane", "heptane"], :eos=>"PC_SAFT", :path=>"/path/to/MicTher
 model = MicThermParam(d)
 ```
 """
-function ES.MicThermParam(ParamDict_ori::Dict{Symbol,Any}; prop=nothing, is_fit=false)
+function ES.MicThermParam(ParamDict_ori::Dict{Symbol,Any}; prop=nothing)
     ParamDict = deepcopy(ParamDict_ori)
 
     # Check Dict
@@ -78,10 +78,7 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
                                 prop::String; 
                                 i_fit=[0,1,1,1,1],
                                 solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}())
-    # Set MicTherm path
-    eval_string("addpath(genpath('$(model.path)'));")
-    mat"warning off;"
-
+    
     # Create function handles
     fs = get_MicTherm_fun(model)
 
@@ -107,10 +104,6 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
                                 prop::String; 
                                 x::Matrix{Float64}=ones(length(T),1),
                                 difcomp::Int64=0)
-    
-    # Set MicTherm path
-    eval_string("addpath(genpath('$(model.path)'))")
-    mat"warning off"
     
     # Create function handles
     fs = get_MicTherm_fun(model)
@@ -159,8 +152,8 @@ function get_initialization_string(p::MicThermParam; comp=0)
         # EOS specific
         if lowercase(p.eos) in ["pc_saft","kolafanezbeda","saft_vr_mie","backone","stephan","soft_saft","pets"]
             out *= string(set_param.(Ref(p),[:σ,:ε],["sigma_$j","epsilon_$j"],i)...)
-        elseif lowercase(p.eos) in ["scpa"]
-            out *= string(set_param.(Ref(p),[:Tcm,:pcm],["Tcm_$j","pcm_$j"],i)...)
+        elseif lowercase(p.eos) in ["scpa","cpa"]
+            out *= string(set_param.(Ref(p),[:Tcm,:pcm,:m],["Tcm_$j","pcm_$j","m_VDW_$j"],i)...)
         elseif lowercase(p.eos) in ["pactplusb"]
             out *= string(set_param.(Ref(p),[:vStar,:TStar,:vStar,:TStar],["vStar_$j","TStar_$j","sigma_$j","epsilon_$j"],i)...)
         else
@@ -211,6 +204,10 @@ end
 
 # Function to provide function objectives from MicTherm
 function get_MicTherm_fun(model)
+    # Set MicTherm path
+    eval_string("addpath(genpath('$(model.path)'))")
+    mat"warning off"
+
     # Set conversion factors
     if model.unit == "reduced"
         Bconv = 1
@@ -279,24 +276,27 @@ function get_MicTherm_fun(model)
     # Pressure
     pfun(T,ϱ; x=ones(length(T),1)) = 
     (   index = T isa Number ? 1 : 1:length(T);
+        Mmix = x * model.M;
         eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = p');");
-        mat"[$names , ~ , $values] = IO_API( 'initialized', $ϱ, $T, [], $x );";                    
+        mat"[$names , ~ , $values] = IO_API( 'initialized', $(ϱ./Mmix), $T, [], $x );";                    
         return values[index,findfirst(names[:] .== "p")] 
     )
 
     # Density
-    ϱfun(T,p; x=ones(length(T),1), states=repeat(["L"],length(T))) = 
+    ϱfun(T,p; x=ones(length(T),1), states=repeat(["L"],length(T)), ϱmax::Number=Inf) = 
     (   index = T isa Number ? 1 : 1:length(T);
+        Mmix = x * model.M;
         eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = rho');");
-        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $p, $x );";
+        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $(p/1e6), $x );";
         ϱ_all = values[:,findfirst(names[:] .== "rho")];
         nr = values[:,findfirst(names[:] .== "Nr")];
         ϱ = NaN*ones(length(T));
         for i in eachindex(T);
-            what_i = nr .== i;
+            what_i = nr .== i .&& ϱ_all .<= ϱmax/Mmix[i];
             ϱ[i] = states[i] == "L" ? maximum(ϱ_all[what_i]) : minimum(ϱ_all[what_i]);
+
         end;
-        return ϱ[index]
+        return ϱ[index].*Mmix[index]
     )
 
     funs = (;sfun=sfun, Bfun=Bfun, dBdTfun=dBdTfun, Bmixfun=Bmixfun, dBdTmixfun=dBdTmixfun, pfun=pfun, ϱfun=ϱfun)
