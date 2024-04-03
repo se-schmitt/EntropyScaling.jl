@@ -212,11 +212,13 @@ function get_MicTherm_fun(model)
     if model.unit == "reduced"
         Bconv = 1
         ϱconv = 1
+        pconv = 1
         h = 1e-3
     elseif model.unit == "SI"
         Bconv = 1e-3
         ϱconv = model.M
-        h = 1e-1
+        pconv= 1e6
+        h = 5
     end
 
     # Configurational entropy
@@ -279,7 +281,7 @@ function get_MicTherm_fun(model)
         Mmix = x * model.M;
         eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = p');");
         mat"[$names , ~ , $values] = IO_API( 'initialized', $(ϱ./Mmix), $T, [], $x );";                    
-        return values[index,findfirst(names[:] .== "p")] 
+        return values[index,findfirst(names[:] .== "p")].*pconv 
     )
 
     # Density
@@ -287,7 +289,7 @@ function get_MicTherm_fun(model)
     (   index = T isa Number ? 1 : 1:length(T);
         Mmix = x * model.M;
         eval_string("IO_API( $(get_initialization_string(model)), 'calculationmode = API', 'APIMode = UserProperties', 'properties = rho');");
-        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $(p/1e6), $x );";
+        mat"[$names , ~ , $values] = IO_API( 'initialized', [], $T, $(p./pconv), $x );";
         ϱ_all = values[:,findfirst(names[:] .== "rho")];
         nr = values[:,findfirst(names[:] .== "Nr")];
         ϱ = NaN*ones(length(T));
