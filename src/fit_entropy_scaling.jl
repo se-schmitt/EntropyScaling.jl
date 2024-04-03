@@ -55,7 +55,7 @@ function fit_entropy_scaling(   model::Dict{Symbol,Any},
     # Modified Rosenfeld scaling
     ϱN = ϱ ./ m.M .* NA                                               # [ϱN] = 1/m³
     if prop == "dif" && !isempty(solute)
-        M = 2/(1/M + 1/solute[:M])
+        M = 2/(1/m.M + 1/solute[:M])
     end
     if prop == "vis"
         Yʳ = @. Y / (ϱN^(2/3) * sqrt(m.M / NA * kB * T))
