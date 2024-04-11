@@ -30,7 +30,7 @@ struct MicThermParam <: ES.MicThermParamType
     type_AB::Union{Vector{String},Missing}
     κ_AB::Union{Vector{Float64},Missing}
     ε_AB::Union{Vector{Float64},Missing}
-    α::Union{Vector{Float64},Missing}
+    α::Union{Vector{Float64},Vector{Vector{Float64}},Missing}
     source::Union{Vector{String},Missing}
     path::String
 end
@@ -311,13 +311,12 @@ function calc_crit_MicTherm(model)
     # Set conversion factors
     if model.unit == "reduced"
         pconv = 1
-        ϱconv = 1
         ΔT = 0.1
     elseif model.unit == "SI"
         pconv = 1e6
-        ϱconv = model.M
         ΔT = 100
     end
+    ϱconv = model.M
 
     Tc = Float64[]
     pc = Float64[]

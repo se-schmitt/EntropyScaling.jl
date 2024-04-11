@@ -48,9 +48,9 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
     ϱN = ϱ ./ (x * m.M) .* NA                                 # [ϱN] = 1/m³
 
     # Overwrrite reference masses for diffusion coefficient
-    M_ref = copy(m.M)
+    M_ref = deepcopy(m.M)
     if prop in ["selfdif","mutdif"]
-        M_dif = 2.0 ./ (1.0 ./ M[1] .+ 1.0 ./ M[2])
+        M_dif = 2.0 ./ (1.0 ./ m.M[1] .+ 1.0 ./ m.M[2])
         if prop == "mutdif" 
             M_ref = repeat([M_dif],2)
         else prop == "selfdif"
@@ -72,8 +72,13 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
     for i in 1:size(x,2)
         solute = Dict{Symbol,Float64}()
         if prop == "mutdif" || (prop == "selfdif" && i != difcomp)
-            solute[:Tc] = Tc[3-i]
-            solute[:pc] = pc[3-i]
+            if !reduced
+                solute[:Tc] = m.Tc[3-i]
+                solute[:pc] = m.pc[3-i]
+            else
+                solute[:ε] = m.ε[3-i]
+                solute[:σ] = m.σ[3-i]
+            end
         end
         (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(split_m(m)[i], T, prop; solute=solute, reduced=reduced)
         push!(Y_CE⁺_all,Y_CE⁺_i)
@@ -119,7 +124,7 @@ function check_input_call(T, ϱ, x, prop)
         error("Property must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'.")
     end
 
-    if prop in ["selfdif","mutdif"] && !(length(M) == 2)
+    if prop in ["selfdif","mutdif"] && !(size(x,2) == 2)
         error("Number of components must be 2 for properties 'selfdif' and 'mutdif'.")
     end
 
@@ -156,6 +161,11 @@ function get_model(model_ori, prop, Ncomp; is_fit=false, reduced=false)
         else
             model[:dBdTfun] = [x -> ForwardDiff.derivative.(f,x) for f in Bfun]
         end
+    end
+    # dBdTmixfun
+    if !haskey(model,:dBdTmixfun) && !is_fit
+        Bfun = deepcopy(model[:Bmixfun])
+        model[:dBdTmixfun] = (x,z) -> [ForwardDiff.derivative(y -> Bfun(y,z[i,:]'),x[i]) for i in eachindex(x)][length(x) == 1 ? 1 : (:)]
     end
     # EOS parameters
     if !haskey(model,:m_EOS)

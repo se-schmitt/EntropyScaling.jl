@@ -54,18 +54,19 @@ function fit_entropy_scaling(   model::Dict{Symbol,Any},
     
     # Modified Rosenfeld scaling
     ϱN = ϱ ./ m.M .* NA                                               # [ϱN] = 1/m³
+    M_ref = deepcopy(m.M)
     if prop == "dif" && !isempty(solute)
-        M = 2/(1/m.M + 1/solute[:M])
+        M_ref = 2/(1/m.M + 1/solute[:M])
     end
     if prop == "vis"
         Yʳ = @. Y / (ϱN^(2/3) * sqrt(m.M / NA * kB * T))
-        Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)  
-    elseif prop == "dif"
-        Yʳ = @. Y * sqrt(m.M / (NA * kB * T)) * ϱN^(1/3)
-        Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)  
+        Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)
     elseif prop == "tcn"
         Yʳ = @. Y / (ϱN^(2/3) * kB) * sqrt(m.M / (T * kB * NA)) 
-        Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)    
+        Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)
+    elseif prop == "dif"
+        Yʳ = @. Y * sqrt(M_ref / (NA * kB * T)) * ϱN^(1/3)
+        Y⁺ = @. Yʳ * (-s_conf / R)^(2/3)
     end
 
     # Calculation of scaled Chapman-Enskog (CE) transport properties and its minimum

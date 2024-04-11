@@ -1,4 +1,4 @@
-# EntropyScaling
+# EntropyScaling.jl
 
 This is an implementation of the entropy scaling framework introduced in
 
@@ -8,7 +8,7 @@ This is an implementation of the entropy scaling framework introduced in
 
 To register the module locally, type 
 ```julia
-Pkg> add https://github.com/se-schmitt/EntropyScaling
+Pkg> add https://github.com/se-schmitt/EntropyScaling.jl
 ```
 in package mode (type `]` in REPL to enter Pkg mode).
 

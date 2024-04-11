@@ -13,10 +13,10 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
     Ω(T) =  prop == "vis" ? Ω_22(T) :
             prop == "tcn" ? Ω_22(T) :
             prop in ["dif","selfdif","mutdif"] ? Ω_11(T) : error("'prop' must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'!")
-    TdBdT_B(T,x) = isempty(x) ? ((T*m.dBdTfun(T)+m.Bfun(T))/NA)^(2/3) :
-                                ((T*m.dBdTmixfun(T,x)+m.Bmixfun(T,x))/NA)^(2/3)
+    TdBdT_B(T,x) = isempty(x) ? ((T.*m.dBdTfun(T).+m.Bfun(T))./NA).^(2/3) :
+                                ((T.*m.dBdTmixfun(T,x).+m.Bmixfun(T,x))./NA).^(2/3)
 
-    Y_CE⁺(T,x) = f  / (√(π) * σ_CE^2 * Ω(T/ε_CE*kB)) * TdBdT_B(T,x)
+    Y_CE⁺(T,x) = f./((√(π)*σ_CE^2).*Ω(T./ε_CE.*kB)).*TdBdT_B(T,x)
 
     # Calculate minimum of Y_CE⁺
     min_Y_CE⁺ = NaN
@@ -35,9 +35,10 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
 
         return Y_CE⁺.(T,Ref(x)), min_Y_CE⁺
     else
-        TB = [nlsolve(y -> Bmixfun(y[1],[z 1-z]),[0.6*mean(m.Tc)]).zero[1] for z in x[:,1]]        # Boyle temperature (x dependent)
+        # TB = [nlsolve(y -> m.Bmixfun(y[1],[z 1-z]),[0.6*mean(m.Tc)]).zero[1] for z in x[:,1]]        # Boyle temperature (x dependent) [not required]
         try 
-            min_Y_CE⁺ = [optimize(y -> Y_CE⁺(y[1],z),[TB[i]],NewtonTrustRegion()).minimum for (i,z) in enumerate(x)]
+            # min_Y_CE⁺ = [optimize(y -> Y_CE⁺(y[1],[x1 1-x1]),[TB[i]],NewtonTrustRegion()).minimum for (i,x1) in enumerate(x[:,1])] # [not required]
+            min_Y_CE⁺ = NaN
         catch e
             if isa(e,DomainError)
                 @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
@@ -47,7 +48,7 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
             end
         end
 
-        return [Y_CE⁺(T[i],x[i,:]) for i in eachindex(T)], min_Y_CE⁺
+        return Y_CE⁺(T,x), min_Y_CE⁺
     end
 end
 
@@ -68,7 +69,7 @@ function calc_σε(m, prop; solute=Dict{Symbol,Float64}(), reduced=false)
         # Apply correspondence principle to calculate LJ parameters
         ε_CE = kB.*m.Tc./Tc_LJ
         σ_CE = (pc_LJ./m.pc.*ε_CE).^(1/3)
-        if prop in ["dif"] && !isempty(solute)
+        if prop in ["dif","mutdif","selfdif"] && !isempty(solute)
             ε_CE_sol = kB.*solute[:Tc]./Tc_LJ
             σ_CE_sol = (pc_LJ./solute[:pc].*ε_CE_sol).^(1/3)
             ε_CE = sqrt(ε_CE * ε_CE_sol)
