@@ -2,7 +2,9 @@
 
 This is an implementation of the entropy scaling framework introduced in
 
-[S. Schmitt, H. Hasse, S. Stephan, **Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State**, *Journal of Molecular Liquids* 395 (2024) 123811.](https://doi.org/10.1016/j.molliq.2023.123811)
+[S. Schmitt, H. Hasse, S. Stephan, **Entropy Scaling Framework for Transport Properties using Molecular-based Equations of State**, *Journal of Molecular Liquids* 395 (2024) 123811.](https://doi.org/10.1016/j.molliq.2023.123811) [[engrxiv]](https://doi.org/10.31224/3456)
+
+which enables modelling transport properties (viscosity, thermal conductivity, selff-diffusion coefficient) based on equations of state (EOS).
 
 ## Installation
 
@@ -31,7 +33,7 @@ The module provides two main functions: `fit_entropy_scaling` and `call_entropy_
   - thermal conductivity $\lambda$ in ${\rm W / (m K)}$
   - self-diffusion coefficient $D$ in ${\rm m^2/s}$
 - `prop::String`: property string, either `vis` for viscosity, `tcn` for thermal conductivity, or `D` for self-diffusion coefficient
-- `sfun::Function`: function to calculate the entropy $s$ in ${\rm J / (K mol)}$ of the form `sfun(T,ϱ,x)` (vectorized)
+- `sfun::Function`: function to calculate the configurational entropy $ s $ in ${\rm J / (K mol)}$ of the form `sfun(T,ϱ,x)` (vectorized)
 - `Bfun::Function`: function to calculate the 2nd virial coefficient $B$ in ${\rm m^3 / mol}$ of the form `Bfun(T)` (vectorized)
 - `dBdTfun::Function`: function to calculate the temperature derivative of the 2nd virial coefficient ${\rm d} B / {\rm d} T$ in ${\rm m^3/(mol K)}$ of the form `dBdTfun(T)` (vectorized)
 - `Tc::Float64`: critical temperature $T_{\rm c}$ in ${\rm K}$
@@ -63,7 +65,7 @@ The module provides two main functions: `fit_entropy_scaling` and `call_entropy_
 
 **Output**:
 - `Y`: calculated transport property $Y$ vector, can be
-  - viscosity $\eta$ in ${\rm Pa\,s}$
+  - viscosity $\eta$ in ${\rm Pa \cdot s}$
   - thermal conductivity $\lambda$ in ${\rm W/ (m K)}$
   - self-diffusion coefficient $D$ in ${\rm m^2/s}$
 
