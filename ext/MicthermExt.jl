@@ -323,11 +323,11 @@ function calc_crit_MicTherm(model)
     ϱc = Float64[]
     for i in 1:length(model.name)
         eval_string("IO_API( $(get_initialization_string(model; comp=i)), 'calculationmode = VLE', 'dT = $(ΔT)' );")
-        mat"[$name_VLE , ~ , $values_VLE] = IO_API( 'initialized', [], [], [], [] );"
+        mat"[$names_VLE , ~ , $values_VLE] = IO_API( 'initialized', [], [], [], [] );"
         mat"close all;"
-        push!(Tc,values_VLE[1,findfirst(name_VLE[:] .== "T_VLE")])          # K or reduced
-        push!(pc,values_VLE[1,findfirst(name_VLE[:] .== "p_VLE")]*pconv)    # Pa or reduced
-        push!(ϱc,values_VLE[1,findfirst(name_VLE[:] .== "rhoL")]*ϱconv[i])     # kg/m³ or reduced
+        push!(Tc,values_VLE[1,findfirst(names_VLE[:] .== "T_VLE")])          # K or reduced
+        push!(pc,values_VLE[1,findfirst(names_VLE[:] .== "p_VLE")]*pconv)    # Pa or reduced
+        push!(ϱc,values_VLE[1,findfirst(names_VLE[:] .== "rhoL")]*ϱconv[i])     # kg/m³ or reduced
     end
     return (Tc, pc, ϱc)
 end

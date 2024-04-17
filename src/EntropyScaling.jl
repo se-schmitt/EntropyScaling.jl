@@ -20,6 +20,7 @@ include("zero_density_limit.jl")
 # Include extensions
 if !isdefined(Base,:get_extension)
     include("../ext/MicthermExt.jl")
+    include("../ext/ClapeyronExt.jl")
 end
 
 # Export
