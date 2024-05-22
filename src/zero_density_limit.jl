@@ -33,7 +33,7 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
             end
         end
 
-        return Y_CE⁺.(T,Ref(x)), min_Y_CE⁺
+        return Y_CE⁺(T,x), min_Y_CE⁺
     else
         # TB = [nlsolve(y -> m.Bmixfun(y[1],[z 1-z]),[0.6*mean(m.Tc)]).zero[1] for z in x[:,1]]        # Boyle temperature (x dependent) [not required]
         try 
@@ -62,7 +62,7 @@ function calc_σε(m, prop; solute=Dict{Symbol,Float64}(), reduced=false)
         σ_CE = m.σ
         ε_CE = m.ε
         if !isempty(solute)
-            ε_CE = sqrt(ε_CE * solute[:ε])
+            ε_CE = sqrt(ε_CE * solute[:ε]) * solute[:ξ]
             σ_CE = (σ_CE + solute[:σ]) / 2
         end
     else

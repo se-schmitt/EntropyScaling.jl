@@ -118,6 +118,9 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
     if model.unit == "reduced"
         modelDict[:σ] = model.σ
         modelDict[:ε] = model.ε
+        if !ismissing(model.ξ)
+            modelDict[:ξ] = model.ξ[1]
+        end
     end
 
     return call_entropy_scaling(modelDict, T, ϱ, prop; x=x, reduced=model.unit=="reduced", difcomp=difcomp)
@@ -296,7 +299,6 @@ function get_MicTherm_fun(model)
         for i in eachindex(T);
             what_i = nr .== i .&& ϱ_all .<= ϱmax/Mmix[i];
             ϱ[i] = states[i] == "L" ? maximum(ϱ_all[what_i]) : minimum(ϱ_all[what_i]);
-
         end;
         return ϱ[index].*Mmix[index]
     )

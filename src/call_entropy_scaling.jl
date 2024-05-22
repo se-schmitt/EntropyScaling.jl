@@ -18,7 +18,7 @@ Input:
     - `α::Vector{Vector{Float64}}`: Component-specific parameters α₀ - α₄
 - `T::Vector{Float64}`: Temperature in K
 - `ϱ::Vector{Float64}`: Density in kg/m³
-- `prop::String`: Transport property (`vis`, `tcn`, or `dif`)
+- `prop::String`: Transport property (`vis`, `tcn`, `dif`, `selfdif`, or `mutdif`)
 - Keyword arguments:
     - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
     - `reduced::Bool`: Using LJ reduced units (default: `reduced=false`)
@@ -78,6 +78,7 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
             else
                 solute[:ε] = m.ε[3-i]
                 solute[:σ] = m.σ[3-i]
+                solute[:ξ] = m.ξ
             end
         end
         (Y_CE⁺_i, min_Y_CE⁺_i) = CE_scaled(split_m(m)[i], T, prop; solute=solute, reduced=reduced)
@@ -141,7 +142,7 @@ function get_model(model_ori, prop, Ncomp; is_fit=false, reduced=false)
     # Check mandatory keys
     required = [:sfun,:Bfun,:Tc,:pc,:M]
     if !all(in.(required,Ref(keys(model))))
-        error("Fields missing in NamedTuple `model`: $(join(required[(!).(in.(required,keys(model)))], ", ")).")
+        error("Fields missing in NamedTuple `model`: $(join(required[(!).(in.(required,Ref(keys(model))))], ", ")).")
     end
     if !haskey(model,:α) && !is_fit
         sym = prop == "vis" ? :α_η : prop == "tcn" ? :α_λ : prop == "dif" ? :α_D : []
@@ -173,7 +174,10 @@ function get_model(model_ori, prop, Ncomp; is_fit=false, reduced=false)
     end
     if reduced && any(!haskey.(Ref(model),[:ε,:σ]))
         error("Fields `ε` and `σ` must be specified in `model` for reduced units.")
-    end        
+    end
+    if reduced && !haskey(model,:ξ)
+        model[:ξ] = 1.0
+    end
 
     # Check and set vector keys
     if !is_fit
