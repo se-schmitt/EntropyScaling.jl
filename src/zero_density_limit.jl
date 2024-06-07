@@ -23,11 +23,12 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
     if isempty(x)
         TB = nlsolve(x -> m.Bfun(x[1]),[0.6*m.Tc]).zero[1]        # Boyle temperature
         try 
-            min_Y_CE⁺ = optimize(y -> Y_CE⁺(y[1],x),[TB],NewtonTrustRegion()).minimum
+            opt = optimize(y -> Y_CE⁺(y[1],x),[TB],NewtonTrustRegion())
+            min_Y_CE⁺ = opt.minimum
         catch e
             if isa(e,DomainError)
                 @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
-                min_Y_CE⁺ = fun_η₀⁺(0.6*T_B)
+                min_Y_CE⁺ = Y_CE⁺(0.6*TB,x)
             else
                 throw(e)
             end

@@ -22,6 +22,7 @@ Input:
 - Keyword arguments:
     - `x::Matrix{Float64}`: Mole fractions of components (default: `x=ones(length(T),1)` -> only valid for pure substances)
     - `reduced::Bool`: Using LJ reduced units (default: `reduced=false`)
+    - `difcomp::Int64`: Component for self-diffusion coefficient calculation (`difcomp ∈ {1,2}`) (default: `difcomp=0`)
 
 Output:
 - `Y::Vector{Float64}`: Transport property (η, λ, or D) in SI units (Pa s, W m⁻¹ K⁻¹, or m² s⁻¹)
