@@ -1,7 +1,7 @@
 # Functions to calculate the scaled Chapman-Enskog (CE) transport properties
 
 # Function to calculate scaled CE transport properties
-function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}(), reduced::Bool=false)
+function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute::Dict{Symbol,Float64}=Dict{Symbol,Float64}(), reduced::Bool=false, min_xdep::Bool=false)
     # Calculate LJ parameters
     σ_CE, ε_CE = calc_σε(m, prop; solute=solute, reduced=reduced)
 
@@ -25,6 +25,14 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
         try 
             opt = optimize(y -> Y_CE⁺(y[1],x),[TB],NewtonTrustRegion())
             min_Y_CE⁺ = opt.minimum
+            # # min_Y_CE⁺ = Y_CE⁺(0.6*TB,x)
+            # if prop == "vis"
+            #     min_Y_CE⁺ = 0.2566051355517457
+            # elseif prop == "tcn"
+            #     min_Y_CE⁺ = 0.9622692583187169
+            # elseif prop == "dif"
+            #     min_Y_CE⁺ = 0.3366408293186321
+            # end
         catch e
             if isa(e,DomainError)
                 @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
@@ -36,17 +44,20 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
 
         return Y_CE⁺(T,x), min_Y_CE⁺
     else
-        # TB = [nlsolve(y -> m.Bmixfun(y[1],[z 1-z]),[0.6*mean(m.Tc)]).zero[1] for z in x[:,1]]        # Boyle temperature (x dependent) [not required]
-        try 
-            # min_Y_CE⁺ = [optimize(y -> Y_CE⁺(y[1],[x1 1-x1]),[TB[i]],NewtonTrustRegion()).minimum for (i,x1) in enumerate(x[:,1])] # [not required]
-            min_Y_CE⁺ = NaN
-        catch e
-            if isa(e,DomainError)
-                @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
-                min_Y_CE⁺ = [fun_η₀⁺(0.6*T_B[i]) for i in 1:length(x)]
-            else
-                throw(e)
+        if min_xdep    # x-dependent minimum calculation
+            TB = [nlsolve(y -> m.Bmixfun(y[1],[z 1-z]),[0.6*mean(m.Tc)]).zero[1] for z in x[:,1]]
+            try 
+                min_Y_CE⁺ = [optimize(y -> Y_CE⁺(y[1],[x1 1-x1]),[TB[i]],NewtonTrustRegion()).minimum for (i,x1) in enumerate(x[:,1])]
+            catch e
+                if isa(e,DomainError)
+                    @warn("DomainError in Y₀⁺! Used value at T = 0.6*T_Boyle as min(Y₀⁺).")
+                    min_Y_CE⁺ = [fun_η₀⁺(0.6*T_B[i]) for i in 1:length(x)]
+                else
+                    throw(e)
+                end
             end
+        else
+            min_Y_CE⁺ = NaN
         end
 
         return Y_CE⁺(T,x), min_Y_CE⁺

@@ -79,7 +79,7 @@ function fit_entropy_scaling(   model::Dict{Symbol,Any},
     if prop in ["vis","dif"]    
         p0 = 0.
         Y_fit = log.(Yˢ)
-    else                        
+    else
         p0 = 1.
         Y_fit = Yˢ
     end

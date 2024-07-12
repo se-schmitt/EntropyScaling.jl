@@ -93,8 +93,11 @@ function call_entropy_scaling(  model::Dict{Symbol,Any},
         Y_CE⁺ = mix_Darken(Y_CE⁺_all, x)
         min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
     elseif prop in ["mutdif"]
-        Y_CE⁺, _ = CE_scaled(m, T, prop; x=x, reduced=reduced)
-        min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
+        min_xdep = false
+        Y_CE⁺, min_Y_CE⁺ = CE_scaled(m, T, prop; x=x, reduced=reduced, min_xdep=min_xdep)
+        if !min_xdep
+            min_Y_CE⁺ = mix_Darken(repeat.(min_Y_CE⁺_all,length(T)), x)
+        end
     end
 
     # Calculation of transport property
