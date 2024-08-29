@@ -1,5 +1,10 @@
 module EntropyScaling
 
+# Warning "Stockmayer"
+function __init__()
+    @warn("This is the Stockamer version! There may be changes that corrupt the results.")
+end
+
 # Load public modules
 using LsqFit
 using NLsolve
