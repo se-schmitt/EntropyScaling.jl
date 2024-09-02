@@ -14,7 +14,7 @@ function __init__()
     @warn("This is the Stockmayer version! There may be changes that corrupt the results.")
 
     # Import python files
-    path_ext = replace(@__DIR__,"\\" => "/","src" => "ext")
+    path_ext = replace(@__DIR__,"\\" => "/","src" => "ext/python")
     println(path_ext)
     py"""
     import sys

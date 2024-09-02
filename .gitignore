@@ -1,2 +1,3 @@
 /Manifest.toml
-*/__pycache__/*
+ext/python/__pycache__/
+*.pyc
