@@ -240,7 +240,7 @@ end
 function split_m(m)
     Ncomp = length(m[:Tc])
     required = [:Bfun, :dBdTfun,:Tc,:pc]
-    optional = [:Bmixfun, :dBdTmixfun, :ε, :σ]
+    optional = [:Bmixfun, :dBdTmixfun, :ε, :σ, :μ]
     ms = Vector{NamedTuple}(undef,Ncomp)
     for i in 1:Ncomp
         id = Dict{Symbol,Any}()
@@ -249,7 +249,7 @@ function split_m(m)
         end
         for k in optional
             if haskey(m,k)
-                if k in [:ε,:σ]
+                if k in [:ε,:σ,:μ]
                     id[k] = m[k][i]
                 else
                     id[k] = m[k]
