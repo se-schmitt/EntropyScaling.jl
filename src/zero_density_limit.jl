@@ -16,14 +16,11 @@ function CE_scaled(m::NamedTuple, T::Vector{Float64}, prop::String; x=[], solute
     TdBdT_B(T,x) = isempty(x) ? ((T.*m.dBdTfun(T).+m.Bfun(T))./NA).^(2/3) :
                                 ((T.*m.dBdTmixfun(T,x).+m.Bmixfun(T,x))./NA).^(2/3)
 
-    if m.μ == 0.0
-        Y_CE⁺(T,x) = f./((√(π)*σ_CE^2).*Ω(T./ε_CE.*kB)).*TdBdT_B(T,x)
-    else
-        index = prop == "vis" ? 1 :
-                prop == "tcn" ? 2 :
-                prop in ["dif","selfdif","mutdif"] ? 3 : error("'prop' must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'!")
-        Y_CE⁺(T,x) = py"calc_Stockmayer_transport"(T,m.μ)[index]
-    end
+    index = prop == "vis" ? 1 :
+            prop == "tcn" ? 2 :
+            prop in ["dif","selfdif","mutdif"] ? 3 : error("'prop' must be 'vis', 'tcn', 'dif', 'selfdif', or 'mutdif'!")
+    Y_CE⁺(T,x) = m.μ == 0.0 ?   f./((√(π)*σ_CE^2).*Ω(T./ε_CE.*kB)).*TdBdT_B(T,x) :
+                                py"calc_Stockmayer_transport"(T,round(m.μ^2,digits=2))[index]
 
     # Calculate minimum of Y_CE⁺
     min_Y_CE⁺ = NaN

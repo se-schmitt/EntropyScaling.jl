@@ -15,7 +15,6 @@ function __init__()
 
     # Import python files
     path_ext = replace(@__DIR__,"\\" => "/","src" => "ext/python")
-    println(path_ext)
     py"""
     import sys
     sys.path.append($path_ext)

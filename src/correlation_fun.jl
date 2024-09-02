@@ -14,4 +14,4 @@ function fun_es(s, p; prop::String)
 end
 
 # Transition function
-W(s, sₓ=0.5, κ=10.0) = 1. ./ (1. .+ exp.(κ .* (s .- sₓ)))
+W(s, sₓ=0.5, κ=20.0) = 1. ./ (1. .+ exp.(κ .* (s .- sₓ)))

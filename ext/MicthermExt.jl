@@ -92,6 +92,9 @@ function ES.fit_entropy_scaling(model::ES.MicThermParamType,
     if model.unit == "reduced"
         modelDict[:σ] = model.σ[1]
         modelDict[:ε] = model.ε[1]
+        if !ismissing(model.μ)
+            modelDict[:μ] = model.μ[1]
+        end
     end
 
     return fit_entropy_scaling(modelDict, T, ϱ, Y, prop; i_fit=i_fit, reduced=model.unit=="reduced", solute=solute)
@@ -118,6 +121,9 @@ function ES.call_entropy_scaling(model::ES.MicThermParamType,
     if model.unit == "reduced"
         modelDict[:σ] = model.σ
         modelDict[:ε] = model.ε
+        if !ismissing(model.μ)
+            modelDict[:μ] = model.μ
+        end
         if !ismissing(model.ξ)
             modelDict[:ξ] = model.ξ[1]
         end
