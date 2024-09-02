@@ -1,16 +1,28 @@
 module EntropyScaling
 
-# Warning "Stockmayer"
-function __init__()
-    @warn("This is the Stockamer version! There may be changes that corrupt the results.")
-end
-
 # Load public modules
 using LsqFit
 using NLsolve
 using Optim
 using StatsBase
 using ForwardDiff
+
+using PyCall
+
+# Warning "Stockmayer"
+function __init__()
+    @warn("This is the Stockmayer version! There may be changes that corrupt the results.")
+
+    # Import python files
+    path_ext = replace(@__DIR__,"\\" => "/","src" => "ext")
+    println(path_ext)
+    py"""
+    import sys
+    sys.path.append($path_ext)
+    from Stockmayer_minimal import calc_Stockmayer_transport
+    from Stockmayer_minimal import B2star_Stockmayer_Bartke
+    """
+end
 
 # Definition of Constants
 get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))

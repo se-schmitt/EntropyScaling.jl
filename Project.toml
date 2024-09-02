@@ -4,22 +4,23 @@ authors = ["Sebastian Schmitt"]
 version = "1.0.0-DEV"
 
 [deps]
+Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
 NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 
 [weakdeps]
-MATLAB = "10e44e05-a98a-55b3-a45b-ba969058deb6"
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
+MATLAB = "10e44e05-a98a-55b3-a45b-ba969058deb6"
 
 [extensions]
-MicthermExt = "MATLAB"
 ClapeyronExt = "Clapeyron"
+MicthermExt = "MATLAB"
 
 [compat]
 julia = "1.9"
