@@ -163,7 +163,7 @@ def calc_Stockmayer_transport(Tstarvec,mustarsquared):
     lambda0 = 15/4*eta0
     lambda0_plus = 15/4*eta0_plus
 
-    return [eta0_plus, rhoD0_plus, lambda0_plus, eta0, rhoD0, lambda0]
+    return [eta0_plus, lambda0_plus, rhoD0_plus, eta0, lambda0, rhoD0]
 
 if __name__ == '__main__':
     xT = np.linspace(1., 20, 1000)
