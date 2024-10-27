@@ -21,6 +21,7 @@ ClapeyronExt = "Clapeyron"
 MicthermExt = "MATLAB"
 
 [compat]
+Clapeyron = "0.6"
 ForwardDiff = "0.10"
 MATLAB = "0.8"
 Optim = "1"
