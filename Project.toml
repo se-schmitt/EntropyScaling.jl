@@ -21,6 +21,7 @@ ClapeyronExt = "Clapeyron"
 MicthermExt = "MATLAB"
 
 [compat]
+Revise = "3"
 NLsolve = "4"
 julia = "1.9"
 
