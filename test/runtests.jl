@@ -98,11 +98,30 @@ model_tol = PCSAFT("toluene")
     @test all(isapprox(α_D_inf, [0.0, 0.0, 0.0, -1.153974, -0.5866215]; atol=1e-5))
 end
 
-model_mix1 = PCPSAFT(["acetone", "chloroform"]; userlocations=(;dipole=[2.88,0.0],epsilon=[232.99,271.63],sigma=[3.2742,3.4709],Mw=[58.08,119.38],segment=[2.7447,2.5038]))
-α_D_mix1 = [
+model_mix1 = PCSAFT(["benzene","hexane"])
+model_mix2 = PCPSAFT(["acetone", "chloroform"]; userlocations=(;dipole=[2.88,0.0],epsilon=[232.99,271.63],sigma=[3.2742,3.4709],Mw=[58.08,119.38],segment=[2.7447,2.5038]))
+model_mix3 = PCSAFT(["toluene","heptane"])
+
+α_η_but = [[0.,-14.165,13.97,-2.382,0.501]]
+α_λ_but = [[3.962,98.222,-82.974,20.079,1.073]]
+α_D_but = [[0.,0.,0.,-3.507,-0.997]]
+α_λ_mix1 = [
+    [6.492054425320112,0.0,0.0,1.9855528414772259,3.12643833453098],
+    [9.75696539716926,0.0,0.0,1.6572105176108498,5.058427863917941]
+]
+α_D_mix2 = [
     [0.,0.,0.,1.1301081958e+01,-7.7638664176e+00],
     [0.,0.,0.,-3.0212807487e+00,-1.8500112748e+00]
 ]
+α_Ð_mix3 = [
+    [0.,0.,0.,1.1606624185e+01,-7.4861787912e+00],
+    [0.,0.,0.,1.8829820233e+01,-1.3186835311e+01],
+]
 @testset "call" begin
-    @test call_entropy_scaling(model_mix1, [298.15], [1151.7720904843], "selfdif"; x=[.5 .5;], α=α_D_mix1, difcomp=1)[1] ≈ 2.872998e-9 atol=1e-5
+    @test call_entropy_scaling(model_but,  [323.],   [ 602.4253281], "vis"; α=α_η_but)[1] ≈ 1.9203575445e-4 rtol=1e-3
+    @test call_entropy_scaling(model_but,  [323.],   [ 602.4253281], "tcn"; α=α_λ_but)[1] ≈ 0.11980321582 rtol=1e-3
+    @test call_entropy_scaling(model_but,  [323.],   [ 602.4253281], "dif"; α=α_D_but)[1] ≈ 6.6470158395e-9 rtol=1e-3
+    @test call_entropy_scaling(model_mix1, [294.7],  [ 740.7881963], "tcn"; x=[.5 .5;], α=α_λ_mix1)[1] ≈ 0.1338505 rtol=1e-3
+    @test call_entropy_scaling(model_mix2, [298.15], [1151.7720905], "selfdif"; x=[.5 .5;], α=α_D_mix2, difcomp=1)[1] ≈ 2.872998e-9 rtol=1e-3
+    @test call_entropy_scaling(model_mix3, [308.15], [ 741.0969526], "mutdif"; x=[.5 .5;], α=α_Ð_mix3)[1] ≈ 3.3341968265e-9 rtol=1e-3
 end
