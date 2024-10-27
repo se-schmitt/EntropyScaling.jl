@@ -22,6 +22,8 @@ MicthermExt = "MATLAB"
 
 [compat]
 LsqFit = "0.15"
+Revise = "3"
+NLsolve = "4"
 julia = "1.9"
 
 [extras]
