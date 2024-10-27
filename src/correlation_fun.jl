@@ -1,10 +1,10 @@
 # Correlation function of the ES framework
 function fun_es(s, p; prop::String)
     # Global parameters
-    glob = Dict(
+    glob = merge(Dict(
         "vis" => [-1.6386, 1.3923],
-        "tcn" => [-1.9107, 1.0725],
-        "dif" => [ 0.6632, 9.4714])
+        "tcn" => [-1.9107, 1.0725],),
+        Dict(("dif","selfdif","mutdif") .=> Ref([ 0.6632, 9.4714])))
     g = glob[prop]
 
     # Compute the correlation function
