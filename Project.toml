@@ -21,6 +21,7 @@ ClapeyronExt = "Clapeyron"
 MicthermExt = "MATLAB"
 
 [compat]
+StatsBase = "0.34"
 LsqFit = "0.15"
 Revise = "3"
 NLsolve = "4"
