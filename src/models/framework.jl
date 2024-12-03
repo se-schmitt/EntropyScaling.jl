@@ -14,14 +14,16 @@ struct FrameworkParams{T,P} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end 
 
-function FrameworkParams(α::Vector, eos, σ::Number, ε::Number, Y₀⁺min::Number, base::BaseParam)
-    return FrameworkParams(hcat(α), [get_m(eos)], [σ], [ε], [Y₀⁺min], base)
-end
+# function FrameworkParams(α::Vector, eos, σ::Number, ε::Number, Y₀⁺min::Number, base::BaseParam)
+#     return FrameworkParams(hcat(α), [get_m(eos)], [σ], [ε], [Y₀⁺min], base)
+# end
 function FrameworkParams(prop::AbstractTransportProperty, eos, σ, ε, Y₀⁺min, data, what_fit)
-    what_fit = isempty(what_fit) ? ones(Bool,5) : what_fit
-    α0 = prop in [Viscosity, DiffusionCoefficient] ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
+    what_fit = isempty(what_fit) ? [false;ones(Bool,4)] : what_fit
+    α0 = get_α0_framework(prop)
     return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, eos, data, what_fit))
 end
+
+get_α0_framework(prop) = any(typeof(prop) .<: [Viscosity, DiffusionCoefficient]) ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
 
 """
     FrameworkModel{T} <: AbstractEntropyScalingModel
@@ -29,11 +31,11 @@ end
 A generic entropy scaling model.
 """
 struct FrameworkModel <: AbstractEntropyScalingModel
-    components::Array{String,1}
+    components::Vector{String}
     params::Vector{FrameworkParams}
-    info::Array{ModelInfo,1}
-    references::Array{String,1}
-    FrameworkModel(components,params,eos_name) = new(components,params,ModelInfo(eos_name,[""]))
+    info::EOSInfo
+    references::Vector{Reference}
+    FrameworkModel(eos,params) = new(get_components(eos),params,get_eos_info(eos))
 end
 
 function FrameworkModel(eos, datasets::Vector{TransportPropertyData}; opts::FitOptions=FitOptions())
@@ -43,7 +45,7 @@ function FrameworkModel(eos, datasets::Vector{TransportPropertyData}; opts::FitO
         if data.N_dat > 0
             # Init
             σ, ε, Ymin = init_framework_model(eos, prop)
-            what_fit = prop in keys(opts.what_fit) ? opts.what_fit[prop] : ones(Bool,5)
+            what_fit = prop in keys(opts.what_fit) ? opts.what_fit[prop] : Bool[]
             param = FrameworkParams(prop, eos, σ, ε, Ymin, data, what_fit)
 
             #TODO make this a generic function
@@ -64,16 +66,36 @@ function FrameworkModel(eos, datasets::Vector{TransportPropertyData}; opts::FitO
                 du .= scaling_model.(Ref(param),xs) .- ys
                 return nothing
             end
+            Yˢ_fit = prop == ThermalConductivity() ? Yˢ : log.(Yˢ)
             prob = NonlinearLeastSquaresProblem(
                 NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
-                randn(sum(param.base.what_fit)), (sˢ, Yˢ),
+                randn(sum(param.base.what_fit)), (sˢ, Yˢ_fit),
             )
-            sol = solve(prob)
-            @show sol.u
-
-            push!(params, FrameworkParams(hcat(Float64.(sol.u)), param.m, param.σ, param.ε, param.Y₀⁺min, param.base))
+            sol = solve(prob,reltol=1e-6)
+            α_fit = get_α0_framework(prop)
+            α_fit[param.base.what_fit] .= sol.u
+            
+            push!(params, FrameworkParams(float.(α_fit), param.m, param.σ, param.ε, param.Y₀⁺min, param.base))
         end
     end
+    return FrameworkModel(eos, params)
+end
+
+get_prop_type(::FrameworkParams{T,P}) where {T, P <: AbstractTransportProperty} = P
+
+function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransportProperty
+    tprop = typeof(prop)
+    k = get_prop_type.(model.params) .== tprop
+    if sum(k) == 1
+        i = findfirst(k)
+    elseif sum(k) == 0
+        @info "No parameters for $tprop."
+        i = k
+    else
+        @info "Multiple parameters for $tprop. Returning the first one."
+        i = findfirst(k)
+    end
+    return model.params[i]
 end
 
 function init_framework_model(eos, prop)
@@ -89,7 +111,7 @@ function init_framework_model(eos, prop)
     for i in eachindex(Tc)#
         optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
         prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, Optimization.LBFGS())
+        sol = solve(prob, Optimization.LBFGS(), reltol=1e-6)
         Ymin[i] = sol.objective[1]
     end
 

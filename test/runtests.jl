@@ -102,11 +102,21 @@ exp_D_inf = [
 @testset "fit" begin
     # Pure butane
     data_but = [
-        TransportPropertyData(Viscosity, exp_η[:,1], [], exp_η[:,2], exp_[:,3], :unknown, "")
-        TransportPropertyData(ThermalConductivity, exp_λ[:,1], [], exp_λ[:,2], exp_λ[:,3], :unknown, "")
-        TransportPropertyData(SelfDiffusionCoefficient, exp_D[:,1], [], exp_D[:,2], exp_D[:,3], :unknown, "")
+        TransportPropertyData(Viscosity(), exp_η[:,1], [], exp_η[:,2]./0.05812, exp_η[:,3], :unknown)
+        TransportPropertyData(ThermalConductivity(), exp_λ[:,1], [], exp_λ[:,2]./0.05812, exp_λ[:,3], :unknown)
+        TransportPropertyData(SelfDiffusionCoefficient(), exp_D[:,1], [], exp_D[:,2]./0.05812, exp_D[:,3], :unknown)
     ]
-    eos_but = FrameworkModel(eos_but, [data_but])
+    fit_opts = FitOptions(;
+        what_fit=Dict(
+            ThermalConductivity()=>ones(Bool,5), 
+            SelfDiffusionCoefficient()=>Bool[0,0,0,1,1])
+    )
+    model_but = FrameworkModel(eos_but, data_but; opts=fit_opts)
+    (α_η, α_λ, α_D) = [model_but[prop_i].α for prop_i in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]]
+
+    @test all(isapprox(α_η, [0.0; -9.490597; 9.747817; -1.279090; 0.3666153;;]; atol=1e-5))
+    @test all(isapprox(α_λ, [3.532197; 116.820461; -99.444029; 24.245996; 0.587130;;]; atol=1e-5))
+    @test all(isapprox(α_D, [0.0; 0.0; 0.0; -3.573438; -0.99224;;]; atol=1e-5))
 end
 
 @testset "fit inf dil" begin

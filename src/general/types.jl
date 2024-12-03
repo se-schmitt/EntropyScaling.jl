@@ -6,9 +6,19 @@ abstract type AbstractEntropyScalingModel end
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParams <: AbstractParam end
 
-struct ModelInfo <: AbstractParam
-    eos_name::String
-    eos_ref::Array{String,1}
+abstract type AbstractTransportProperty end
+abstract type DiffusionCoefficient <: AbstractTransportProperty end
+
+# get_prop_type(::A{T,P}) where {A <: AbstractEntropyScalingParams, T, P <: AbstractTransportProperty} = P
+
+struct Reference
+    doi::String
+    shortref::String
+end
+
+struct EOSInfo <: AbstractParam
+    name::String
+    ref::Vector{Reference}
 end
 
 struct BaseParam{P} <: AbstractParam
@@ -26,9 +36,6 @@ function BaseParam(prop, eos, dat, what_fit)
     p_range = (minimum(dat.p), maximum(dat.p))
     return BaseParam(prop, get_Mw(eos), ["fit"], dat.N_dat, T_range, p_range, what_fit)
 end
-
-abstract type AbstractTransportProperty end
-abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
 struct Viscosity <: AbstractTransportProperty end
 name(::Viscosity) = "viscosity"

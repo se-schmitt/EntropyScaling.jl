@@ -2,11 +2,6 @@ export TransportPropertyData, FitOptions
 
 abstract type AbstractTransportPropertyData end
 
-struct Reference
-    doi::String
-    shortref::String
-end
-
 struct TransportPropertyData{P} <: AbstractTransportPropertyData
     prop::P
     N_dat::Int
@@ -52,6 +47,6 @@ end
 filter_datasets(datasets::Vector{TransportPropertyData}, prop) = filter(data -> data.prop == prop, datasets)
 
 struct FitOptions
-    what_fit::Dict{DataType,Vector{Bool}}
+    what_fit::Dict{T,Vector{Bool}} where T<:AbstractTransportProperty
     FitOptions(;what_fit=Dict{AbstractTransportProperty,Vector{Bool}}()) = new(what_fit)
 end
