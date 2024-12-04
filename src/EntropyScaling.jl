@@ -18,6 +18,7 @@ include("general/chapman_enskog.jl")
 # Utils
 include("utils/data.jl")
 include("utils/thermo.jl")
+include("utils/misc.jl")
 
 # Models 
 include("models/framework.jl")

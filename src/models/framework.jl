@@ -14,10 +14,21 @@ struct FrameworkParams{T,P} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end 
 
-function FrameworkParams(prop::AbstractTransportProperty, eos, σ, ε, Y₀⁺min, data, what_fit; solute=nothing)
-    what_fit = isempty(what_fit) ? [false;ones(Bool,4)] : what_fit
+# Constructor for fitting
+function FrameworkParams(prop::AbstractTransportProperty, eos, data; solute=nothing)
     α0 = get_α0_framework(prop)
-    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, eos, data, what_fit; solute=solute))
+    σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
+    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, eos, data; solute=solute))
+end
+
+# Constructor for existing parameters
+function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2}; 
+                         solute=nothing) where {T}
+    size(α,1) == 5 || error("Parameter array 'α' must have 5 rows.")
+    size(α,2) == length(eos) || error("Parameter array 'α' doesn't fit EOS model.")
+
+    σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
+    return FrameworkParams(α, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
 end
 
 get_α0_framework(prop) = any(typeof(prop) .<: [Viscosity, DiffusionCoefficient]) ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
@@ -31,11 +42,28 @@ struct FrameworkModel <: AbstractEntropyScalingModel
     components::Vector{String}
     params::Vector{FrameworkParams}
     info::EOSInfo
-    references::Vector{Reference}
     FrameworkModel(eos,params) = new(get_components(eos),params,get_eos_info(eos))
 end
 
-function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(), solute=nothing) where TPD <: TransportPropertyData
+function cite_model(::FrameworkModel) 
+    print("Entropy Scaling Framework:\n---\n" *
+          "(1) Schmitt, S.; Hasse, H.; Stephan, S. Entropy Scaling Framework for " * 
+          "Transport Properties Using Molecular-Based Equations of State. Journal of " *
+          "Molecular Liquids 2024, 395, 123811. DOI: " *
+          "https://doi.org/10.1016/j.molliq.2023.123811")
+    return nothing
+end
+
+function FrameworkModel(eos, param_dict::Dict{AbstractTransportProperty,Array{T,2}}) where T
+    params = FrameworkParams[]
+    for (prop, α) in param_dict
+        push!(params, FrameworkParams(prop, eos, α))
+    end
+    return FrameworkModel(eos, params)
+end
+
+function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(), 
+                        solute=nothing) where TPD <: TransportPropertyData
     # Check eos and solute
     length(eos) == 1 || error("Only one component allowed for fitting.")
 
@@ -51,9 +79,8 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
             end
 
             # Init
-            σ, ε, Ymin = init_framework_model(eos, prop; solute=solute_)
-            what_fit = prop in keys(opts.what_fit) ? opts.what_fit[prop] : Bool[]
-            param = FrameworkParams(prop, eos, σ, ε, Ymin, data, what_fit; solute=solute_)
+            what_fit = prop in keys(opts.what_fit) ? opts.what_fit[prop] : [false;ones(Bool,4)]
+            param = FrameworkParams(prop, eos, data; solute=solute_)
 
             #TODO make this a generic function
             # Calculate density 
@@ -69,18 +96,18 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
             # Fit
             function resid!(du, p, xy)
                 (xs,ys) = xy
-                param.α[param.base.what_fit] .= p
+                param.α[what_fit] .= p
                 du .= scaling_model.(Ref(param),xs) .- ys
                 return nothing
             end
             Yˢ_fit = prop == ThermalConductivity() ? Yˢ : log.(Yˢ)
             prob = NonlinearLeastSquaresProblem(
                 NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
-                randn(sum(param.base.what_fit)), (sˢ, Yˢ_fit),
+                randn(sum(what_fit)), (sˢ, Yˢ_fit),
             )
             sol = solve(prob,reltol=1e-6)
             α_fit = get_α0_framework(prop)
-            α_fit[param.base.what_fit] .= sol.u
+            α_fit[what_fit] .= sol.u
             
             push!(params, FrameworkParams(float.(α_fit), param.m, param.σ, param.ε, param.Y₀⁺min, param.base))
         end
@@ -166,7 +193,6 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     # Transport property scaling
     Y₀⁺ = sum(property_CE_plus.(Ref(param.base.prop), eos, T, param.σ, param.ε) .* z)
     Y₀⁺min = sum(param.Y₀⁺min .* z)
-
     W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
 
     Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s; inv=inv)
@@ -178,15 +204,17 @@ function reduced_entropy(param::FrameworkParams, s, z=[1.])
     return -s / R / sum(param.m .* z)
 end
 
-
 function viscosity(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
     ϱ = molar_density(eos, p, T, z; phase=phase)
-    return ϱT_viscosity(es_model, eos, T, ϱ, z)
+    return ϱT_viscosity(es_model, eos, ϱ, T, z)
 end
 function ϱT_viscosity(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
+    param = es_model[Viscosity()]
     s = entropy_conf(eos, ϱ, T, z)
-    sˢ = reduced_entropy(es_model.params[1],s)
-    Yˢ = scaling(es_model.params[1], Y, T, ϱ, s)
+    sˢ = reduced_entropy(param, s, z)
+    ηˢ = exp(scaling_model(param, sˢ, z))
+
+    return scaling(param, eos, ηˢ, T, ϱ, s, z; inv=true) 
 end
 
 function thermal_conductivity(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)

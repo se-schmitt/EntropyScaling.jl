@@ -1,6 +1,6 @@
 @testset "Framework" begin
     @testset "Fit Pure" begin
-        # Load eos and data
+        # EOS models and data
         eos = PCSAFT("n-butane")
         (raw_η, raw_λ, raw_D) = [readdlm("data/exp_$name.csv",',';skipstart=1) for name in ["eta", "lambda", "D"]]
 
@@ -24,7 +24,7 @@
     end
     
     @testset "Fit Inf. Dilution" begin
-        # Load eos and data
+        # EOS models and data
         solvent = PCSAFT("toluene")
         solute = PCSAFT("hexane")
         raw = readdlm("data/exp_D_inf.csv",',';skipstart=1) 
@@ -36,5 +36,48 @@
         model = FrameworkModel(solvent, data_inf; opts=fit_opts, solute=solute)
 
         @test all(isapprox(model[InfDiffusionCoefficient()].α, [0.0; 0.0; 0.0; -2.604948; -1.567851;;]; atol=1e-5))
+    end
+
+    @testset "Call" begin
+        @testset "Pure" begin
+            # EOS model
+            pure = PCSAFT("n-butane")
+            
+            # ES model 
+            model = FrameworkModel(pure,Dict(
+                Viscosity() => [0.;-14.165;13.97;-2.382;0.501;;],
+                ThermalConductivity() => [3.962;98.222;-82.974;20.079;1.073;;],
+                SelfDiffusionCoefficient() => [0.;0.;0.;-3.507;-0.997;;]
+            ))
+
+            @test viscosity() ≈ 1.9203575445e-4 rtol=1e-3
+            @test thermal_conductivity() ≈ 0.11980321582 rtol=1e-3
+            @test self_diffusion_coefficient() ≈ 6.6470158395e-9 rtol=1e-3
+        end
+
+        @testset "Mixtures" begin
+            # EOS models     
+            mix1 = PCSAFT(["benzene","hexane"])
+            user_mix2 = (; dipole=[2.88,0.0], epsilon=[232.99,271.63], sigma=[3.2742,3.4709], Mw=[58.08,119.38], segment=[2.7447,2.5038])
+            mix2 = PCPSAFT(["acetone", "chloroform"]; userlocations=user_mix2)
+            mix3 = PCSAFT(["toluene","heptane"])
+
+            # ES models
+        
+        α_η_but = [[0.,-14.165,13.97,-2.382,0.501]]
+        α_λ_but = [[3.962,98.222,-82.974,20.079,1.073]]
+        α_D_but = [[0.,0.,0.,-3.507,-0.997]]
+        α_λ_mix1 = [
+            [6.492054425320112,0.0,0.0,1.9855528414772259,3.12643833453098],
+            [9.75696539716926,0.0,0.0,1.6572105176108498,5.058427863917941]
+        ]
+        α_D_mix2 = [
+            [0.,0.,0.,1.1301081958e+01,-7.7638664176e+00],
+            [0.,0.,0.,-3.0212807487e+00,-1.8500112748e+00]
+        ]
+        α_Ð_mix3 = [
+            [0.,0.,0.,1.1606624185e+01,-7.4861787912e+00],
+            [0.,0.,0.,1.8829820233e+01,-1.3186835311e+01],
+        ]
     end
 end

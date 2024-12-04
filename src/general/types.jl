@@ -1,4 +1,5 @@
-export Viscosity, ThermalConductivity, SelfDiffusionCoefficient, InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
+export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
+export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
 export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
 
 abstract type AbstractEntropyScalingModel end
@@ -9,12 +10,13 @@ abstract type AbstractEntropyScalingParams <: AbstractParam end
 abstract type AbstractTransportProperty end
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
-# get_prop_type(::A{T,P}) where {A <: AbstractEntropyScalingParams, T, P <: AbstractTransportProperty} = P
+abstract type AbstractTransportPropertyData end
 
 struct Reference
     doi::String
     shortref::String
 end
+Reference() = Reference("", "NA")
 
 struct EOSInfo <: AbstractParam
     name::String
@@ -23,20 +25,33 @@ end
 
 struct BaseParam{P} <: AbstractParam
     prop::P
+    solute_name::Union{Missing,String}
     Mw::Vector{Float64}
-    param_ref::Array{String,1}
+    param_ref::Vector{Reference}
     N_data::Int
     T_range::Tuple{Number,Number}
     p_range::Tuple{Number,Number}
-    what_fit::Vector{Bool}
 end
 
-function BaseParam(prop, eos, dat, what_fit; solute=nothing)
+function BaseParam(prop::P, eos, dat::D; solute=nothing) where 
+                   {P <: AbstractTransportProperty, D <: AbstractTransportPropertyData}
+    solute_name = isnothing(solute) ? missing : get_components(solute)[1]
+    Mw = isnothing(solute) ? get_Mw(eos) : [2.0/sum(1.0./vcat(get_Mw.([eos, solute])...))]
     T_range = (minimum(dat.T), maximum(dat.T))
     p_range = (minimum(dat.p), maximum(dat.p))
-    Mw = isnothing(solute) ? get_Mw(eos) : [2.0/sum(1.0./vcat(get_Mw.([eos, solute])...))]
-    return BaseParam(prop, Mw, ["fit"], dat.N_dat, T_range, p_range, what_fit)
+    return BaseParam(prop, solute_name, Mw, [Reference()], dat.N_dat, T_range, p_range)
 end
+
+function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN), 
+                   p_range=(NaN,NaN); solute_name=missing) where 
+                   P <: AbstractTransportProperty
+    return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
+end
+
+# function BaseParam(prop::P, )
+
+#     return BaseParam(prop, Mw, [Reference("fit")], dat.N_dat, T_range, p_range)
+# end
 
 struct Viscosity <: AbstractTransportProperty end
 name(::Viscosity) = "viscosity"
