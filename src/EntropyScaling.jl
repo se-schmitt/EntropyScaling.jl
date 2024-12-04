@@ -1,7 +1,6 @@
 module EntropyScaling
 
 # Load public modules
-using LsqFit
 using NonlinearSolve
 using Optimization
 using StatsBase
