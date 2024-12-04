@@ -14,13 +14,10 @@ struct FrameworkParams{T,P} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end 
 
-# function FrameworkParams(α::Vector, eos, σ::Number, ε::Number, Y₀⁺min::Number, base::BaseParam)
-#     return FrameworkParams(hcat(α), [get_m(eos)], [σ], [ε], [Y₀⁺min], base)
-# end
-function FrameworkParams(prop::AbstractTransportProperty, eos, σ, ε, Y₀⁺min, data, what_fit)
+function FrameworkParams(prop::AbstractTransportProperty, eos, σ, ε, Y₀⁺min, data, what_fit; solute=nothing)
     what_fit = isempty(what_fit) ? [false;ones(Bool,4)] : what_fit
     α0 = get_α0_framework(prop)
-    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, eos, data, what_fit))
+    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, eos, data, what_fit; solute=solute))
 end
 
 get_α0_framework(prop) = any(typeof(prop) .<: [Viscosity, DiffusionCoefficient]) ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
@@ -38,15 +35,25 @@ struct FrameworkModel <: AbstractEntropyScalingModel
     FrameworkModel(eos,params) = new(get_components(eos),params,get_eos_info(eos))
 end
 
-function FrameworkModel(eos, datasets::Vector{TransportPropertyData}; opts::FitOptions=FitOptions())
+function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(), solute=nothing) where TPD <: TransportPropertyData
+    # Check eos and solute
+    length(eos) == 1 || error("Only one component allowed for fitting.")
+
     params = FrameworkParams[]
     for prop in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient(), InfDiffusionCoefficient()]
         data = collect_data(datasets, prop)
         if data.N_dat > 0
+            if typeof(prop) == InfDiffusionCoefficient 
+                isnothing(solute) && error("Solute EOS model must be provided for diffusion coefficient at infinite dilution.")
+                solute_ = solute
+            else
+                solute_ = nothing
+            end
+
             # Init
-            σ, ε, Ymin = init_framework_model(eos, prop)
+            σ, ε, Ymin = init_framework_model(eos, prop; solute=solute_)
             what_fit = prop in keys(opts.what_fit) ? opts.what_fit[prop] : Bool[]
-            param = FrameworkParams(prop, eos, σ, ε, Ymin, data, what_fit)
+            param = FrameworkParams(prop, eos, σ, ε, Ymin, data, what_fit; solute=solute_)
 
             #TODO make this a generic function
             # Calculate density 
@@ -98,17 +105,28 @@ function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransp
     return model.params[i]
 end
 
-function init_framework_model(eos, prop)
+function init_framework_model(eos, prop; solute=nothing, inv_dil=Int64[])
     # Calculation of σ and ε
-    eos_pure = split_model(eos)
+    eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
     cs = crit_pure.(eos_pure)
     (Tc, pc) = [getindex.(cs,i) for i in 1:2]
     σε = correspondence_principle.(Tc,pc)
     (σ, ε) = [getindex.(σε,i) for i in 1:2]
 
+    if !isnothing(solute)
+        length(eos_pure) != 2 && error("Solvent and solute must each contain one component.")
+        σ = [mean(σ)]
+        ε = [geomean(ε)]
+    end
+
+    for i in inv_dil
+        σ[i] = mean(σ)
+        ε[i] = geomean(ε)
+    end
+
     # Calculation of Ymin
     Ymin = Vector{Float64}(undef,length(Tc))
-    for i in eachindex(Tc)#
+    for i in 1:length(eos)
         optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
         prob = OptimizationProblem(optf, [2*Tc[i]])
         sol = solve(prob, Optimization.LBFGS(), reltol=1e-6)
@@ -117,6 +135,8 @@ function init_framework_model(eos, prop)
 
     return σ, ε, Ymin
 end
+
+
 
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
 function scaling_model(param::FrameworkParams{T,Viscosity}, s, x=[1.]) where T

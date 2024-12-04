@@ -31,10 +31,11 @@ struct BaseParam{P} <: AbstractParam
     what_fit::Vector{Bool}
 end
 
-function BaseParam(prop, eos, dat, what_fit)
+function BaseParam(prop, eos, dat, what_fit; solute=nothing)
     T_range = (minimum(dat.T), maximum(dat.T))
     p_range = (minimum(dat.p), maximum(dat.p))
-    return BaseParam(prop, get_Mw(eos), ["fit"], dat.N_dat, T_range, p_range, what_fit)
+    Mw = isnothing(solute) ? get_Mw(eos) : [2.0/sum(1.0./vcat(get_Mw.([eos, solute])...))]
+    return BaseParam(prop, Mw, ["fit"], dat.N_dat, T_range, p_range, what_fit)
 end
 
 struct Viscosity <: AbstractTransportProperty end

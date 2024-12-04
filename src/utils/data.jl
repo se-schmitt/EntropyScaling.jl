@@ -1,4 +1,5 @@
-export TransportPropertyData, FitOptions
+export TransportPropertyData, ViscosityData, ThermalConductivityData, SelfDiffusionCoefficientData, InfDiffusionCoefficientData
+export FitOptions
 
 abstract type AbstractTransportPropertyData end
 
@@ -27,9 +28,12 @@ function TransportPropertyData(prop, T::Vector, p, ϱ, Y::Vector, phase::Symbol,
 
     return TransportPropertyData(prop, length(T), T, p, ϱ, Y, repeat([phase],N_dat), repeat([Reference(doi,short)],N_dat))
 end
+ViscosityData(args...) = TransportPropertyData(Viscosity(), args...)
+ThermalConductivityData(args...) = TransportPropertyData(ThermalConductivity(), args...)
+SelfDiffusionCoefficientData(args...) = TransportPropertyData(SelfDiffusionCoefficient(), args...)
+InfDiffusionCoefficientData(args...) = TransportPropertyData(InfDiffusionCoefficient(), args...)
 
-
-function collect_data(datasets::Vector{TransportPropertyData}, prop::AbstractTransportProperty)
+function collect_data(datasets::Vector{TPD}, prop::AbstractTransportProperty) where TPD <: TransportPropertyData
     (T, p, ϱ, Y, phase, ref) = (Float64[], Float64[], Float64[], Float64[], Symbol[], Reference[])
     N_dat = 0
     for data in filter_datasets(datasets, prop)
@@ -44,7 +48,7 @@ function collect_data(datasets::Vector{TransportPropertyData}, prop::AbstractTra
     return TransportPropertyData(prop, N_dat, T, p, ϱ, Y, phase, ref)
 end
 
-filter_datasets(datasets::Vector{TransportPropertyData}, prop) = filter(data -> data.prop == prop, datasets)
+filter_datasets(datasets::Vector{TPD}, prop) where TPD <: TransportPropertyData = filter(data -> data.prop == prop, datasets)
 
 struct FitOptions
     what_fit::Dict{T,Vector{Bool}} where T<:AbstractTransportProperty
