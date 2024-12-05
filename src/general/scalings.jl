@@ -38,7 +38,7 @@ Plus scaling for transport properties.
 """
 plus_scaling
 
-function plus_scaling(param::BaseParam, Y, T, ϱN, s; inv=false)
+function plus_scaling(param::BaseParam, Y, T, ϱ, s, z=[1.]; inv=false)
     k = !inv ? 1 : -1
-    return rosenfeld_scaling(param, Y, T, ϱN; inv=inv) * (-s/R)^(k*2/3)
+    return rosenfeld_scaling(param, Y, T, ϱ, z; inv=inv) * (-s/R)^(k*2/3)
 end

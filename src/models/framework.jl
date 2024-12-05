@@ -33,6 +33,37 @@ end
 
 get_α0_framework(prop) = any(typeof(prop) .<: [Viscosity, DiffusionCoefficient]) ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
 
+function init_framework_model(eos, prop; solute=nothing, inv_dil=Int64[])
+    # Calculation of σ and ε
+    eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
+    cs = crit_pure.(eos_pure)
+    (Tc, pc) = [getindex.(cs,i) for i in 1:2]
+    σε = correspondence_principle.(Tc,pc)
+    (σ, ε) = [getindex.(σε,i) for i in 1:2]
+
+    if !isnothing(solute)
+        length(eos_pure) != 2 && error("Solvent and solute must each contain one component.")
+        σ = [mean(σ)]
+        ε = [geomean(ε)]
+    end
+
+    for i in inv_dil
+        σ[i] = mean(σ)
+        ε[i] = geomean(ε)
+    end
+
+    # Calculation of Ymin
+    Ymin = Vector{Float64}(undef,length(eos))
+    for i in 1:length(eos)
+        optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
+        prob = OptimizationProblem(optf, [2*Tc[i]])
+        sol = solve(prob, Optimization.LBFGS(), reltol=1e-6)
+        Ymin[i] = sol.objective[1]
+    end
+
+    return σ, ε, Ymin
+end
+
 """
     FrameworkModel{T} <: AbstractEntropyScalingModel
 
@@ -133,38 +164,6 @@ function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransp
     return model.params[i]
 end
 
-function init_framework_model(eos, prop; solute=nothing, inv_dil=Int64[])
-    # Calculation of σ and ε
-    eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
-    cs = crit_pure.(eos_pure)
-    (Tc, pc) = [getindex.(cs,i) for i in 1:2]
-    σε = correspondence_principle.(Tc,pc)
-    (σ, ε) = [getindex.(σε,i) for i in 1:2]
-
-    if !isnothing(solute)
-        length(eos_pure) != 2 && error("Solvent and solute must each contain one component.")
-        σ = [mean(σ)]
-        ε = [geomean(ε)]
-    end
-
-    for i in inv_dil
-        σ[i] = mean(σ)
-        ε[i] = geomean(ε)
-    end
-
-    # Calculation of Ymin
-    Ymin = Vector{Float64}(undef,length(Tc))
-    for i in 1:length(eos)
-        optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
-        prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, Optimization.LBFGS(), reltol=1e-6)
-        Ymin[i] = sol.objective[1]
-    end
-
-    return σ, ε, Ymin
-end
-
-
 
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
 function scaling_model(param::FrameworkParams{T,Viscosity}, s, x=[1.]) where T
@@ -197,7 +196,7 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
     
     W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
-    Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s; inv=inv)
+    Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
 
     return Yˢ
 end
@@ -228,7 +227,6 @@ function ϱT_thermal_conductivity(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
     s = entropy_conf(eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    @show s, sˢ, λˢ
 
     return scaling(param, eos, λˢ, T, ϱ, s, z; inv=true) 
 end

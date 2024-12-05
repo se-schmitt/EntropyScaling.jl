@@ -50,9 +50,9 @@
                 SelfDiffusionCoefficient() => [0.;0.;0.;-3.507;-0.997;;]
             ))
 
-            @test viscosity(model, pure, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-4
-            @test thermal_conductivity(model, pure, 37.21e6, 323.) ≈ 1.199070e-1 rtol=1e-4
-            @test self_diffusion_coefficient(model, pure, 37.21e6, 323.) ≈ 6.645588e-9 rtol=1e-4
+            @test viscosity(model, pure, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-5
+            @test thermal_conductivity(model, pure, 37.21e6, 323.) ≈ 1.199070e-1 rtol=1e-5
+            @test self_diffusion_coefficient(model, pure, 37.21e6, 323.) ≈ 6.645588e-9 rtol=1e-5
         end
 
         @testset "Mixtures" begin
@@ -70,19 +70,7 @@
                 )
             ))
 
-            @test thermal_conductivity(model_1, mix1, )
+            @test thermal_conductivity(model_1, mix1, 0.1e6, 294.7, [.5,.5]) ≈ 1.338512e-1 rtol=1e-5
         end
-        # α_λ_mix1 = [
-        #     [6.492054425320112,0.0,0.0,1.9855528414772259,3.12643833453098],
-        #     [9.75696539716926,0.0,0.0,1.6572105176108498,5.058427863917941]
-        # ]
-        # α_D_mix2 = [
-        #     [0.,0.,0.,1.1301081958e+01,-7.7638664176e+00],
-        #     [0.,0.,0.,-3.0212807487e+00,-1.8500112748e+00]
-        # ]
-        # α_Ð_mix3 = [
-        #     [0.,0.,0.,1.1606624185e+01,-7.4861787912e+00],
-        #     [0.,0.,0.,1.8829820233e+01,-1.3186835311e+01],
-        # ]
     end
 end
