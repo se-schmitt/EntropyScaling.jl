@@ -18,7 +18,8 @@ end
 function FrameworkParams(prop::AbstractTransportProperty, eos, data; solute=nothing)
     α0 = get_α0_framework(prop)
     σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
-    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, eos, data; solute=solute))
+    base = BaseParam(prop, get_Mw(eos), data; solute=solute)
+    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, base)
 end
 
 # Constructor for existing parameters
@@ -33,7 +34,7 @@ end
 
 get_α0_framework(prop) = any(typeof(prop) .<: [Viscosity, DiffusionCoefficient]) ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
 
-function init_framework_model(eos, prop; solute=nothing, inv_dil=Int64[])
+function init_framework_model(eos, prop; solute=nothing)
     # Calculation of σ and ε
     eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
     cs = crit_pure.(eos_pure)
@@ -41,15 +42,10 @@ function init_framework_model(eos, prop; solute=nothing, inv_dil=Int64[])
     σε = correspondence_principle.(Tc,pc)
     (σ, ε) = [getindex.(σε,i) for i in 1:2]
 
-    if !isnothing(solute)
+    if typeof(prop) == InfDiffusionCoefficient
         length(eos_pure) != 2 && error("Solvent and solute must each contain one component.")
-        σ = [mean(σ)]
-        ε = [geomean(ε)]
-    end
-
-    for i in inv_dil
-        σ[i] = mean(σ)
-        ε[i] = geomean(ε)
+        σ = mean(σ)*ones(length(eos))
+        ε = geomean(ε)*ones(length(eos))
     end
 
     # Calculation of Ymin
@@ -233,16 +229,51 @@ end
 
 function self_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
     ϱ = molar_density(eos, p, T, z; phase=phase)
-    return ϱT_self_diffusion_coefficient(es_model, eos, ϱ, T, z)
+    if length(eos) == 1
+        return ϱT_self_diffusion_coefficient(es_model, eos, ϱ, T)
+    else
+        return ϱT_self_diffusion_coefficient(es_model, eos, ϱ, T, z)
+    end
 end
-function ϱT_self_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
+
+function ϱT_self_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T)
     param = es_model[SelfDiffusionCoefficient()]
+    s = entropy_conf(eos, ϱ, T)
+    sˢ = reduced_entropy(param, s)
+    Dˢ = exp(scaling_model(param, sˢ))
+
+    return scaling(param, eos, Dˢ, T, ϱ, s; inv=true) 
+end
+
+function ϱT_self_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T, z)
+    param_self = es_model[SelfDiffusionCoefficient()]
+    param_inf = es_model[InfDiffusionCoefficient()]
+    s = entropy_conf(eos, ϱ, T, z)
+    αi = similar(param_self.α)
+    Di = similar(z)
+
+    for i in 1:length(eos)
+        αi[:,i] = param_self.α[:,i]
+        αi[:,3-i] = param_inf.α[:,3-i]
+        
+        param = FrameworkParams(SelfDiffusionCoefficient(), eos, αi)
+        sˢ = reduced_entropy(param, s, z)
+        Dˢ = exp(scaling_model(param, sˢ, z))
+        Di[i] = scaling(param, eos, Dˢ, T, ϱ, s, z; inv=true)
+    end
+
+    return Di
+end
+
+function MS_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z; phase=:unknown)
+    ϱ = molar_density(eos, p, T, z; phase=phase)
+    return ϱT_MS_diffusion_coefficient(es_model, eos, ϱ, T, z)
+end
+function ϱT_MS_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T, z)
+    param = es_model[InfDiffusionCoefficient()]
     s = entropy_conf(eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     Dˢ = exp(scaling_model(param, sˢ, z))
 
     return scaling(param, eos, Dˢ, T, ϱ, s, z; inv=true) 
-end
-
-function MS_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z; phase=:unknown)
 end

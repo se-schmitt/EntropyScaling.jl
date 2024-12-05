@@ -6,6 +6,8 @@ abstract type AbstractEntropyScalingModel end
 
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParams <: AbstractParam end
+Base.broadcastable(param::Type{<:AbstractParam}) = Ref(param)
+#TODO make parameters broadcastable (see above) and remove unnecessary `Ref(...)`
 
 abstract type AbstractTransportProperty end
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
@@ -33,10 +35,12 @@ struct BaseParam{P} <: AbstractParam
     p_range::Tuple{Number,Number}
 end
 
-function BaseParam(prop::P, eos, dat::D; solute=nothing) where 
+function BaseParam(prop::P, Mw, dat::D; solute=nothing) where 
                    {P <: AbstractTransportProperty, D <: AbstractTransportPropertyData}
     solute_name = isnothing(solute) ? missing : get_components(solute)[1]
-    Mw = isnothing(solute) ? get_Mw(eos) : [2.0/sum(1.0./vcat(get_Mw.([eos, solute])...))]
+    if prop isa InfDiffusionCoefficient
+        Mw = [calc_M_CE([Mw[1],get_Mw(solute)[1]])]
+    end
     T_range = (minimum(dat.T), maximum(dat.T))
     p_range = (minimum(dat.p), maximum(dat.p))
     return BaseParam(prop, solute_name, Mw, [Reference()], dat.N_dat, T_range, p_range)
@@ -45,6 +49,9 @@ end
 function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN), 
                    p_range=(NaN,NaN); solute_name=missing) where 
                    P <: AbstractTransportProperty
+    if prop isa InfDiffusionCoefficient
+        Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
+    end
     return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
 end
 

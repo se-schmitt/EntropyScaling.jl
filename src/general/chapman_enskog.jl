@@ -149,3 +149,5 @@ and Experiment for Certain Gas Mixtures. Trans. Faraday Soc. 1961, 57 (0), 2143â
 function mix_CE(param::BaseParam{P}, Y, x) where {P <: DiffusionCoefficient}
     return 1.0 ./ sum([x[i] / Y[i] for i in eachindex(Y)])
 end
+
+calc_M_CE(Mw::Vector{Float64}) = 2.0/sum(1.0./Mw)
