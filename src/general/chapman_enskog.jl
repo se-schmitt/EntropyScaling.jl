@@ -111,3 +111,41 @@ function correspondence_principle(Tc, pc)
     σ = (pc_LJ/pc*ε).^(1/3)
     return σ, ε
 end
+
+# Mixing rule from Wilke (1950) [DOI: 10.1063/1.1747673] and Mason and Saxena (1958) [DOI: 10.1063/1.1724352]
+"""
+    mix_CE(param::BaseParam{Viscosity}, x)
+    mix_CE(param::BaseParam{ThermalConductivity}, x)
+
+Mixing rule for Chapman-Enskog transport properties by Wilke (1950) for Viscosity and by 
+Mason and Saxena (1958) for ThermalConductivity.
+
+## References
+(1) Wilke, C. R. A Viscosity Equation for Gas Mixtures. The Journal of Chemical Physics 
+1950, 18 (4), 517–519. https://doi.org/10.1063/1.1747673.
+(2) Mason, E. A.; Saxena, S. C. Approximate Formula for the Thermal Conductivity of Gas 
+Mixtures. The Physics of Fluids 1958, 1 (5), 361–369. https://doi.org/10.1063/1.1724352.
+"""
+function mix_CE(param::BaseParam{P}, Y, x) where {P <: Union{Viscosity, ThermalConductivity}}
+    Y₀_mix = 0.0
+    enum_M = enumerate(param.Mw)
+    for (i,Mi) in enum_M
+        xΦ = sum([x[j] * (1+√(Y[i]/Y[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj)) for (j,Mj) in enum_M])
+        Y₀_mix += x[i]*Y[i]/xΦ
+    end
+    return Y₀_mix
+end
+
+"""
+    mix_CE(param::BaseParam{DiffusionCoefficient}, x)
+
+Mixing rule for Chapman-Enskog diffusion coefficient by Miller and Carman (1961).
+
+## References
+(1) Miller, L.; Carman, P. C. Self-Diffusion in Mixtures. Part 4. -- Comparison of Theory 
+and Experiment for Certain Gas Mixtures. Trans. Faraday Soc. 1961, 57 (0), 2143–2150. 
+    https://doi.org/10.1039/TF9615702143.
+"""
+function mix_CE(param::BaseParam{P}, Y, x) where {P <: DiffusionCoefficient}
+    return 1.0 ./ sum([x[i] / Y[i] for i in eachindex(Y)])
+end

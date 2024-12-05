@@ -54,7 +54,8 @@ function cite_model(::FrameworkModel)
     return nothing
 end
 
-function FrameworkModel(eos, param_dict::Dict{AbstractTransportProperty,Array{T,2}}) where T
+function FrameworkModel(eos, param_dict::Dict{P,Array{T,2}}) where 
+                        {T,P <: AbstractTransportProperty}
     params = FrameworkParams[]
     for (prop, α) in param_dict
         push!(params, FrameworkParams(prop, eos, α))
@@ -188,13 +189,14 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     k = !inv ? 1 : -1
 
     # Entropy
-    sˢ = reduced_entropy(param,s)
+    sˢ = reduced_entropy(param,s,z)
 
     # Transport property scaling
-    Y₀⁺ = sum(property_CE_plus.(Ref(param.base.prop), eos, T, param.σ, param.ε) .* z)
-    Y₀⁺min = sum(param.Y₀⁺min .* z)
+    Y₀⁺_all = property_CE_plus.(Ref(param.base.prop), split_model(eos), T, param.σ, param.ε)
+    Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
+    Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
+    
     W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
-
     Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s; inv=inv)
 
     return Yˢ
@@ -218,9 +220,30 @@ function ϱT_viscosity(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
 end
 
 function thermal_conductivity(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
+    ϱ = molar_density(eos, p, T, z; phase=phase)
+    return ϱT_thermal_conductivity(es_model, eos, ϱ, T, z)
+end
+function ϱT_thermal_conductivity(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
+    param = es_model[ThermalConductivity()]
+    s = entropy_conf(eos, ϱ, T, z)
+    sˢ = reduced_entropy(param, s, z)
+    λˢ = scaling_model(param, sˢ, z)
+    @show s, sˢ, λˢ
+
+    return scaling(param, eos, λˢ, T, ϱ, s, z; inv=true) 
 end
 
 function self_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
+    ϱ = molar_density(eos, p, T, z; phase=phase)
+    return ϱT_self_diffusion_coefficient(es_model, eos, ϱ, T, z)
+end
+function ϱT_self_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
+    param = es_model[SelfDiffusionCoefficient()]
+    s = entropy_conf(eos, ϱ, T, z)
+    sˢ = reduced_entropy(param, s, z)
+    Dˢ = exp(scaling_model(param, sˢ, z))
+
+    return scaling(param, eos, Dˢ, T, ϱ, s, z; inv=true) 
 end
 
 function MS_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z; phase=:unknown)

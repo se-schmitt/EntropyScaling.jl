@@ -1,7 +1,7 @@
 @testset "Framework" begin
     @testset "Fit Pure" begin
         # EOS models and data
-        eos = PCSAFT("n-butane")
+        pure = PCSAFT("n-butane")
         (raw_η, raw_λ, raw_D) = [readdlm("data/exp_$name.csv",',';skipstart=1) for name in ["eta", "lambda", "D"]]
 
         # Transport properties pure butane
@@ -15,7 +15,7 @@
                 ThermalConductivity()=>ones(Bool,5), 
                 SelfDiffusionCoefficient()=>Bool[0,0,0,1,1])
         )
-        model = FrameworkModel(eos, data_pure; opts=fit_opts)
+        model = FrameworkModel(pure, data_pure; opts=fit_opts)
         (α_η, α_λ, α_D) = [model[prop_i].α for prop_i in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]]
 
         @test all(isapprox(α_η, [0.0; -9.490597; 9.747817; -1.279090; 0.3666153;;]; atol=1e-5))
@@ -50,9 +50,9 @@
                 SelfDiffusionCoefficient() => [0.;0.;0.;-3.507;-0.997;;]
             ))
 
-            @test viscosity() ≈ 1.9203575445e-4 rtol=1e-3
-            @test thermal_conductivity() ≈ 0.11980321582 rtol=1e-3
-            @test self_diffusion_coefficient() ≈ 6.6470158395e-9 rtol=1e-3
+            @test viscosity(model, pure, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-4
+            @test thermal_conductivity(model, pure, 37.21e6, 323.) ≈ 1.199070e-1 rtol=1e-4
+            @test self_diffusion_coefficient(model, pure, 37.21e6, 323.) ≈ 6.645588e-9 rtol=1e-4
         end
 
         @testset "Mixtures" begin
@@ -63,21 +63,26 @@
             mix3 = PCSAFT(["toluene","heptane"])
 
             # ES models
-        
-        α_η_but = [[0.,-14.165,13.97,-2.382,0.501]]
-        α_λ_but = [[3.962,98.222,-82.974,20.079,1.073]]
-        α_D_but = [[0.,0.,0.,-3.507,-0.997]]
-        α_λ_mix1 = [
-            [6.492054425320112,0.0,0.0,1.9855528414772259,3.12643833453098],
-            [9.75696539716926,0.0,0.0,1.6572105176108498,5.058427863917941]
-        ]
-        α_D_mix2 = [
-            [0.,0.,0.,1.1301081958e+01,-7.7638664176e+00],
-            [0.,0.,0.,-3.0212807487e+00,-1.8500112748e+00]
-        ]
-        α_Ð_mix3 = [
-            [0.,0.,0.,1.1606624185e+01,-7.4861787912e+00],
-            [0.,0.,0.,1.8829820233e+01,-1.3186835311e+01],
-        ]
+            model_1 = FrameworkModel(mix1, Dict(
+                ThermalConductivity() => hcat(
+                    [6.492054, 0.0, 0.0, 1.985553, 3.126438],
+                    [9.756965, 0.0, 0.0, 1.657211, 5.058428]
+                )
+            ))
+
+            @test thermal_conductivity(model_1, mix1, )
+        end
+        # α_λ_mix1 = [
+        #     [6.492054425320112,0.0,0.0,1.9855528414772259,3.12643833453098],
+        #     [9.75696539716926,0.0,0.0,1.6572105176108498,5.058427863917941]
+        # ]
+        # α_D_mix2 = [
+        #     [0.,0.,0.,1.1301081958e+01,-7.7638664176e+00],
+        #     [0.,0.,0.,-3.0212807487e+00,-1.8500112748e+00]
+        # ]
+        # α_Ð_mix3 = [
+        #     [0.,0.,0.,1.1606624185e+01,-7.4861787912e+00],
+        #     [0.,0.,0.,1.8829820233e+01,-1.3186835311e+01],
+        # ]
     end
 end
