@@ -1,0 +1,7 @@
+[deps]
+Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+EntropyScaling = "36a13073-9e6e-4b19-b12b-cb530e79ee8e"
+
+[compat]
+Documenter = "1.8"
