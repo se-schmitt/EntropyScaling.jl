@@ -1,7 +1,7 @@
 @testset "Framework" begin
     @testset "Fit Pure" begin
         # EOS models and data
-        pure = PCSAFT("n-butane")
+        eos_model = PCSAFT("n-butane")
         (raw_η, raw_λ, raw_D) = [readdlm("data/exp_$name.csv",',';skipstart=1) for name in ["eta", "lambda", "D"]]
 
         # Transport properties pure butane
@@ -16,7 +16,7 @@
                 ThermalConductivity()=>ones(Bool,5), 
                 SelfDiffusionCoefficient()=>Bool[0,0,0,1,1])
         )
-        model = FrameworkModel(pure, data_pure; opts=fit_opts)
+        model = FrameworkModel(eos_model, data_pure; opts=fit_opts)
         (α_η, α_λ, α_D) = [model[prop_i].α for prop_i in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]]
 
         α_η_ref = [0.000000e+00;-9.490597e+00; 9.747817e+00;-1.279090e+00; 3.666153e-01;;]
@@ -46,35 +46,35 @@
     @testset "Call" begin
         @testset "Pure" begin
             # EOS model
-            pure = PCSAFT("n-butane")
+            eos_model = PCSAFT("n-butane")
             
             # ES model 
-            model = FrameworkModel(pure,Dict(
+            model = FrameworkModel(eos_model,Dict(
                 Viscosity() => [0.;-14.165;13.97;-2.382;0.501;;],
                 ThermalConductivity() => [3.962;98.222;-82.974;20.079;1.073;;],
                 SelfDiffusionCoefficient() => [0.;0.;0.;-3.507;-0.997;;]
             ))
 
-            @test viscosity(model, pure, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-5
-            @test thermal_conductivity(model, pure, 37.21e6, 323.) ≈ 1.199070e-1 rtol=1e-5
-            @test self_diffusion_coefficient(model, pure, 37.21e6, 323.) ≈ 6.645588e-9 rtol=1e-5
+            @test viscosity(model, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-5
+            @test thermal_conductivity(model, 37.21e6, 323.) ≈ 1.199070e-1 rtol=1e-5
+            @test self_diffusion_coefficient(model, 37.21e6, 323.) ≈ 6.645588e-9 rtol=1e-5
         end
 
         @testset "Mixtures" begin
             # EOS models     
-            mix1 = PCSAFT(["benzene","hexane"])
-            #TODO replace mix2 by better example
-            user_mix2 = (; dipole=[2.88,0.0], epsilon=[232.99,271.63], sigma=[3.2742,3.4709], Mw=[58.08,119.38], segment=[2.7447,2.5038])
-            mix2 = PCPSAFT(["acetone", "chloroform"]; userlocations=user_mix2)
-            mix3 = PCSAFT(["toluene","heptane"])
+            eos_model_1 = PCSAFT(["benzene","hexane"])
+            #TODO replace mixture 2 by better example
+            user_2 = (; dipole=[2.88,0.0], epsilon=[232.99,271.63], sigma=[3.2742,3.4709], Mw=[58.08,119.38], segment=[2.7447,2.5038])
+            eos_model_2 = PCPSAFT(["acetone", "chloroform"]; userlocations=user_2)
+            eos_model_3 = PCSAFT(["toluene","heptane"])
 
             # ES models
-            model_1 = FrameworkModel(mix1, Dict(
+            model_1 = FrameworkModel(eos_model_1, Dict(
                 ThermalConductivity() => hcat(
                     [6.492054, 0.0, 0.0, 1.985553, 3.126438],
                     [9.756965, 0.0, 0.0, 1.657211, 5.058428]),
             ))
-            model_2 = FrameworkModel(mix2, Dict(
+            model_2 = FrameworkModel(eos_model_2, Dict(
                 SelfDiffusionCoefficient() => hcat(
                     [0.0, 0.0, 0.0, 11.301082, -7.763866],
                     ones(5)*NaN),
@@ -82,15 +82,15 @@
                     ones(5)*NaN,
                     [0.0, 0.0, 0.0, -3.021281, -1.850011]),
             ))
-            model_3 = FrameworkModel(mix3, Dict(
+            model_3 = FrameworkModel(eos_model_3, Dict(
                 InfDiffusionCoefficient() => hcat(
                     [0.0, 0.0, 0.0, 11.606624, -7.486179],
                     [0.0, 0.0, 0.0, 18.829820, -13.186835]),
             ))
 
-            @test thermal_conductivity(model_1, mix1, 0.1e6, 294.7, [.5,.5]) ≈ 1.338512e-1 rtol=1e-5
-            @test self_diffusion_coefficient(model_2, mix2, 0.1e6, 298.15, [.5,.5])[1] ≈ 2.847940e-9 rtol=1e-5
-            @test MS_diffusion_coefficient(model_3, mix3, 0.1e6, 308.15, [.5,.5]) ≈ 3.333533e-9 rtol=1e-5
+            @test thermal_conductivity(model_1, 0.1e6, 294.7, [.5,.5]) ≈ 1.338512e-1 rtol=1e-5
+            @test self_diffusion_coefficient(model_2, 0.1e6, 298.15, [.5,.5])[1] ≈ 2.847940e-9 rtol=1e-5
+            @test MS_diffusion_coefficient(model_3, 0.1e6, 308.15, [.5,.5]) ≈ 3.333533e-9 rtol=1e-5
         end
     end
 end

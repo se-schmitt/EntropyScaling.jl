@@ -3,13 +3,14 @@ export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
 export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
 
 abstract type AbstractEntropyScalingModel end
+Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParams <: AbstractParam end
-Base.broadcastable(param::Type{<:AbstractParam}) = Ref(param)
-#TODO make parameters broadcastable (see above) and remove unnecessary `Ref(...)`
+Base.broadcastable(param::T) where {T<:AbstractParam} = Ref(param)
 
 abstract type AbstractTransportProperty end
+Base.broadcastable(prop::T) where {T<:AbstractTransportProperty} = Ref(prop)
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
 abstract type AbstractTransportPropertyData end
@@ -86,56 +87,56 @@ symbol(::MaxwellStefanDiffusionCoefficient) = :Ð
 symbol_name(::MaxwellStefanDiffusionCoefficient) = "D_MS"
 
 """
-    viscosity(es_model::EntropyScalingModel, eos, p, T, z=[1.]; phase=:unknown)
+    viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
 
 Viscosity `η(p,T,x)` (`[η] = Pa s`).
 """
 viscosity
 
 """
-    ϱT_viscosity(es_model::EntropyScalingModel, eos, ϱ, T, z=[1.])
+    ϱT_viscosity(model::EntropyScalingModel, ϱ, T, z=[1.])
 
 Viscosity `η(ϱ,T,x)` (`[η] = Pa s`).
 """
 ϱT_viscosity
 
 """
-    thermal_conductivity(es_model::EntropyScalingModel, eos, p, T, z=[1.]; phase=:unknown)
+    thermal_conductivity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
 
 Thermal conductivity `λ(p,T,x)` (`[λ] = W m⁻¹ K⁻¹`).
 """
 thermal_conductivity
 
 """
-    ϱT_thermal_conductivity(es_model::EntropyScalingModel, eos, ϱ, T, z=[1.])
+    ϱT_thermal_conductivity(model::EntropyScalingModel, ϱ, T, z=[1.])
 
 Thermal conductivity `λ(ϱ,T,x)` (`[λ] = W m⁻¹ K⁻¹`).
 """
 ϱT_thermal_conductivity
 
 """
-    self_diffusion_coefficient(es_model::EntropyScalingModel, eos, p, T, z=[1.]; phase=:unknown)
+    self_diffusion_coefficient(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
 
 Self-diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
 """
 self_diffusion_coefficient
 
 """
-    ϱT_self_diffusion_coefficient(es_model::EntropyScalingModel, eos, ϱ, T, z=[1.])
+    ϱT_self_diffusion_coefficient(model::EntropyScalingModel, ϱ, T, z=[1.])
 
 Self-diffusion coefficient `D(ϱ,T,x)` (`[D] = m² s⁻¹`).
 """
 ϱT_self_diffusion_coefficient
 
 """
-    MS_diffusion_coefficient(es_model::EntropyScalingModel, eos, p, T, z; phase=:unknown)
+    MS_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown)
 
 Maxwell-Stefan diffusion coefficient `Ð(p,T,x)` (`[Ð] = m² s⁻¹`).
 """
 MS_diffusion_coefficient
 
 """
-    ϱT_MS_diffusion_coefficient(es_model::EntropyScalingModel, eos, ϱ, T, z)
+    ϱT_MS_diffusion_coefficient(model::EntropyScalingModel, ϱ, T, z)
     
 Maxwell-Stefan diffusion coefficient `Ð(ϱ,T,x)` (`[Ð] = m² s⁻¹`).
 """
