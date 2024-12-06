@@ -4,6 +4,7 @@ authors = ["Sebastian Schmitt"]
 version = "0.1.0"
 
 [deps]
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -19,6 +20,7 @@ MicthermExt = "MATLAB"
 
 [compat]
 Clapeyron = "0.6"
+DelimitedFiles = "1.9.1"
 ForwardDiff = "0.10"
 MATLAB = "0.8"
 NonlinearSolve = "4.2.0"
