@@ -1,4 +1,4 @@
-[![Dev][docs-stable-img]][docs-stable-url] [![Build Status][build-img]][build-url]
+[![Dev][docs-stable-img]][docs-stable-url] [![Dev][docs-dev-img]][docs-dev-url] [![Build Status][build-img]][build-url]
 
 # EntropyScaling.jl
 
@@ -16,6 +16,7 @@ included in this package.
 Entropy scaling makes use of the fact that transport properies can be scaled such that the
 scaled transport property $Y^{\rm s}$ is a univariate function of the configurational (or 
 residual) entropy $s_{\rm conf}$, i.e. 
+
 $$Y^{\rm s} = Y^{\rm s}\left(s_{\rm conf}\right).$$
 
 Entropy scaling enables the prediction of transport porperties in all fluid phases based on 
@@ -23,7 +24,6 @@ few experimental data.
 
 The following entropy scaling methods are implemented:
 - [Entropy Scaling Framework](https://doi.org/10.1016/j.molliq.2023.123811)
-- more to come...
 
 All methods are based on empirical parameters fitted to experimental data of the respective
 transport property. If no parameters are given for a specific substance, the workflow for 
@@ -74,5 +74,8 @@ T = 300.                                        # K
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://se-schmitt.github.io/EntropyScaling.jl/stable
 
-[build-img]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml?query=branch%3Amain
-[build-url]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml/badge.svg?branch=main
+[docs-dev-img]: https://img.shields.io/badge/docs-dev-blue.svg
+[docs-dev-url]: https://se-schmitt.github.io/EntropyScaling.jl/dev
+
+[build-img]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml/badge.svg?branch=main
+[build-url]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml?query=branch%3Amain
