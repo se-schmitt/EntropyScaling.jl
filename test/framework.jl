@@ -19,9 +19,12 @@
         model = FrameworkModel(pure, data_pure; opts=fit_opts)
         (α_η, α_λ, α_D) = [model[prop_i].α for prop_i in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]]
 
-        @test all(isapprox(α_η, [0.0; -9.490597; 9.747817; -1.279090; 0.3666153;;]; rtol=1e-5))
-        @test all(isapprox(α_λ, [3.532197; 116.8205; -99.44403; 24.245996; 0.5871304;;]; rtol=1e-5))
-        @test all(isapprox(α_D, [0.0; 0.0; 0.0; -3.573438; -0.9922387;;]; rtol=1e-5))
+        α_η_ref = [0.000000e+00;-9.490597e+00; 9.747817e+00;-1.279090e+00; 3.666153e-01;;]
+        α_λ_ref = [3.532197e+00; 1.168205e+02;-9.944405e+01; 2.424600e+01; 5.871304e-01;;]
+        α_D_ref = [0.000000e+00; 0.000000e+00; 0.000000e+00;-3.573438e+00;-9.922401e-01;;]
+        @test all(isapprox(α_η, α_η_ref; rtol=1e-5))
+        @test all(isapprox(α_λ, α_λ_ref; rtol=1e-5))
+        @test all(isapprox(α_D, α_D_ref; rtol=1e-5))
     end
     
     @testset "Fit Inf. Dilution" begin
@@ -36,7 +39,8 @@
         fit_opts = FitOptions(;what_fit=Dict(InfDiffusionCoefficient()=>Bool[0,0,0,1,1]))
         model = FrameworkModel(solvent, data_inf; opts=fit_opts, solute=solute)
 
-        @test all(isapprox(model[InfDiffusionCoefficient()].α, [0.0; 0.0; 0.0; -2.604948; -1.567851;;]; rtol=1e-5))
+        α_D_inf_ref = [0.0; 0.0; 0.0;-2.604944e+00;-1.567851e+00;;]
+        @test all(isapprox(model[InfDiffusionCoefficient()].α, α_D_inf_ref; rtol=1e-5))
     end
 
     @testset "Call" begin

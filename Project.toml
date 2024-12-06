@@ -26,7 +26,7 @@ MATLAB = "0.8"
 NonlinearSolve = "4.2.0"
 Optimization = "4.0.5"
 StatsBase = "0.34"
-julia = "1.9"
+julia = "1.10"
 
 [extras]
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"

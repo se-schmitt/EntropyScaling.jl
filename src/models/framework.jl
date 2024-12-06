@@ -53,7 +53,7 @@ function init_framework_model(eos, prop; solute=nothing)
     for i in 1:length(eos)
         optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
         prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, Optimization.LBFGS(), reltol=1e-6)
+        sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
         Ymin[i] = sol.objective[1]
     end
 
@@ -133,7 +133,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
                 NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
                 randn(sum(what_fit)), (sˢ, Yˢ_fit),
             )
-            sol = solve(prob,reltol=1e-6)
+            sol = solve(prob, TrustRegion(), reltol=1e-8)
             α_fit = get_α0_framework(prop)
             α_fit[what_fit] .= sol.u
             

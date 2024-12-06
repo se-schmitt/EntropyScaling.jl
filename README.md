@@ -55,7 +55,20 @@ using EntropyScaling
 ```julia
 using EntropyScaling, Clapeyron
 
-# 
+# Load sample data
+(T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data()
+data = ViscosityData(T_exp, [], ϱ_exp, η_exp, :unknown)
+
+# Create EOS model
+eos_model = PCSAFT("butane")
+
+# Create entropy scaling model (fit of parameters)
+model = FrameworkModel(eos_model, [data])
+
+# Calculation of the viscostiy at state
+p = 0.1e6                                       # Pa
+T = 300.                                        # K
+η = viscosity(model, p, T)
 ```
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
