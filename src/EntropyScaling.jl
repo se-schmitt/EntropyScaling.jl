@@ -1,7 +1,7 @@
 module EntropyScaling
 
 # Load public modules
-using NonlinearSolve, Optimization, StatsBase, ForwardDiff, DelimitedFiles
+using SimpleNonlinearSolve, Optimization, StatsBase, ForwardDiff, DelimitedFiles
 
 # Definition of Constants
 get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))

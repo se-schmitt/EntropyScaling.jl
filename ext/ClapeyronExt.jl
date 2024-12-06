@@ -25,6 +25,4 @@ ES.get_m(eos::EoSModel) = :segment in fieldnames(typeof(eos.params)) ? eos.param
 
 ES.get_components(eos::EoSModel) = eos.components
 
-ES.get_eos_info(eos::EoSModel) = ES.EOSInfo(string(typeof(eos)), [ES.Reference(doi,"") for doi in CL.doi(eos)])
-
 end

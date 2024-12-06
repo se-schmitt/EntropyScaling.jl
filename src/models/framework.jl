@@ -134,7 +134,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
                 NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
                 randn(sum(what_fit)), (sˢ, Yˢ_fit),
             )
-            sol = solve(prob, TrustRegion(), reltol=1e-8)
+            sol = solve(prob, SimpleGaussNewton(), reltol=1e-8)
             α_fit = get_α0_framework(prop)
             α_fit[what_fit] .= sol.u
             

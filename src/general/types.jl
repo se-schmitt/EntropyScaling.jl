@@ -21,11 +21,6 @@ struct Reference
 end
 Reference() = Reference("", "NA")
 
-struct EOSInfo <: AbstractParam
-    name::String
-    ref::Vector{Reference}
-end
-
 struct BaseParam{P} <: AbstractParam
     prop::P
     solute_name::Union{Missing,String}

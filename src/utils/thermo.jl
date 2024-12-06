@@ -73,10 +73,3 @@ get_m(eos::Any) = fun_na_error("get_m",typeof(eos))
 Number of components in the system.
 """
 get_components(eos::Any) = fun_na_error("get_components",typeof(eos))
-
-"""
-    get_eos_info(eos)
-
-Get information about the EOS.
-"""
-get_eos_info(eos::Any) = EOSInfo("NA",Reference[])
