@@ -53,7 +53,7 @@ function init_framework_model(eos, prop; solute=nothing)
     for i in 1:length(eos)
         optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
         prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, Optimization.LBFGS(), reltol=1e-6)
+        sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
         Ymin[i] = sol.objective[1]
     end
 
@@ -65,12 +65,13 @@ end
 
 A generic entropy scaling model.
 """
-struct FrameworkModel <: AbstractEntropyScalingModel
+struct FrameworkModel{T} <: AbstractEntropyScalingModel
     components::Vector{String}
     params::Vector{FrameworkParams}
-    info::EOSInfo
-    FrameworkModel(eos,params) = new(get_components(eos),params,get_eos_info(eos))
+    eos::T
 end
+
+FrameworkModel(eos,params) = FrameworkModel(get_components(eos),params,eos)
 
 function cite_model(::FrameworkModel) 
     print("Entropy Scaling Framework:\n---\n" *
@@ -118,14 +119,14 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
 
             # Scaling
             s = entropy_conf.(eos, data.ϱ, data.T)
-            sˢ = reduced_entropy.(Ref(param),s)
-            Yˢ = scaling.(Ref(param), eos, data.Y, data.T, data.ϱ, s)
+            sˢ = reduced_entropy.(param,s)
+            Yˢ = scaling.(param, eos, data.Y, data.T, data.ϱ, s)
 
             # Fit
             function resid!(du, p, xy)
                 (xs,ys) = xy
                 param.α[what_fit] .= p
-                du .= scaling_model.(Ref(param),xs) .- ys
+                du .= scaling_model.(param,xs) .- ys
                 return nothing
             end
             Yˢ_fit = prop == ThermalConductivity() ? Yˢ : log.(Yˢ)
@@ -133,7 +134,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
                 NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
                 randn(sum(what_fit)), (sˢ, Yˢ_fit),
             )
-            sol = solve(prob,reltol=1e-6)
+            sol = solve(prob, SimpleGaussNewton(), reltol=1e-8)
             α_fit = get_α0_framework(prop)
             α_fit[what_fit] .= sol.u
             
@@ -187,7 +188,7 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     sˢ = reduced_entropy(param,s,z)
 
     # Transport property scaling
-    Y₀⁺_all = property_CE_plus.(Ref(param.base.prop), split_model(eos), T, param.σ, param.ε)
+    Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε)
     Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
     Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
     
@@ -201,79 +202,79 @@ function reduced_entropy(param::FrameworkParams, s, z=[1.])
     return -s / R / sum(param.m .* z)
 end
 
-function viscosity(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
-    ϱ = molar_density(eos, p, T, z; phase=phase)
-    return ϱT_viscosity(es_model, eos, ϱ, T, z)
+function viscosity(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
+    ϱ = molar_density(model.eos, p, T, z; phase=phase)
+    return ϱT_viscosity(model, ϱ, T, z)
 end
-function ϱT_viscosity(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
-    param = es_model[Viscosity()]
-    s = entropy_conf(eos, ϱ, T, z)
+function ϱT_viscosity(model::FrameworkModel, ϱ, T, z=[1.])
+    param = model[Viscosity()]
+    s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     ηˢ = exp(scaling_model(param, sˢ, z))
 
-    return scaling(param, eos, ηˢ, T, ϱ, s, z; inv=true) 
+    return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true) 
 end
 
-function thermal_conductivity(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
-    ϱ = molar_density(eos, p, T, z; phase=phase)
-    return ϱT_thermal_conductivity(es_model, eos, ϱ, T, z)
+function thermal_conductivity(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
+    ϱ = molar_density(model.eos, p, T, z; phase=phase)
+    return ϱT_thermal_conductivity(model, ϱ, T, z)
 end
-function ϱT_thermal_conductivity(es_model::FrameworkModel, eos, ϱ, T, z=[1.])
-    param = es_model[ThermalConductivity()]
-    s = entropy_conf(eos, ϱ, T, z)
+function ϱT_thermal_conductivity(model::FrameworkModel, ϱ, T, z=[1.])
+    param = model[ThermalConductivity()]
+    s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
 
-    return scaling(param, eos, λˢ, T, ϱ, s, z; inv=true) 
+    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true) 
 end
 
-function self_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z=[1.]; phase=:unknown)
-    ϱ = molar_density(eos, p, T, z; phase=phase)
-    if length(eos) == 1
-        return ϱT_self_diffusion_coefficient(es_model, eos, ϱ, T)
+function self_diffusion_coefficient(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
+    ϱ = molar_density(model.eos, p, T, z; phase=phase)
+    if length(model) == 1
+        return ϱT_self_diffusion_coefficient(model, ϱ, T)
     else
-        return ϱT_self_diffusion_coefficient(es_model, eos, ϱ, T, z)
+        return ϱT_self_diffusion_coefficient(model, ϱ, T, z)
     end
 end
 
-function ϱT_self_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T)
-    param = es_model[SelfDiffusionCoefficient()]
-    s = entropy_conf(eos, ϱ, T)
+function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T)
+    param = model[SelfDiffusionCoefficient()]
+    s = entropy_conf(model.eos, ϱ, T)
     sˢ = reduced_entropy(param, s)
     Dˢ = exp(scaling_model(param, sˢ))
 
-    return scaling(param, eos, Dˢ, T, ϱ, s; inv=true) 
+    return scaling(param, model.eos, Dˢ, T, ϱ, s; inv=true) 
 end
 
-function ϱT_self_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T, z)
-    param_self = es_model[SelfDiffusionCoefficient()]
-    param_inf = es_model[InfDiffusionCoefficient()]
-    s = entropy_conf(eos, ϱ, T, z)
+function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
+    param_self = model[SelfDiffusionCoefficient()]
+    param_inf = model[InfDiffusionCoefficient()]
+    s = entropy_conf(model.eos, ϱ, T, z)
     αi = similar(param_self.α)
     Di = similar(z)
 
-    for i in 1:length(eos)
+    for i in 1:length(model.eos)
         αi[:,i] = param_self.α[:,i]
         αi[:,3-i] = param_inf.α[:,3-i]
         
-        param = FrameworkParams(SelfDiffusionCoefficient(), eos, αi)
+        param = FrameworkParams(SelfDiffusionCoefficient(), model.eos, αi)
         sˢ = reduced_entropy(param, s, z)
         Dˢ = exp(scaling_model(param, sˢ, z))
-        Di[i] = scaling(param, eos, Dˢ, T, ϱ, s, z; inv=true)
+        Di[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
     end
 
     return Di
 end
 
-function MS_diffusion_coefficient(es_model::FrameworkModel, eos, p, T, z; phase=:unknown)
-    ϱ = molar_density(eos, p, T, z; phase=phase)
-    return ϱT_MS_diffusion_coefficient(es_model, eos, ϱ, T, z)
+function MS_diffusion_coefficient(model::FrameworkModel, p, T, z; phase=:unknown)
+    ϱ = molar_density(model.eos, p, T, z; phase=phase)
+    return ϱT_MS_diffusion_coefficient(model, ϱ, T, z)
 end
-function ϱT_MS_diffusion_coefficient(es_model::FrameworkModel, eos, ϱ, T, z)
-    param = es_model[InfDiffusionCoefficient()]
-    s = entropy_conf(eos, ϱ, T, z)
+function ϱT_MS_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
+    param = model[InfDiffusionCoefficient()]
+    s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     Dˢ = exp(scaling_model(param, sˢ, z))
 
-    return scaling(param, eos, Dˢ, T, ϱ, s, z; inv=true) 
+    return scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true) 
 end
