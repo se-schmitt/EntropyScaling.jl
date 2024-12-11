@@ -73,13 +73,24 @@ Collision integrals from [Kim and Monroe (2014)](https://www.doi.org/10.1016/j.j
 """
 function Ω_22(T_red)
     A = -0.92032979
-    BCi = [ [   2.3508044,      1.6330213       ],
-            [   0.50110649,     -6.9795156e-1   ],
-            [   -4.7193769e-1,  1.6096572e-1,   ],
-            [   1.5806367e-1,   -2.2109440e-2   ],
-            [   -2.6367184e-2,  1.7031434e-3    ],
-            [   1.8120118e-3,   -0.56699986e-4    ]]
-    return A .+ sum([BCi[k][1] ./ T_red.^k .+ BCi[k][2] .* log.(T_red).^k for k in 1:6])
+    BCi = ( (   2.3508044,      1.6330213      ),
+            (   0.50110649,     -6.9795156e-1  ),
+            (   -4.7193769e-1,  1.6096572e-1,  ),
+            (   1.5806367e-1,   -2.2109440e-2  ),
+            (   -2.6367184e-2,  1.7031434e-3   ),
+            (   1.8120118e-3,   -0.56699986e-4 ))
+    Ω22 = zero(1.0*T_red) + A
+    T_red_i = T_red
+    lnT_red = log(T_red)
+    lnT_red_i = lnT_red
+    for k in 1:6
+        BCi1,BCi2 = BCi[k]
+        Ω22 += BCi1/T_red_i + BCi2*lnT_red_i
+        T_red_i *= T_red
+        lnT_red_i *= lnT_red
+    end
+    return Ω22
+    #return A .+ sum([BCi[k][1] ./ T_red.^k .+ BCi[k][2] .* log.(T_red).^k for k in 1:6])
 end
 
 """
@@ -89,13 +100,24 @@ Collision integrals from [Kim and Monroe (2014)](https://www.doi.org/10.1016/j.j
 """
 function Ω_11(T_red)
     A = -1.1036729
-    BCi = [ [   2.6431984,      1.6690746       ],
-            [   0.0060432255,   -6.9145890e-1   ],
-            [   -1.5158773e-1,  1.5502132e-1,   ],
-            [   0.54237938e-1,  -2.0642189e-2   ],
-            [   -0.90468682e-2, 1.5402077e-3    ],
-            [   0.61742007e-3,  -0.49729535e-4  ]]
-    return A .+ sum([BCi[k][1] ./ T_red.^k .+ BCi[k][2] .* log.(T_red).^k for k in 1:6])
+    BCi = ( (   2.6431984,      1.6690746      ),
+            (   0.0060432255,   -6.9145890e-1  ),
+            (   -1.5158773e-1,  1.5502132e-1,  ),
+            (   0.54237938e-1,  -2.0642189e-2  ),
+            (   -0.90468682e-2, 1.5402077e-3   ),
+            (   0.61742007e-3,  -0.49729535e-4 ))
+    Ω11 = zero(1.0*T_red) + A
+    T_red_i = T_red
+    lnT_red = log(T_red)
+    lnT_red_i = lnT_red
+    for k in 1:6
+        BCi1,BCi2 = BCi[k]
+        Ω11 += BCi1/T_red_i + BCi2*lnT_red_i
+        T_red_i *= T_red
+        lnT_red_i *= lnT_red
+    end
+    return Ω11
+    #return A .+ sum([BCi[k][1] ./ T_red.^k .+ BCi[k][2] .* log.(T_red).^k for k in 1:6])
 end
 
 """
@@ -108,7 +130,7 @@ function correspondence_principle(Tc, pc)
     pc_LJ = 0.129
 
     ε = kB*Tc/Tc_LJ
-    σ = (pc_LJ/pc*ε).^(1/3)
+    σ = cbrt(pc_LJ/pc*ε)
     return σ, ε
 end
 
@@ -127,10 +149,15 @@ Mason and Saxena (1958) for ThermalConductivity.
 Mixtures. The Physics of Fluids 1958, 1 (5), 361–369. https://doi.org/10.1063/1.1724352.
 """
 function mix_CE(param::BaseParam{P}, Y, x) where {P <: Union{Viscosity, ThermalConductivity}}
-    Y₀_mix = 0.0
+    Y₀_mix = zero(Base.promote_eltype(param.T_range,Y,x))
+    zero(Base.promote_eltype(param.T_range,Y,x))
     enum_M = enumerate(param.Mw)
     for (i,Mi) in enum_M
-        xΦ = sum([x[j] * (1+√(Y[i]/Y[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj)) for (j,Mj) in enum_M])
+        xΦ = zero(Y₀_mix)
+        for (j,Mj) in enum_M
+            xΦ += x[j] * (1+√(Y[i]/Y[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj))
+        end
+        #xΦ = sum([x[j] * (1+√(Y[i]/Y[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj)) for (j,Mj) in enum_M])
         Y₀_mix += x[i]*Y[i]/xΦ
     end
     return Y₀_mix
@@ -147,7 +174,7 @@ and Experiment for Certain Gas Mixtures. Trans. Faraday Soc. 1961, 57 (0), 2143�
     https://doi.org/10.1039/TF9615702143.
 """
 function mix_CE(param::BaseParam{P}, Y, x) where {P <: DiffusionCoefficient}
-    return 1.0 ./ sum([x[i] / Y[i] for i in eachindex(Y)])
+    return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end
 
-calc_M_CE(Mw::Vector{Float64}) = 2.0/sum(1.0./Mw)
+calc_M_CE(Mw::Vector{Float64}) = 2.0/sum(inv,Mw)
