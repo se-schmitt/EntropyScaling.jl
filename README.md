@@ -1,5 +1,9 @@
 [![Dev][docs-stable-img]][docs-stable-url] [![Dev][docs-dev-img]][docs-dev-url] [![Build Status][build-img]][build-url]
 
+<p align="center">
+  <img width="300px" src="docs/assets/logo.svg">
+</p>
+
 # EntropyScaling.jl
 
 Transport property modeling based on entropy scaling and equations of state (EOS).
