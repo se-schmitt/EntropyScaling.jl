@@ -1,4 +1,5 @@
 
+# TODO add references (LTD style)
 """
     viscosity_CE(T, Mw, σ, ε)
 
@@ -40,7 +41,7 @@ function thermal_conductivity_CE_plus(eos, T, σ, ε)
 end
 
 """
-    self_diffusion_coefficient_CE(T, Mw, σ, ε)
+    diffusion_coefficient_CE(T, Mw, σ, ε)
 
 Chapman-Enskog diffusion coefficient for the zero-density limit.
 """
