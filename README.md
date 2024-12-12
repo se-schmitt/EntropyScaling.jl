@@ -8,15 +8,19 @@
 
 Transport property modeling based on entropy scaling, equations of state (EOS) and more.
 
-This package provides methods to model 
+This package provides models for 
 - the viscosity,
 - the thermal conductivity, and
 - diffusion coefficients.
 
-For the EOS calculations, additional packages need to be imported. Alternatively, custom EOS
-functions can be defined. Implementations of EOS models are *not* included in this package.
+Currently, the following models are available:
+- Chapman-Enskog models for gases
+- Entropy Scaling framework
 
 The documentation of the package can be found [here][docs-stable-url].
+
+For the EOS calculations, additional packages need to be imported. Alternatively, custom EOS
+functions can be defined. Implementations of EOS models are *not* included in this package.
 
 ## Installation
 
@@ -31,6 +35,16 @@ using EntropyScaling
 ```
 
 ## Example
+
+**Chapman-Enskog viscosity**
+
+```julia
+using EntropyScaling
+
+
+```
+
+**Entropy scaling framework in combination with [Clapeyron.jl](https://github.com/ClapeyronThermo/Clapeyron.jl)**
 
 ```julia
 using EntropyScaling, Clapeyron
