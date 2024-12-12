@@ -12,12 +12,12 @@ struct TransportPropertyData{P} <: AbstractTransportPropertyData
     phase::Vector{Symbol}
     ref::Vector{Reference}
 end
-function Base.show(io::IO, data::TransportPropertyData) 
+function Base.show(io::IO, data::TransportPropertyData)
     print(io,"$(typeof(data))\n    $(data.N_dat) data points.")
     return nothing
 end
 
-function TransportPropertyData(prop, T::Vector, p, ϱ, Y::Vector, phase::Symbol, 
+function TransportPropertyData(prop, T::Vector, p, ϱ, Y::Vector, phase::Symbol,
                                doi::String="", short::String="")
     N_dat = length(T)
     if isempty(p) && !isempty(ϱ)
@@ -29,7 +29,7 @@ function TransportPropertyData(prop, T::Vector, p, ϱ, Y::Vector, phase::Symbol,
     end
     [length(k) != N_dat && error("All vectors must have the same length.") for k in [p,ϱ,Y]]
 
-    return TransportPropertyData(prop, length(T), T, p, ϱ, Y, repeat([phase],N_dat), 
+    return TransportPropertyData(prop, length(T), T, p, ϱ, Y, repeat([phase],N_dat),
                                  repeat([Reference(doi,short)],N_dat))
 end
 ViscosityData(args...) = TransportPropertyData(Viscosity(), args...)
@@ -37,7 +37,7 @@ ThermalConductivityData(args...) = TransportPropertyData(ThermalConductivity(), 
 SelfDiffusionCoefficientData(args...) = TransportPropertyData(SelfDiffusionCoefficient(), args...)
 InfDiffusionCoefficientData(args...) = TransportPropertyData(InfDiffusionCoefficient(), args...)
 
-function collect_data(  datasets::Vector{TPD}, prop::AbstractTransportProperty) where 
+function collect_data(  datasets::Vector{TPD}, prop::AbstractTransportProperty) where
                         TPD <: TransportPropertyData
     (T, p, ϱ, Y, phase, ref) = (Float64[], Float64[], Float64[], Float64[], Symbol[], Reference[])
     N_dat = 0
@@ -53,7 +53,7 @@ function collect_data(  datasets::Vector{TPD}, prop::AbstractTransportProperty) 
     return TransportPropertyData(prop, N_dat, T, p, ϱ, Y, phase, ref)
 end
 
-function filter_datasets(datasets::Vector{TPD}, prop) where TPD <: TransportPropertyData 
+function filter_datasets(datasets::Vector{TPD}, prop) where TPD <: TransportPropertyData
     return filter(data -> data.prop == prop, datasets)
 end
 

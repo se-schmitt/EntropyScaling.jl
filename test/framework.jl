@@ -93,4 +93,9 @@
             @test MS_diffusion_coefficient(model_3, 0.1e6, 308.15, [.5,.5]) ≈ 3.333533e-9 rtol=1e-5
         end
     end
+
+    @testset "misc" begin
+        @test EntropyScaling.Ω_22(0.9) ≈ 1.68262401248626
+        @test EntropyScaling.Ω_11(0.9) ≈ 1.517529517136435
+    end
 end
