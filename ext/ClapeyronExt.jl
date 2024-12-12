@@ -31,4 +31,8 @@ ES.get_m(eos::CL.EoSVectorParam) = ES.get_m(eos.model)
 
 ES.get_components(eos::EoSModel) = eos.components
 
+ES._framework_cache(eos::EoSModel) = CL.EoSVectorParam(eos)
+ES._framework_cache(eos::CL.EoSVectorParam) = eos
+ES._framework_cache(eos::MultiFluid) = eos
+
 end
