@@ -190,23 +190,10 @@ get_prop_type(::FrameworkParams{T,P}) where {T, P <: AbstractTransportProperty} 
 get_prop_type(::Type{FrameworkParams{T,P}}) where {T, P <: AbstractTransportProperty} = P 
 function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransportProperty
     return getindex_prop(model.params,prop)
-    #=
-    tprop = typeof(prop)
-    k = get_prop_type.(model.params) .== tprop
-    if sum(k) == 1
-        i = findfirst(k)
-    elseif sum(k) == 0
-        @info "No parameters for $tprop."
-        i = k
-    else
-        @info "Multiple parameters for $tprop. Returning the first one."
-        i = findfirst(k)
-    end
-    return model.params[i] =#
 end
 
 @generated function getindex_prop(x::T,prop::P) where {T<:NTuple{<:Any,FrameworkParams},P<:AbstractTransportProperty}
-    idx = findfirst(xi ->get_prop_type(xi) == P,fieldtypes(T))
+    idx = findfirst(Base.Fix1(transport_compare_type,P),fieldtypes(T))
     if isnothing(idx)
         return quote
             throw(error("cannot found specified property $P"))
@@ -218,7 +205,7 @@ end
 end
 
 function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
-    idx = findfirst(xi ->get_prop_type(xi) == P,x)
+    idx = findfirst(Base.Fix1(transport_compare_type,P),x)
     if isnothing(idx)
         return quote
             throw(error("cannot found specified property $P"))

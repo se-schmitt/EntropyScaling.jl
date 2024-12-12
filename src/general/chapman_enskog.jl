@@ -59,10 +59,10 @@ function diffusion_coefficient_CE_plus(eos, T, σ, ε)
     return 3/8/√π / (σ^2*Ω_11(T*kB/ε)) * (T*dBdT+B)^(2/3)
 end
 
-property_CE(prop::Viscosity, T, Mw, σ, ε) = viscosity_CE(T, Mw, σ, ε)
-property_CE_plus(prop::Viscosity, eos, T, σ, ε) = viscosity_CE_plus(eos, T, σ, ε)
-property_CE(prop::ThermalConductivity, T, Mw, σ, ε) = thermal_conductivity_CE(T, Mw, σ, ε)
-property_CE_plus(prop::ThermalConductivity, eos, T, σ, ε) = thermal_conductivity_CE_plus(eos, T, σ, ε)
+property_CE(prop::AbstractViscosity, T, Mw, σ, ε) = viscosity_CE(T, Mw, σ, ε)
+property_CE_plus(prop::AbstractViscosity, eos, T, σ, ε) = viscosity_CE_plus(eos, T, σ, ε)
+property_CE(prop::AbstractThermalConductivity, T, Mw, σ, ε) = thermal_conductivity_CE(T, Mw, σ, ε)
+property_CE_plus(prop::AbstractThermalConductivity, eos, T, σ, ε) = thermal_conductivity_CE_plus(eos, T, σ, ε)
 property_CE(prop::DiffusionCoefficient, T, Mw, σ, ε) = diffusion_coefficient_CE(T, Mw, σ, ε)
 property_CE_plus(prop::DiffusionCoefficient, eos, T, σ, ε) = diffusion_coefficient_CE_plus(eos, T, σ, ε)
 
@@ -148,7 +148,7 @@ Mason and Saxena (1958) for ThermalConductivity.
 (2) Mason, E. A.; Saxena, S. C. Approximate Formula for the Thermal Conductivity of Gas 
 Mixtures. The Physics of Fluids 1958, 1 (5), 361–369. https://doi.org/10.1063/1.1724352.
 """
-function mix_CE(param::BaseParam{P}, Y, x) where {P <: Union{Viscosity, ThermalConductivity}}
+function mix_CE(param::BaseParam{P}, Y, x) where {P <: Union{AbstractViscosity, AbstractThermalConductivity}}
     Y₀_mix = zero(Base.promote_eltype(param.T_range,Y,x))
     zero(Base.promote_eltype(param.T_range,Y,x))
     enum_M = enumerate(param.Mw)
@@ -177,4 +177,4 @@ function mix_CE(param::BaseParam{P}, Y, x) where {P <: DiffusionCoefficient}
     return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end
 
-calc_M_CE(Mw::Vector{Float64}) = 2.0/sum(inv,Mw)
+calc_M_CE(Mw) = 2.0/sum(inv,Mw)

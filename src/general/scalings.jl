@@ -11,19 +11,19 @@ Rosenfeld scaling for transport properties.
 """
 rosenfeld_scaling
 
-function rosenfeld_scaling(param::BaseParam{Viscosity}, η, T, ϱ, z=[1.]; inv=false)
+function rosenfeld_scaling(param::BaseParam{<:AbstractViscosity}, η, T, ϱ, z=[1.]; inv=false)
     k = !inv ? 1 : -1
     Mw = _dot(param.Mw,z)
     return η / ((ϱ*NA)^(2/3) * sqrt(Mw / NA * kB * T))^k
 end
 
-function rosenfeld_scaling(param::BaseParam{ThermalConductivity}, λ, T, ϱ, z=[1.]; inv=false)
+function rosenfeld_scaling(param::BaseParam{<:AbstractThermalConductivity}, λ, T, ϱ, z=[1.]; inv=false)
     k = !inv ? 1 : -1
     Mw = _dot(param.Mw,z)
     return λ / ((ϱ*NA)^(2/3) * kB)^k * sqrt(Mw / (T * kB * NA))^k
 end
 
-function rosenfeld_scaling(param::BaseParam{P}, D, T, ϱ, z=[1.]; inv=false) where P<:DiffusionCoefficient
+function rosenfeld_scaling(param::BaseParam{<:DiffusionCoefficient}, D, T, ϱ, z=[1.]; inv=false)
     k = !inv ? 1 : -1
     Mw = _dot(param.Mw,z)
     return D * sqrt(Mw / (NA * kB * T))^k * (ϱ*NA)^(k/3)

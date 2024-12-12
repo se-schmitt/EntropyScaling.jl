@@ -7,10 +7,12 @@ Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParams <: AbstractParam end
-Base.broadcastable(param::T) where {T<:AbstractParam} = Ref(param)
+Base.broadcastable(param::AbstractParam) = Ref(param)
 
 abstract type AbstractTransportProperty end
-Base.broadcastable(prop::T) where {T<:AbstractTransportProperty} = Ref(prop)
+abstract type AbstractViscosity <: AbstractTransportProperty end
+abstract type AbstractThermalConductivity <: AbstractTransportProperty end
+Base.broadcastable(prop::AbstractTransportProperty) = Ref(prop)
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
 abstract type AbstractTransportPropertyData end
@@ -31,7 +33,7 @@ struct BaseParam{P,T} <: AbstractParam
     p_range::Tuple{T,T}
 end
 
-function BaseParam(prop::P, Mw, dat::D; solute=nothing) where 
+function BaseParam(prop::P, Mw, dat::D; solute=nothing) where
                    {P <: AbstractTransportProperty, D <: AbstractTransportPropertyData}
     solute_name = isnothing(solute) ? missing : get_components(solute)[1]
     if prop isa InfDiffusionCoefficient
@@ -44,8 +46,8 @@ function BaseParam(prop::P, Mw, dat::D; solute=nothing) where
     return BaseParam(prop, solute_name, Mw, [Reference()], dat.N_dat, T_range, p_range)
 end
 
-function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN), 
-                   p_range=(NaN,NaN); solute_name=missing) where 
+function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
+                   p_range=(NaN,NaN); solute_name=missing) where
                    P <: AbstractTransportProperty
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
@@ -53,7 +55,7 @@ function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
     return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
 end
 
-function BaseParam{P,TT}(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN), 
+function BaseParam{P,TT}(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
     p_range=(NaN,NaN); solute_name=missing) where
     {TT,P <: AbstractTransportProperty}
     if prop isa InfDiffusionCoefficient
@@ -78,15 +80,15 @@ end
 #     return BaseParam(prop, Mw, [Reference("fit")], dat.N_dat, T_range, p_range)
 # end
 
-struct Viscosity <: AbstractTransportProperty end
-name(::Viscosity) = "viscosity"
-symbol(::Viscosity) = :η
-symbol_name(::Viscosity) = "eta"
+struct Viscosity <: AbstractViscosity end
+name(::AbstractViscosity) = "viscosity"
+symbol(::AbstractViscosity) = :η
+symbol_name(::AbstractViscosity) = "eta"
 
-struct ThermalConductivity <: AbstractTransportProperty end
-name(::ThermalConductivity) = "thermal conductivity"
-symbol(::ThermalConductivity) = :λ
-symbol_name(::ThermalConductivity) = "lambda"
+struct ThermalConductivity <: AbstractThermalConductivity end
+name(::AbstractThermalConductivity) = "thermal conductivity"
+symbol(::AbstractThermalConductivity) = :λ
+symbol_name(::AbstractThermalConductivity) = "lambda"
 
 struct SelfDiffusionCoefficient <: DiffusionCoefficient end
 name(::SelfDiffusionCoefficient) = "self-diffusion coefficient"
@@ -102,6 +104,11 @@ struct MaxwellStefanDiffusionCoefficient <: DiffusionCoefficient end
 name(::MaxwellStefanDiffusionCoefficient) = "Maxwell-Stefan diffusion coefficient"
 symbol(::MaxwellStefanDiffusionCoefficient) = :Ð
 symbol_name(::MaxwellStefanDiffusionCoefficient) = "D_MS"
+
+#used for general comparisons
+transport_compare_type(P1::AbstractTransportProperty,P2::AbstractTransportProperty) = transport_compare_type(typeof(P1),typeof(P2))
+transport_compare_type(P1::Type{T},P2::Type{T}) where T <: AbstractTransportProperty = true
+transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransportProperty,T2 <: AbstractTransportProperty} = false
 
 """
     viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
@@ -154,7 +161,7 @@ MS_diffusion_coefficient
 
 """
     ϱT_MS_diffusion_coefficient(model::EntropyScalingModel, ϱ, T, z)
-    
+
 Maxwell-Stefan diffusion coefficient `Ð(ϱ,T,x)` (`[Ð] = m² s⁻¹`).
 """
 ϱT_MS_diffusion_coefficient
