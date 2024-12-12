@@ -1,7 +1,7 @@
 [![Dev][docs-stable-img]][docs-stable-url] [![Dev][docs-dev-img]][docs-dev-url] [![Build Status][build-img]][build-url]
 
 <p align="center">
-  <img width="300px" src="docs/assets/logo.svg">
+  <img width="150px" src="docs/src/assets/logo.svg">
 </p>
 
 # EntropyScaling.jl
