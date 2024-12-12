@@ -108,7 +108,12 @@ symbol_name(::MaxwellStefanDiffusionCoefficient) = "D_MS"
 #used for general comparisons
 transport_compare_type(P1::AbstractTransportProperty,P2::AbstractTransportProperty) = transport_compare_type(typeof(P1),typeof(P2))
 transport_compare_type(P1::Type{T},P2::Type{T}) where T <: AbstractTransportProperty = true
+#get viscosities, thermal conductivities, TODO: do the same structure with diffusion coeffficients?
+transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractViscosity,T2 <: AbstractViscosity} = true
+transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractThermalConductivity,T2 <: AbstractThermalConductivity} = true
+#fallback
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransportProperty,T2 <: AbstractTransportProperty} = false
+
 
 """
     viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)

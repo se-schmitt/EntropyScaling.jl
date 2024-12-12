@@ -35,4 +35,4 @@ ES._framework_cache(eos::EoSModel) = CL.EoSVectorParam(eos)
 ES._framework_cache(eos::CL.EoSVectorParam) = eos
 ES._framework_cache(eos::MultiFluid) = eos
 
-end
+end #module

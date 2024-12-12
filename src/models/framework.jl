@@ -192,16 +192,26 @@ function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransp
     return getindex_prop(model.params,prop)
 end
 
+#=
+note to developers,
+
+this function allows access to the properties without allocations, but it is a generated function
+so no function inside can be overloaded during a julia session.
+=#
 @generated function getindex_prop(x::T,prop::P) where {T<:NTuple{<:Any,FrameworkParams},P<:AbstractTransportProperty}
-    idx = findfirst(Base.Fix1(transport_compare_type,P),fieldtypes(T))
+    idx = findfirst(xi -> transport_compare_type(get_prop_type(xi),P),fieldtypes(T))
     if isnothing(idx)
         return quote
-            throw(error("cannot found specified property $P"))
+            getindex_prop_error(prop)
         end
     else
         f = fieldtypes(T)[idx]
         return :(x[$idx]::$(f))
     end
+end
+
+function getindex_prop_error(p::P) where P
+    throw(error("cannot found specified property $P"))
 end
 
 function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
@@ -280,12 +290,10 @@ function viscosity(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
 end
 
 function ϱT_viscosity(model::FrameworkModel, ϱ, T, z=[1.])
-    #param = model[Viscosity()]
     param = model[Viscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     ηˢ = exp(scaling_model(param, sˢ, z))
-
     return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true)
 end
 
