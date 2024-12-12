@@ -34,14 +34,21 @@ Then, the module can be loaded by
 using EntropyScaling
 ```
 
-## Example
+## Examples
 
-**Chapman-Enskog viscosity**
+**Chapman-Enskog viscosity of methane**
 
 ```julia
 using EntropyScaling
 
+# Parameters from Poling et al. (2001)
+σ = 3.758e-10                   # size parameter ([σ] = m)
+ε = 148.6*EntropyScaling.kB     # energy parameter ([ε] = J)
+Mw = 16.0425e-3                 # molar mass ([Mw] = kg/mol)
 
+# Calculate gas viscosity of methane at 300 K
+T = 300.
+η = viscosity_CE(T, Mw, σ, ε)
 ```
 
 **Entropy scaling framework in combination with [Clapeyron.jl](https://github.com/ClapeyronThermo/Clapeyron.jl)**

@@ -1,5 +1,8 @@
 
 # TODO add references (LTD style)
+# TODO make CE also a models and use default functions `viscosity(...)` etc.
+# TODO add LJ parameters from Poling to database
+
 """
     viscosity_CE(T, Mw, σ, ε)
 
