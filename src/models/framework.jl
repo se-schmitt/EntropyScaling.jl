@@ -11,7 +11,7 @@ struct FrameworkParams{T,P} <: AbstractEntropyScalingParams
     σ::Vector{Float64}
     ε::Vector{Float64}
     Y₀⁺min::Vector{Float64}
-    base::BaseParam{P,T}
+    base::BaseParam{P}
 end
 
 # Constructor for fitting
@@ -19,14 +19,7 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, data; solute=noth
     α0 = get_α0_framework(prop)
     σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
     base = BaseParam(prop, get_Mw(eos), data; solute=solute)
-    TT = Base.promote_eltype(α0,base.p_range)
-    if TT != typeof(base.p_range[1])
-        _base = convert(BaseParam{typeof(prop),TT},base)
-    else
-        _base = base
-    end
-    _α0 = convert(Vector{TT},α0)
-    return FrameworkParams(_α0, get_m(eos), σ, ε, Y₀⁺min, _base)
+    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, base)
 end
 
 # Constructor for existing parameters
@@ -39,9 +32,8 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
     return FrameworkParams(α, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
 end
 
-#get_α0_framework(prop) = any(typeof(prop) .<: [Viscosity, DiffusionCoefficient]) ? zeros(Real,5,1) : [1.;zeros(Real,4,1);]
-get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(5,1)
-get_α0_framework(prop) = zeros(4,1)
+get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
+get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
 
 function init_framework_model(eos, prop; solute=nothing)
     # Calculation of σ and ε
@@ -246,7 +238,7 @@ function generic_scaling_model(param::FrameworkParams, s, x, g)
     num += _dot(@view(α[1,:]),x) + _dot(@view(α[2,:]),x)*log1p(s)
     denom = 1 + g1*log1p(s) + g2*s
     si = s
-    for i in 3:length(α)
+    for i in 3:size(α,1)
         num += _dot(@view(α[i,:]),x)*si
         si *= s
     end

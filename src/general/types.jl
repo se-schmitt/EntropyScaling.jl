@@ -23,14 +23,14 @@ struct Reference
 end
 Reference() = Reference("", "NA")
 
-struct BaseParam{P,T} <: AbstractParam
+struct BaseParam{P} <: AbstractParam
     prop::P
     solute_name::Union{Missing,String}
     Mw::Vector{Float64}
     param_ref::Vector{Reference}
     N_data::Int
-    T_range::Tuple{T,T}
-    p_range::Tuple{T,T}
+    T_range::Tuple{Float64,Float64}
+    p_range::Tuple{Float64,Float64}
 end
 
 function BaseParam(prop::P, Mw, dat::D; solute=nothing) where
@@ -39,10 +39,9 @@ function BaseParam(prop::P, Mw, dat::D; solute=nothing) where
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE([Mw[1],get_Mw(solute)[1]])]
     end
-    TT = Base.promote_eltype(dat.T,dat.p)
 
-    T_range = TT.(extrema(dat.T))
-    p_range = TT.(extrema(dat.p))
+    T_range = extrema(dat.T)
+    p_range = extrema(dat.p)
     return BaseParam(prop, solute_name, Mw, [Reference()], dat.N_dat, T_range, p_range)
 end
 
@@ -55,30 +54,14 @@ function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
     return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
 end
 
-function BaseParam{P,TT}(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
+function BaseParam{P}(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
     p_range=(NaN,NaN); solute_name=missing) where
-    {TT,P <: AbstractTransportProperty}
+    {P <: AbstractTransportProperty}
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
     end
-    return BaseParam(prop, solute_name, Mw, ref, N_dat, TT.(T_range), TT.(p_range))
+    return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
 end
-
-function Base.convert(::Type{BaseParam{P,T1}},param::BaseParam{P,T2}) where {P,T1,T2}
-    prop = param.prop
-    solute_name = param.solute_name
-    Mw = param.Mw
-    param_ref = param.param_ref
-    N_data = param.N_data
-    T_range = T1.(param.T_range)
-    p_range = T1.(param.p_range)
-    return BaseParam(prop,solute_name,Mw,param_ref,N_data,T_range,p_range)
-end
-
-# function BaseParam(prop::P, )
-
-#     return BaseParam(prop, Mw, [Reference("fit")], dat.N_dat, T_range, p_range)
-# end
 
 struct Viscosity <: AbstractViscosity end
 name(::AbstractViscosity) = "viscosity"
