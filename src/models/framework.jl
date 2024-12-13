@@ -254,18 +254,13 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
 
     # Transport property scaling
     if length(z) == 1
-        _1 = one(eltype(z))
-        Y₀⁺_all = _1*property_CE_plus(param.base.prop, eos, T, param.σ[1], param.ε[1])
-        Y₀⁺min = _1*param.Y₀⁺min[1]
+        Y₀⁺ = property_CE_plus(param.base.prop, eos, T, param.σ[1], param.ε[1])
+        Y₀⁺min = param.Y₀⁺min[1]
     else
         Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε)
         Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
         Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
-    
     end
-    Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε)
-    Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
-    Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
 
     W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
     Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
