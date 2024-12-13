@@ -1,62 +1,62 @@
 
 """
-    viscosity_CE(T, Mw, σ, ε)
+    viscosity_CE(T, Mw, σ, ε, Ω22 = Ω_22(T*kB/ε))
 
 Chapman-Enskog viscosity for the zero-density limit.
 """
-function viscosity_CE(T, Mw, σ, ε)
-    return 5/16 * √(Mw*kB*T/NA/π) / (σ^2*Ω_22(T*kB/ε))
+function viscosity_CE(T, Mw, σ, ε, Ω22 = Ω_22(T*kB/ε))
+    return 5/16 * √(Mw*kB*T/NA/π) / (σ^2*Ω22)
 end
 
 """
-    viscosity_CE_plus(eos, T, σ, ε)
+    viscosity_CE_plus(eos, T, σ, ε, Ω22 = Ω_22(T*kB/ε))
 
 Scaled Chapman-Enskog viscosity for the zero-density limit.
 """
-function viscosity_CE_plus(eos, T, σ, ε)
+function viscosity_CE_plus(eos, T, σ, ε, Ω22 = Ω_22(T*kB/ε))
     dBdT = second_virial_coefficient_dT(eos,T)/NA
     B = second_virial_coefficient(eos,T)/NA
-    return 5/16/√π / (σ^2*Ω_22(T*kB/ε)) * (T*dBdT+B)^(2/3)
+    return 5/16/√π / (σ^2*Ω22) * (T*dBdT+B)^(2/3)
 end
 
 """
-    thermal_conductivity_CE(T, Mw, σ, ε)
+    thermal_conductivity_CE(T, Mw, σ, ε, Ω22 = Ω_22(T*kB/ε))
 
 Chapman-Enskog thermal conductivity for the zero-density limit.
 """
-function thermal_conductivity_CE(T, Mw, σ, ε)
-    return 75/64 * kB * √(R*T/Mw/π) / (σ^2*Ω_22(T*kB/ε))
+function thermal_conductivity_CE(T, Mw, σ, ε, Ω22 = Ω_22(T*kB/ε))
+    return 75/64 * kB * √(R*T/Mw/π) / (σ^2*Ω22)
 end
 
 """
-    thermal_conductivity_CE_plus(eos, T, σ, ε)
+    thermal_conductivity_CE_plus(eos, T, σ, ε, Ω22 = Ω_22(T*kB/ε))
 
 Scaled Chapman-Enskog thermal conductivity for the zero-density limit.
 """
-function thermal_conductivity_CE_plus(eos, T, σ, ε)
+function thermal_conductivity_CE_plus(eos, T, σ, ε, Ω22 = Ω_22(T*kB/ε))
     dBdT = second_virial_coefficient_dT(eos,T)/NA
     B = second_virial_coefficient(eos,T)/NA
-    return 75/64/√π / (σ^2*Ω_22(T*kB/ε)) * (T*dBdT+B)^(2/3)
+    return 75/64/√π / (σ^2*Ω22) * (T*dBdT+B)^(2/3)
 end
 
 """
-    self_diffusion_coefficient_CE(T, Mw, σ, ε)
+    self_diffusion_coefficient_CE(T, Mw, σ, ε, Ω11 = Ω_11(T*kB/ε))
 
 Chapman-Enskog diffusion coefficient for the zero-density limit.
 """
-function diffusion_coefficient_CE(T, Mw, σ, ε)
-    return 3/8 * √(Mw*kB*T/NA/π) / (σ^2*Ω_11(T*kB/ε))
+function diffusion_coefficient_CE(T, Mw, σ, ε, Ω11 = Ω_11(T*kB/ε))
+    return 3/8 * √(Mw*kB*T/NA/π) / (σ^2*Ω11)
 end
 
 """
-    diffusion_coefficient_CE_plus(eos, T, σ, ε)
+    diffusion_coefficient_CE_plus(eos, T, σ, ε, Ω11 = Ω_11(T*kB/ε))
 
 Scaled Chapman-Enskog diffusion coefficient for the zero-density limit.
 """
-function diffusion_coefficient_CE_plus(eos, T, σ, ε)
+function diffusion_coefficient_CE_plus(eos, T, σ, ε, Ω11 = Ω_11(T*kB/ε))
     dBdT = second_virial_coefficient_dT(eos,T)/NA
     B = second_virial_coefficient(eos,T)/NA
-    return 3/8/√π / (σ^2*Ω_11(T*kB/ε)) * (T*dBdT+B)^(2/3)
+    return 3/8/√π / (σ^2*Ω11) * (T*dBdT+B)^(2/3)
 end
 
 property_CE(prop::AbstractViscosity, T, Mw, σ, ε) = viscosity_CE(T, Mw, σ, ε)
@@ -121,6 +121,15 @@ function Ω_11(T_red)
 end
 
 """
+    Ω_22_newfeld(T_red)
+
+Collision integrals from [Neufeld (1972)](https://doi.org/10.1063/1.1678363). The non-polynomial terms are neglected (as REFPROP 10.0 does)
+"""
+function Ω_22_newfeld(T_red)
+    16145*(T_red)^−0.14874 + 0.52487*exp(−0.77320*T_red) + 2.16178*exp(−2.43787*T_red)
+end
+
+"""
     correspondence_principle(Tc, pc)
 
 Calculate the LJ parameters from the critical temperature and pressure.
@@ -150,6 +159,9 @@ Mixtures. The Physics of Fluids 1958, 1 (5), 361–369. https://doi.org/10.1063/
 """
 function mix_CE(param::BaseParam{P}, Y, x) where {P <: Union{AbstractViscosity, AbstractThermalConductivity}}
     Y₀_mix = zero(Base.promote_eltype(param.T_range,Y,x))
+    if length(x) == 1
+        return Y[1] + Y₀_mix
+    end
     zero(Base.promote_eltype(param.T_range,Y,x))
     enum_M = enumerate(param.Mw)
     for (i,Mi) in enum_M
