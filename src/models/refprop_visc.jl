@@ -2,8 +2,8 @@ struct ViscosityREFPROP <: AbstractViscosity end
 
 export ViscosityREFPROP
 
-function scaling_model(param::FrameworkParams{T,ViscosityREFPROP}, s, x=[1.]) where T
-    g = (1.0, 1.5,2.0,2.5)
+function scaling_model(param::FrameworkParams{ViscosityREFPROP}, s, x=[1.]) where T
+    g = (1.0,1.5,2.0,2.5)
     return generic_powerseries_scaling_model(param, s, x, g)
 end
 
@@ -21,8 +21,7 @@ function generic_powerseries_scaling_model(param::FrameworkParams, s, x, g)
         for j in 1:length(x)
             ni += x[j]*α[i,j]/(α[end,j]^g[i])
         end
-        num += ni*s^g[i]
-        si *= s
+        res_plus += ni*s^g[i]
     end
     return res_plus
 end

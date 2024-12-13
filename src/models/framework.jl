@@ -95,11 +95,17 @@ function cite_model(::FrameworkModel)
     return nothing
 end
 
-function FrameworkModel(eos, param_dict::Dict{P,Array{T,2}}) where
-                        {T,P <: AbstractTransportProperty}
+function FrameworkModel(eos, param_dict::Dict{P}) where
+                        {P <: AbstractTransportProperty}
     params_vec = FrameworkParams[]
     for (prop, α) in param_dict
-        push!(params_vec, FrameworkParams(prop, eos, α))
+        T = eltype(α)
+        if α isa Vector && length(eos) == 1
+            αx = convert(Array{T,2},reshape(α,length(α),1))
+        else
+            αx = convert(Array{T,2},α)
+        end
+        push!(params_vec, FrameworkParams(prop, eos, αx))
     end
     params = tuple(params_vec...)
     return FrameworkModel(eos, params)
