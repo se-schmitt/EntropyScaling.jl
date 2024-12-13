@@ -29,6 +29,7 @@ include("utils/misc.jl")
 
 # Models 
 include("models/framework.jl")
+include("models/refprop_visc.jl")
 
 # Extensions
 if !isdefined(Base,:get_extension)
