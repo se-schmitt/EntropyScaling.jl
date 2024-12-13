@@ -92,5 +92,19 @@
             @test self_diffusion_coefficient(model_2, 0.1e6, 298.15, [.5,.5])[1] ≈ 2.847940e-9 rtol=1e-5
             @test MS_diffusion_coefficient(model_3, 0.1e6, 308.15, [.5,.5]) ≈ 3.333533e-9 rtol=1e-5
         end
+        @testset "REFPROP Viscosity" begin
+            eos_model = IAPWS95()
+            #a1,a2,a3,a4,ξ, from https://doi.org/10.1007/s10765-022-03096-9, table 1
+            vd = [-0.669333,1.418565,-0.797172,0.160096,1.0036]
+            model = FrameworkModel(eos_model,Dict(ViscosityREFPROP() => vd))
+            #=
+            julia> PropsSI("viscosity","P",1e5,"T",298.15,"water")
+            0.0008900226737731678
+
+            julia> viscosity(model,1e5,298.15)
+            0.000853163720192704
+            =#
+            @test viscosity(model,1e5,298.15) ≈ 0.00089 rtol = 5e-2
+        end
     end
 end
