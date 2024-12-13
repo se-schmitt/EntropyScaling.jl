@@ -1,11 +1,17 @@
 export FrameworkModel, FrameworkParams
 
 """
-    FrameworkParams
+    FrameworkParams{P<:AbstractTransportProperty,T<:Number}
 
 Structure to store the parameters of the framework model. The parameters are:
+- `α`: a matrix of size `(nparams,ncomponents)` containing the parameters of the corresponding transport property
+- `m`: a vector of length `ncomponents` containing segment information
+- `σ`: a vector of length `ncomponents` containing the molecular size parameters
+- `ε`: a vector of length `ncomponents` containing the dispersion energies
+- `Y₀⁺min`: vector of length `ncomponents` containing the minimum scaled property
+- `base`: a `BaseParam` containing molecular weight, transport property and fitting information.
 """
-struct FrameworkParams{T,P} <: AbstractEntropyScalingParams
+struct FrameworkParams{P,T} <: AbstractEntropyScalingParams
     α::Matrix{T}
     m::Vector{Float64}
     σ::Vector{Float64}
@@ -29,12 +35,13 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
     size(α,2) == length(eos) || throw(DimensionMismatch("Parameter array 'α' doesn't fit EOS model."))
 
     σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
-    return FrameworkParams(α, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
+    return FrameworkParams(α, convert(Vector{Float64},get_m(eos)), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
 end
 
+transport_property(x::FrameworkParams) = x.base.prop
 get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
-
+calculate_Ymin(prop) = true
 function init_framework_model(eos, prop; solute=nothing)
     # Calculation of σ and ε
     eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
@@ -51,13 +58,16 @@ function init_framework_model(eos, prop; solute=nothing)
 
     # Calculation of Ymin
     Ymin = Vector{Float64}(undef,length(eos))
-    for i in 1:length(eos)
-        optf = OptimizationFunction((x,p) -> property_CE_plus(prop,eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
-        prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
-        Ymin[i] = sol.objective[1]
+    if calculate_Ymin(prop)
+        for i in 1:length(eos)
+            optf = OptimizationFunction((x,p) -> property_CE_plus(prop, eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
+            prob = OptimizationProblem(optf, [2*Tc[i]])
+            sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
+            Ymin[i] = sol.objective[1]
+        end
+    else
+        Ymin .= 0
     end
-
     return σ, ε, Ymin
 end
 
@@ -107,8 +117,7 @@ function Base.show(io::IO,::MIME"text/plain",model::FrameworkModel)
     print(io," Available properties: ")
     np = length(model.params)
     for i in 1:length(model.params)
-        param_i = model.params[i]
-        print(io,name(param_i.base.prop))
+        print(io,name(transport_property(model.params[i])))
         i != np && print(io,", ")
     end
     println(io)
@@ -178,8 +187,8 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
     return FrameworkModel(eos, params)
 end
 
-get_prop_type(::FrameworkParams{T,P}) where {T, P <: AbstractTransportProperty} = P
-get_prop_type(::Type{FrameworkParams{T,P}}) where {T, P <: AbstractTransportProperty} = P 
+get_prop_type(::FrameworkParams{P}) where {P <: AbstractTransportProperty} = P
+get_prop_type(::Type{<:FrameworkParams{P}}) where {P <: AbstractTransportProperty} = P
 function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransportProperty
     return getindex_prop(model.params,prop)
 end
@@ -218,15 +227,15 @@ function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
 end
 
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
-function scaling_model(param::FrameworkParams{T,Viscosity}, s, x=[1.]) where T
+function scaling_model(param::FrameworkParams{<:AbstractViscosity}, s, x=[1.])
     g = (-1.6386, 1.3923)
     return generic_scaling_model(param, s, x, g)
 end
-function scaling_model(param::FrameworkParams{T,ThermalConductivity}, s, x=[1.]) where T
+function scaling_model(param::FrameworkParams{<:AbstractThermalConductivity}, s, x=[1.])
     g = (-1.9107, 1.0725)
     return generic_scaling_model(param, s, x, g)
 end
-function scaling_model(param::FrameworkParams{T,P}, s, x=[1.]) where {T, P<:DiffusionCoefficient}
+function scaling_model(param::FrameworkParams{<:DiffusionCoefficient}, s, x=[1.])
     g =  (0.6632, 9.4714)
     return generic_scaling_model(param, s, x, g)
 end
@@ -246,28 +255,28 @@ function generic_scaling_model(param::FrameworkParams, s, x, g)
     #return (α' * [1., log(s+1.), s, s^2, s^3]) / (1. + g1 * [log(s+1.), s])
 end
 
+#sigmoid function with bias
+W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
+
 function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     k = !inv ? 1 : -1
-
-    # Entropy
-    sˢ = reduced_entropy(param,s,z)
-
     # Transport property scaling
     if length(z) == 1
         _1 = one(eltype(z))
-        Y₀⁺_all = _1*property_CE_plus(param.base.prop, eos, T, param.σ[1], param.ε[1])
-        Y₀⁺min = _1*param.Y₀⁺min[1]
+        Y₀⁺ = _1*property_CE_plus(transport_property(param), eos, T, param.σ[1], param.ε[1])
     else
-        Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε)
+        Y₀⁺_all = property_CE_plus.(transport_property(param), split_model(eos), T, param.σ, param.ε)
         Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
-        Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
-    
     end
-    Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε)
-    Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
-    Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
+    return scaling_property(param, eos, Y, Y₀⁺, T, ϱ, s, z; inv)
+end
 
-    W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
+#TODO: better name??
+function scaling_property(param::FrameworkParams, eos, Y, Y₀⁺, T, ϱ, s, z=[1.]; inv=false) 
+    k = !inv ? 1 : -1
+    Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
+    # Entropy
+    sˢ = reduced_entropy(param,s,z)
     Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
     return Yˢ
 end
@@ -298,7 +307,6 @@ function ϱT_thermal_conductivity(model::FrameworkModel, ϱ, T, z=[1.])
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-
     return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true)
 end
 

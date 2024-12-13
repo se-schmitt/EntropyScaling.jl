@@ -51,7 +51,7 @@ function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
     end
-    return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
+    return BaseParam(prop, solute_name, convert(Vector{Float64},Mw), ref, N_dat, T_range, p_range)
 end
 
 function BaseParam{P}(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
@@ -153,3 +153,6 @@ MS_diffusion_coefficient
 Maxwell-Stefan diffusion coefficient `Ð(ϱ,T,x)` (`[Ð] = m² s⁻¹`).
 """
 ϱT_MS_diffusion_coefficient
+
+transport_property(x::AbstractTransportProperty) = x
+transport_property(x::BaseParam) = x.prop
