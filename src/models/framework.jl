@@ -32,6 +32,29 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
     return FrameworkParams(α, get_m(eos), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
 end
 
+# Constructor for merging multiple parameter sets
+function FrameworkParams(self::FrameworkParams{T,<:SelfDiffusionCoefficient},
+                         inf::FrameworkParams{T,<:InfDiffusionCoefficient}, idiff) where T
+
+    what_inf = 1:length(self.base) .!= idiff
+    new_self = deepcopy(self)
+    new_self.α[:,what_inf] = inf.α[:,what_inf]
+    for k in [:m,:σ,:ε,:Y₀⁺min]
+        getfield(new_self,k)[what_inf] = getfield(inf,k)[what_inf]
+    end
+    new_self.base.Mw[what_inf] = inf.base.Mw[what_inf]
+    
+    return new_self
+end
+
+#show methods for FrameworkParams
+function Base.show(io::IO,params::FrameworkParams)
+    print(io,"FrameworkParams(")
+    print(io,symbol(params.base.prop))
+    print(io,") with fields ")
+    print(io,join(fieldnames(FrameworkParams),", "))
+end
+
 get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
 
@@ -319,15 +342,11 @@ function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
     param_self = model[SelfDiffusionCoefficient()]
     param_inf = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
-    αi = similar(param_self.α)
+    sˢ = reduced_entropy(param_self, s, z)
     Di = similar(z)
 
     for i in 1:length(model.eos)
-        αi[:,i] = param_self.α[:,i]
-        αi[:,3-i] = param_inf.α[:,3-i]
-
-        param = FrameworkParams(SelfDiffusionCoefficient(), model.eos, αi)
-        sˢ = reduced_entropy(param, s, z)
+        param = FrameworkParams(param_self, param_inf, i)
         Dˢ = exp(scaling_model(param, sˢ, z))
         Di[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
     end
