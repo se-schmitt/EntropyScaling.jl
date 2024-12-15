@@ -22,9 +22,9 @@
         α_η_ref = [0.000000e+00;-9.490597e+00; 9.747817e+00;-1.279090e+00; 3.666153e-01;;]
         α_λ_ref = [3.532197e+00; 1.168205e+02;-9.944405e+01; 2.424600e+01; 5.871304e-01;;]
         α_D_ref = [0.000000e+00; 0.000000e+00; 0.000000e+00;-3.573438e+00;-9.922401e-01;;]
-        @test all(isapprox(α_η, α_η_ref; rtol=1e-5))
-        @test all(isapprox(α_λ, α_λ_ref; rtol=1e-5))
-        @test all(isapprox(α_D, α_D_ref; rtol=1e-5))
+        @test isapprox(α_η, α_η_ref; rtol=1e-5)
+        @test isapprox(α_λ, α_λ_ref; rtol=1e-5)
+        @test isapprox(α_D, α_D_ref; rtol=1e-5)
     end
     
     @testset "Fit Inf. Dilution" begin
@@ -61,36 +61,26 @@
         end
 
         @testset "Mixtures" begin
-            # EOS models     
-            eos_model_1 = PCSAFT(["benzene","hexane"])
-            #TODO replace mixture 2 by better example
-            user_2 = (; dipole=[2.88,0.0], epsilon=[232.99,271.63], sigma=[3.2742,3.4709], Mw=[58.08,119.38], segment=[2.7447,2.5038])
-            eos_model_2 = PCPSAFT(["acetone", "chloroform"]; userlocations=user_2)
-            eos_model_3 = PCSAFT(["toluene","heptane"])
-
             # ES models
-            model_1 = FrameworkModel(eos_model_1, Dict(
+            model_1 = FrameworkModel(PCSAFT(["benzene","hexane"]), Dict(
                 ThermalConductivity() => hcat(
                     [6.492054, 0.0, 0.0, 1.985553, 3.126438],
                     [9.756965, 0.0, 0.0, 1.657211, 5.058428]),
             ))
-            model_2 = FrameworkModel(eos_model_2, Dict(
+            model_2 = FrameworkModel(PCSAFT(["hexane", "dodecane"]), Dict(
                 SelfDiffusionCoefficient() => hcat(
-                    [0.0, 0.0, 0.0, 11.301082, -7.763866],
-                    ones(5)*NaN),
+                    [0.0, 0.0, 0.0, -2.5414, -1.9186],
+                    [0.0, 0.0, 0.0, -4.6610, -3.2021]
+                ),
                 InfDiffusionCoefficient() => hcat(
-                    ones(5)*NaN,
-                    [0.0, 0.0, 0.0, -3.021281, -1.850011]),
-            ))
-            model_3 = FrameworkModel(eos_model_3, Dict(
-                InfDiffusionCoefficient() => hcat(
-                    [0.0, 0.0, 0.0, 11.606624, -7.486179],
-                    [0.0, 0.0, 0.0, 18.829820, -13.186835]),
+                    [0.0, 0.0, 0.0, -2.5463, -1.8070],
+                    [0.0, 0.0, 0.0, -4.0610, -3.4267]),
             ))
 
             @test thermal_conductivity(model_1, 0.1e6, 294.7, [.5,.5]) ≈ 1.338512e-1 rtol=1e-5
-            @test self_diffusion_coefficient(model_2, 0.1e6, 298.15, [.5,.5])[1] ≈ 2.847940e-9 rtol=1e-5
-            @test MS_diffusion_coefficient(model_3, 0.1e6, 308.15, [.5,.5]) ≈ 3.333533e-9 rtol=1e-5
+            @test isapprox(self_diffusion_coefficient(model_2, 0.1e6, 298.15, [.25,.75]),[1.746913e-9,1.097029e-9]; rtol=1e-5)
+            @test MS_diffusion_coefficient(model_2, 0.1e6, 298.15, [.6,.4]) ≈ 3.333533e-9 rtol=1e-5
+            @test self_diffusion_coefficient(model_2, 0.1e6, 298.15, [0.,1.])[1] ≈ MS_diffusion_coefficient(model_2, 0.1e6, 298.15, [0.,1.])
         end
     end
 end
