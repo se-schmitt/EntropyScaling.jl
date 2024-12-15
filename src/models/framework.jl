@@ -266,7 +266,6 @@ function generic_scaling_model(param::FrameworkParams, s, x, g)
         si *= s
     end
     return num/denom
-    #return (α' * [1., log(s+1.), s, s^2, s^3]) / (1. + g1 * [log(s+1.), s])
 end
 
 function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
@@ -279,8 +278,11 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     if length(z) == 1
         Y₀⁺ = property_CE_plus(param.base.prop, eos, T, param.σ[1], param.ε[1])
         Y₀⁺min = param.Y₀⁺min[1]
+    elseif param.base.prop isa InfDiffusionCoefficient
+        Y₀⁺ = property_CE_plus(MaxwellStefanDiffusionCoefficient(), eos, T, param.σ[1], param.ε[1], z)
+        Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
     else
-        Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε)
+        Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε, z)
         Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
         Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
     end
