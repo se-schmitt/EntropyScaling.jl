@@ -76,7 +76,7 @@ Scaled Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
 function MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, z=[1.], Ω11 = Ω_11(T*kB/ε))
     dBdT = second_virial_coefficient_dT(eos,T,z)/NA
     B = second_virial_coefficient(eos,T,z)/NA
-    return 3/8/√π / (σ^2*Ω_11) * (T*dBdT+B)^(2/3)
+    return 3/8/√π / (σ^2*Ω11) * (T*dBdT+B)^(2/3)
 end
 
 #TODO call CE mixing rules in CE functions
