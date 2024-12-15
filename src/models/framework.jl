@@ -40,8 +40,8 @@ end
 
 transport_property(x::FrameworkParams) = x.base.prop
 # Constructor for merging multiple parameter sets
-function FrameworkParams(self::FrameworkParams{T,<:SelfDiffusionCoefficient},
-                         inf::FrameworkParams{T,<:InfDiffusionCoefficient}, idiff) where T
+function FrameworkParams(self::FrameworkParams{<:SelfDiffusionCoefficient},
+                         inf::FrameworkParams{<:InfDiffusionCoefficient}, idiff)
 
     what_inf = 1:length(self.base) .!= idiff
     new_self = deepcopy(self)
