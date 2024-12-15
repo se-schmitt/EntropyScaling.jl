@@ -40,31 +40,60 @@ function thermal_conductivity_CE_plus(eos, T, σ, ε, Ω22 = Ω_22(T*kB/ε))
 end
 
 """
-    self_diffusion_coefficient_CE(T, Mw, σ, ε, Ω11 = Ω_11(T*kB/ε))
+    self_diffusion_coefficient_CE(T, Mw, σ, ε, z = [1.0], Ω11 = Ω_11(T*kB/ε))
 
 Chapman-Enskog diffusion coefficient for the zero-density limit.
 """
-function diffusion_coefficient_CE(T, Mw, σ, ε, Ω11 = Ω_11(T*kB/ε))
+function self_diffusion_coefficient_CE(T, Mw, σ, ε, z=[1.], Ω11 = Ω_11(T*kB/ε))
     return 3/8 * √(Mw*kB*T/NA/π) / (σ^2*Ω11)
 end
 
 """
-    diffusion_coefficient_CE_plus(eos, T, σ, ε, Ω11 = Ω_11(T*kB/ε))
+    self_diffusion_coefficient_CE_plus(eos, T, σ, ε)
 
-Scaled Chapman-Enskog diffusion coefficient for the zero-density limit.
+Scaled Chapman-Enskog self-diffusion coefficient for the zero-density limit.
 """
-function diffusion_coefficient_CE_plus(eos, T, σ, ε, Ω11 = Ω_11(T*kB/ε))
+function self_diffusion_coefficient_CE_plus(eos, T, σ, ε, Ω11 = Ω_11(T*kB/ε))
     dBdT = second_virial_coefficient_dT(eos,T)/NA
     B = second_virial_coefficient(eos,T)/NA
     return 3/8/√π / (σ^2*Ω11) * (T*dBdT+B)^(2/3)
 end
 
-property_CE(prop::AbstractViscosity, T, Mw, σ, ε) = viscosity_CE(T, Mw, σ, ε)
-property_CE_plus(prop::AbstractViscosity, eos, T, σ, ε) = viscosity_CE_plus(eos, T, σ, ε)
-property_CE(prop::AbstractThermalConductivity, T, Mw, σ, ε) = thermal_conductivity_CE(T, Mw, σ, ε)
-property_CE_plus(prop::AbstractThermalConductivity, eos, T, σ, ε) = thermal_conductivity_CE_plus(eos, T, σ, ε)
-property_CE(prop::DiffusionCoefficient, T, Mw, σ, ε) = diffusion_coefficient_CE(T, Mw, σ, ε)
-property_CE_plus(prop::DiffusionCoefficient, eos, T, σ, ε) = diffusion_coefficient_CE_plus(eos, T, σ, ε)
+"""
+    MS_diffusion_coefficient_CE(T, Mw, σ, ε)
+
+Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
+"""
+function MS_diffusion_coefficient_CE(T, Mw, σ, ε, z=[1.], Ω11 = Ω_11(T*kB/ε))
+    return 3/8 * √(Mw*kB*T/NA/π) / (σ^2*Ω11)
+end
+
+"""
+    MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, Ω11 = Ω_11(T*kB/ε))
+
+Scaled Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
+"""
+function MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, z=[1.], Ω11 = Ω_11(T*kB/ε))
+    dBdT = second_virial_coefficient_dT(eos,T,z)/NA
+    B = second_virial_coefficient(eos,T,z)/NA
+    return 3/8/√π / (σ^2*Ω_11) * (T*dBdT+B)^(2/3)
+end
+
+#TODO call CE mixing rules in CE functions
+property_CE(prop::AbstractViscosity, T, Mw, σ, ε, z=[1.]) = viscosity_CE(T, Mw, σ, ε)
+property_CE_plus(prop::AbstractViscosity, eos, T, σ, ε, z=[1.]) = viscosity_CE_plus(eos, T, σ, ε)
+property_CE(prop::AbstractThermalConductivity, T, Mw, σ, ε, z=[1.]) = thermal_conductivity_CE(T, Mw, σ, ε)
+property_CE_plus(prop::AbstractThermalConductivity, eos, T, σ, ε, z=[1.]) = thermal_conductivity_CE_plus(eos, T, σ, ε)
+property_CE(prop::SelfDiffusionCoefficient, T, Mw, σ, ε, z=[1.]) = self_diffusion_coefficient_CE(T, Mw, σ, ε)
+property_CE_plus(prop::SelfDiffusionCoefficient, eos, T, σ, ε, z=[1.]) = self_diffusion_coefficient_CE_plus(eos, T, σ, ε)
+function property_CE(prop::P, T, Mw, σ, ε, z=[1.]) where 
+                    {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
+    return MS_diffusion_coefficient_CE(T, Mw, σ, ε)
+end
+function property_CE_plus(prop::P, eos, T, σ, ε, z=[1.]) where
+                    {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
+    return MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, z)
+end
 
 """
     Ω_22(T_red)

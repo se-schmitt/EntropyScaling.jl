@@ -39,6 +39,29 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
 end
 
 transport_property(x::FrameworkParams) = x.base.prop
+# Constructor for merging multiple parameter sets
+function FrameworkParams(self::FrameworkParams{T,<:SelfDiffusionCoefficient},
+                         inf::FrameworkParams{T,<:InfDiffusionCoefficient}, idiff) where T
+
+    what_inf = 1:length(self.base) .!= idiff
+    new_self = deepcopy(self)
+    new_self.α[:,what_inf] = inf.α[:,what_inf]
+    for k in [:m,:σ,:ε,:Y₀⁺min]
+        getfield(new_self,k)[what_inf] = getfield(inf,k)[what_inf]
+    end
+    new_self.base.Mw[what_inf] = inf.base.Mw[what_inf]
+    
+    return new_self
+end
+
+#show methods for FrameworkParams
+function Base.show(io::IO,params::FrameworkParams)
+    print(io,"FrameworkParams(")
+    print(io,symbol(params.base.prop))
+    print(io,") with fields ")
+    print(io,join(fieldnames(FrameworkParams),", "))
+end
+
 get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
 calculate_Ymin(prop) = true
@@ -258,7 +281,6 @@ function generic_scaling_model(param::FrameworkParams, s, x, g)
         si *= s
     end
     return num/denom
-    #return (α' * [1., log(s+1.), s, s^2, s^3]) / (1. + g1 * [log(s+1.), s])
 end
 
 #sigmoid function with bias
@@ -268,10 +290,11 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     k = !inv ? 1 : -1
     # Transport property scaling
     if length(z) == 1
-        _1 = one(eltype(z))
-        Y₀⁺ = _1*property_CE_plus(transport_property(param), eos, T, param.σ[1], param.ε[1])
+        Y₀⁺ = property_CE_plus(param.base.prop, eos, T, param.σ[1], param.ε[1])
+    elseif param.base.prop isa InfDiffusionCoefficient
+        Y₀⁺ = property_CE_plus(MaxwellStefanDiffusionCoefficient(), eos, T, param.σ[1], param.ε[1], z)
     else
-        Y₀⁺_all = property_CE_plus.(transport_property(param), split_model(eos), T, param.σ, param.ε)
+        Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε, z)
         Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
     end
     return scaling_property(param, eos, Y, Y₀⁺, T, ϱ, s, z; inv)
@@ -338,15 +361,11 @@ function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
     param_self = model[SelfDiffusionCoefficient()]
     param_inf = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
-    αi = similar(param_self.α)
+    sˢ = reduced_entropy(param_self, s, z)
     Di = similar(z)
 
     for i in 1:length(model.eos)
-        αi[:,i] = param_self.α[:,i]
-        αi[:,3-i] = param_inf.α[:,3-i]
-
-        param = FrameworkParams(SelfDiffusionCoefficient(), model.eos, αi)
-        sˢ = reduced_entropy(param, s, z)
+        param = FrameworkParams(param_self, param_inf, i)
         Dˢ = exp(scaling_model(param, sˢ, z))
         Di[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
     end
