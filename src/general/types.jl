@@ -33,7 +33,7 @@ struct BaseParam{P} <: AbstractParam
     p_range::Tuple{Float64,Float64}
 end
 
-function BaseParam(prop::P, Mw, dat::D; solute=nothing) where
+function BaseParam(prop::P, Mw, dat::D; solute=missing) where
                    {P <: AbstractTransportProperty, D <: AbstractTransportPropertyData}
     solute_name = isnothing(solute) ? missing : get_components(solute)[1]
     if prop isa InfDiffusionCoefficient
@@ -47,21 +47,14 @@ end
 
 function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
                    p_range=(NaN,NaN); solute_name=missing) where
-                   P <: AbstractTransportProperty
+                   {P <: AbstractTransportProperty}
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
     end
     return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
 end
 
-function BaseParam{P}(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
-    p_range=(NaN,NaN); solute_name=missing) where
-    {P <: AbstractTransportProperty}
-    if prop isa InfDiffusionCoefficient
-        Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
-    end
-    return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
-end
+Base.length(base::BaseParam) = length(base.Mw)
 
 struct Viscosity <: AbstractViscosity end
 name(::AbstractViscosity) = "viscosity"
