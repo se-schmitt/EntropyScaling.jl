@@ -38,7 +38,6 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
     return FrameworkParams(α, convert(Vector{Float64},get_m(eos)), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
 end
 
-transport_property(x::FrameworkParams) = x.base.prop
 # Constructor for merging multiple parameter sets
 function FrameworkParams(self::FrameworkParams{<:SelfDiffusionCoefficient},
                          inf::FrameworkParams{<:InfDiffusionCoefficient}, idiff)
@@ -54,13 +53,6 @@ function FrameworkParams(self::FrameworkParams{<:SelfDiffusionCoefficient},
     return new_self
 end
 
-#show methods for FrameworkParams
-function Base.show(io::IO,params::FrameworkParams)
-    print(io,"FrameworkParams(")
-    print(io,symbol(params.base.prop))
-    print(io,") with fields ")
-    print(io,join(fieldnames(FrameworkParams),", "))
-end
 
 get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
@@ -105,9 +97,9 @@ struct FrameworkModel{E,FP} <: AbstractEntropyScalingModel
     eos::E
 end
 
-FrameworkModel(eos,params::Tuple) = FrameworkModel(get_components(eos),params,_framework_cache(eos))
+FrameworkModel(eos,params::Tuple) = FrameworkModel(get_components(eos),params,_eos_cache(eos))
 FrameworkModel(eos,params::AbstractVector) = FrameworkModel(eos,tuple(params...))
-_framework_cache(eos) = eos
+
 
 function cite_model(::FrameworkModel)
     print("Entropy Scaling Framework:\n---\n" *
@@ -134,34 +126,21 @@ function FrameworkModel(eos, param_dict::Dict{P}) where
     return FrameworkModel(eos, params)
 end
 
-#show methods for FrameworkModel
-function Base.show(io::IO,::MIME"text/plain",model::FrameworkModel)
-    n = length(model.components)
-    print(io,"FrameworkModel")
-    print(io," with ",n," component")
-    n != 1 && print(io,"s")
-    println(io,":")
-    Base.print_matrix(IOContext(io, :compact => true),model.components)
-    println(io)
-    print(io," Available properties: ")
-    np = length(model.params)
-    for i in 1:length(model.params)
-        print(io,name(transport_property(model.params[i])))
-        i != np && print(io,", ")
+function build_model(MODEL::Type{T},eos,param_dict::Dict{P}) where {T<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
+    params_vec = Any[]
+    PARAM = paramstype(MODEL)
+    for (prop, α) in param_dict
+        T = eltype(α)
+        if α isa Vector && length(eos) == 1
+            αx = convert(Array{T,2},reshape(α,length(α),1))
+        else
+            αx = convert(Array{T,2},α)
+        end
+        push!(params_vec, FrameworkParams(prop, eos, αx))
     end
-    println(io)
-    print(io," Equation of state: ")
-    print(io,model.eos)
+    params = tuple(params_vec...)
+    return MODEL(eos, params)
 end
-
-function Base.show(io::IO,model::FrameworkModel)
-    print(io,"FrameworkModel(")
-    print(io,typeof(model.eos))
-    print(io,", ")
-    types = map(x -> x.base.prop,model.params)
-    print(io,types)
-end
-
 
 function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(),
                         solute=nothing) where TPD <: TransportPropertyData
@@ -216,44 +195,6 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
     return FrameworkModel(eos, params)
 end
 
-get_prop_type(::FrameworkParams{P}) where {P <: AbstractTransportProperty} = P
-get_prop_type(::Type{<:FrameworkParams{P}}) where {P <: AbstractTransportProperty} = P
-function Base.getindex(model::FrameworkModel, prop::P) where P <: AbstractTransportProperty
-    return getindex_prop(model.params,prop)
-end
-
-#=
-note to developers,
-
-this function allows access to the properties without allocations, but it is a generated function
-so no function inside can be overloaded during a julia session.
-=#
-@generated function getindex_prop(x::T,prop::P) where {T<:NTuple{<:Any,FrameworkParams},P<:AbstractTransportProperty}
-    idx = findfirst(xi -> transport_compare_type(get_prop_type(xi),P),fieldtypes(T))
-    if isnothing(idx)
-        return quote
-            getindex_prop_error(prop)
-        end
-    else
-        f = fieldtypes(T)[idx]
-        return :(x[$idx]::$(f))
-    end
-end
-
-function getindex_prop_error(p::P) where P
-    throw(error("cannot found specified property $P"))
-end
-
-function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
-    idx = findfirst(Base.Fix1(transport_compare_type,P),x)
-    if isnothing(idx)
-        return quote
-            throw(error("cannot found specified property $P"))
-        end
-    else
-        return x[idx]
-    end
-end
 
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
 function scaling_model(param::FrameworkParams{<:AbstractViscosity}, s, x=[1.])
@@ -310,16 +251,12 @@ function scaling_property(param::FrameworkParams, eos, Y, Y₀⁺, T, ϱ, s, z=[
     return Yˢ
 end
 
-function reduced_entropy(param::FrameworkParams, s, z=[1.])
-    return -s / R / _dot(param.m,z)
-end
-
-function viscosity(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
+function viscosity(model::AbstractEntropyScalingModel, p, T, z=[1.]; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     return ϱT_viscosity(model, ϱ, T, z)
 end
 
-function ϱT_viscosity(model::FrameworkModel, ϱ, T, z=[1.])
+function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z=[1.])
     param = model[Viscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
@@ -327,11 +264,12 @@ function ϱT_viscosity(model::FrameworkModel, ϱ, T, z=[1.])
     return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true)
 end
 
-function thermal_conductivity(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
+function thermal_conductivity(model::AbstractEntropyScalingModel, p, T, z=[1.]; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     return ϱT_thermal_conductivity(model, ϱ, T, z)
 end
-function ϱT_thermal_conductivity(model::FrameworkModel, ϱ, T, z=[1.])
+
+function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z=[1.])
     param = model[ThermalConductivity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
@@ -339,7 +277,7 @@ function ϱT_thermal_conductivity(model::FrameworkModel, ϱ, T, z=[1.])
     return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true)
 end
 
-function self_diffusion_coefficient(model::FrameworkModel, p, T, z=[1.]; phase=:unknown)
+function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=[1.]; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     if length(model) == 1
         return ϱT_self_diffusion_coefficient(model, ϱ, T)
@@ -348,12 +286,11 @@ function self_diffusion_coefficient(model::FrameworkModel, p, T, z=[1.]; phase=:
     end
 end
 
-function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T)
+function ϱT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T)
     param = model[SelfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T)
     sˢ = reduced_entropy(param, s)
     Dˢ = exp(scaling_model(param, sˢ))
-
     return scaling(param, model.eos, Dˢ, T, ϱ, s; inv=true)
 end
 
@@ -373,15 +310,15 @@ function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
     return Di
 end
 
-function MS_diffusion_coefficient(model::FrameworkModel, p, T, z; phase=:unknown)
+function MS_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     return ϱT_MS_diffusion_coefficient(model, ϱ, T, z)
 end
-function ϱT_MS_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
+
+function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
     param = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = reduced_entropy(param, s, z)
     Dˢ = exp(scaling_model(param, sˢ, z))
-
     return scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
 end
