@@ -12,10 +12,25 @@ function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParam
     print(io,typeof(params).name.name)
     print(io,"{")
     print(io,symbol(params.base.prop))
-    print(io,"} with fields: ")
+    print(io,"} ($(length(params.base.Mw)) components) with fields: ")
     print(io,join(fieldnames(typeof(params)),", "))
 end
 
+#show methods for CE model
+function Base.show(io::IO, model::ChapmanEnskogModel)
+    print(io,typeof(params).name.name)
+    print(io,"{")
+    print(io,join(model.components,','))
+    print(io,"}")
+end
+
+function Base.show(io::IO,::MIME"text/plain", model::ChapmanEnskogModel)
+    print(io,"ChapmanEnskogModel{$(join(model.components,','))}")
+    print(io,"\n⋅ σ: [$(join(round.(model.σ/1e-10,digits=5),", "))] Å")
+    print(io,"\n⋅ ε: [$(join(round.(model.ε/kB,digits=3),", "))] K")
+    print(io,"\n⋅ M: [$(join(round.(model.Mw,digits=5),", "))] kg/m³")
+    print(io,"\nCollision integral: $(typeof(model.collision).name.name)")
+end
 
 #show methods for AbstractEntropyScalingModel
 function Base.show(io::IO,::MIME"text/plain",model::AbstractEntropyScalingModel)
