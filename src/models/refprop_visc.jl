@@ -57,7 +57,7 @@ function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true)
     end
 end
 
-viscosity_refprop(T,Mw,σ,ε) = viscosity_CE(T, Mw, σ, ε, Ω_22_newfeld(T*kB/ε))
+viscosity_refprop(T,Mw,σ,ε) = viscosity_CE(T, Mw, σ, ε, Ω_22_neufeld(T*kB/ε))
 
 function property_CE(param::RefpropRESParams{Viscosity}, T, z = Z1; mixing = nothing)
     Mw = param.base.Mw
