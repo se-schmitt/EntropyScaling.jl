@@ -95,7 +95,3 @@ transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractViscosity
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractThermalConductivity,T2 <: AbstractThermalConductivity} = true
 #fallback
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransportProperty,T2 <: AbstractTransportProperty} = false
-
-transport_property(x::AbstractTransportProperty) = x
-transport_property(x::BaseParam) = x.prop
-transport_property(x::AbstractEntropyScalingParams) = x.base.prop

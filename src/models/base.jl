@@ -26,10 +26,10 @@ end
 
 function Base.show(io::IO,::MIME"text/plain", model::ChapmanEnskogModel)
     print(io,"ChapmanEnskogModel{$(join(model.components,','))}")
-    print(io,"\n⋅ σ: [$(join(round.(model.σ/1e-10,digits=5),", "))] Å")
-    print(io,"\n⋅ ε: [$(join(round.(model.ε/kB,digits=3),", "))] K")
-    print(io,"\n⋅ M: [$(join(round.(model.Mw,digits=5),", "))] kg/m³")
-    print(io,"\nCollision integral: $(typeof(model.collision).name.name)")
+    print(io,"\n σ: [$(join(round.(model.σ/1e-10,digits=5),", "))] Å")
+    print(io,"\n ε: [$(join(round.(model.ε/kB,digits=3),", "))] K")
+    print(io,"\n M: [$(join(round.(model.Mw,digits=5),", "))] kg/m³")
+    print(io,"\n Collision integral: $(typeof(model.collision).name.name)")
 end
 
 #show methods for AbstractEntropyScalingModel
@@ -66,7 +66,8 @@ function Base.show(io::IO,model::AbstractEntropyScalingModel)
 end
 
 #transport_property methods
-
+transport_property(x::AbstractTransportProperty) = x
+transport_property(x::BaseParam) = x.prop
 transport_property(x::AbstractEntropyScalingParams) = transport_property(x.base)
 
 #Base.getindex methods
@@ -138,9 +139,6 @@ _eos_cache(eos) = eos
 # entropy scaling variable
 function scaling_variable(param::AbstractEntropyScalingParams, s, z = Z1)
     return -s / R
-end
-function scaling_variable(param::FrameworkParams, s, z = Z1)
-    return -s / R / _dot(get_m(param),z)
 end
 
 function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
