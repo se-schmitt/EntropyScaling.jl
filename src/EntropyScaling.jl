@@ -4,10 +4,10 @@ module EntropyScaling
 using SimpleNonlinearSolve, Optimization, StatsBase, ForwardDiff, DelimitedFiles
 import LogExpFunctions #loaded by StatsBase.jl
 import FillArrays #loaded by Optimization.jl
-const z1 = FillArrays.Fill(1.0,1)
+const Z1 = FillArrays.Fill(1.0,1)
 # Definition of Constants
 get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))
-(kB, NA, R) = get_kBNAR()
+const (kB, NA, R) = get_kBNAR()
 
 const DB_PATH = normpath(Base.pkgdir(EntropyScaling),"data")
 
