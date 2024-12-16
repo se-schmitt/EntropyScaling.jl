@@ -23,6 +23,7 @@ end
 include("general/types.jl")
 include("general/scalings.jl")
 include("general/chapman_enskog.jl")
+include("general/properties.jl")
 
 # Utils
 include("utils/data.jl")
