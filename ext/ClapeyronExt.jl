@@ -35,8 +35,8 @@ ES.get_m(eos::SingleFluid) = SA1
 ES.get_m(eos::CL.SAFTgammaMieModel) = ES.get_m(eos.vr_model)
 ES.get_components(eos::EoSModel) = eos.components
 
-ES._framework_cache(eos::EoSModel) = CL.EoSVectorParam(eos)
-ES._framework_cache(eos::CL.EoSVectorParam) = eos
-ES._framework_cache(eos::MultiFluid) = eos
+ES._eos_cache(eos::EoSModel) = CL.EoSVectorParam(eos)
+ES._eos_cache(eos::CL.EoSVectorParam) = eos
+ES._eos_cache(eos::MultiFluid) = eos
 
 end #module
