@@ -23,7 +23,7 @@ end
 # Constructor for fitting
 function FrameworkParams(prop::AbstractTransportProperty, eos, data; solute=nothing)
     α0 = get_α0_framework(prop)
-    σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
+    σ, ε, Y₀⁺min = init_framework_params(eos, prop; solute=solute)
     base = BaseParam(prop, get_Mw(eos), data; solute=solute)
     return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, base)
 end
@@ -34,7 +34,7 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
     size(α,1) == 5 || throw(DimensionMismatch("Parameter array 'α' must have 5 rows."))
     size(α,2) == length(eos) || throw(DimensionMismatch("Parameter array 'α' doesn't fit EOS model."))
 
-    σ, ε, Y₀⁺min = init_framework_model(eos, prop; solute=solute)
+    σ, ε, Y₀⁺min = init_framework_params(eos, prop; solute=solute)
     return FrameworkParams(α, convert(Vector{Float64},get_m(eos)), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
 end
 
@@ -56,8 +56,7 @@ end
 
 get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
-calculate_Ymin(prop) = true
-function init_framework_model(eos, prop; solute=nothing)
+function init_framework_params(eos, prop; solute = nothing, calculate_Ymin = true)
     # Calculation of σ and ε
     eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
     cs = crit_pure.(eos_pure)
@@ -73,7 +72,7 @@ function init_framework_model(eos, prop; solute=nothing)
 
     # Calculation of Ymin
     Ymin = Vector{Float64}(undef,length(eos))
-    if calculate_Ymin(prop)
+    if calculate_Ymin
         for i in 1:length(eos)
             optf = OptimizationFunction((x,p) -> property_CE_plus(prop, eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
             prob = OptimizationProblem(optf, [2*Tc[i]])
@@ -97,9 +96,7 @@ struct FrameworkModel{E,FP} <: AbstractEntropyScalingModel
     eos::E
 end
 
-FrameworkModel(eos,params::Tuple) = FrameworkModel(get_components(eos),params,_eos_cache(eos))
-FrameworkModel(eos,params::AbstractVector) = FrameworkModel(eos,tuple(params...))
-
+@modelmethods FrameworkModel FrameworkParams
 
 function cite_model(::FrameworkModel)
     print("Entropy Scaling Framework:\n---\n" *
@@ -110,37 +107,6 @@ function cite_model(::FrameworkModel)
     return nothing
 end
 
-function FrameworkModel(eos, param_dict::Dict{P}) where
-                        {P <: AbstractTransportProperty}
-    params_vec = FrameworkParams[]
-    for (prop, α) in param_dict
-        T = eltype(α)
-        if α isa Vector && length(eos) == 1
-            αx = convert(Array{T,2},reshape(α,length(α),1))
-        else
-            αx = convert(Array{T,2},α)
-        end
-        push!(params_vec, FrameworkParams(prop, eos, αx))
-    end
-    params = tuple(params_vec...)
-    return FrameworkModel(eos, params)
-end
-
-function build_model(MODEL::Type{T},eos,param_dict::Dict{P}) where {T<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
-    params_vec = Any[]
-    PARAM = paramstype(MODEL)
-    for (prop, α) in param_dict
-        T = eltype(α)
-        if α isa Vector && length(eos) == 1
-            αx = convert(Array{T,2},reshape(α,length(α),1))
-        else
-            αx = convert(Array{T,2},α)
-        end
-        push!(params_vec, FrameworkParams(prop, eos, αx))
-    end
-    params = tuple(params_vec...)
-    return MODEL(eos, params)
-end
 
 function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(),
                         solute=nothing) where TPD <: TransportPropertyData
