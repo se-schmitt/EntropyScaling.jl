@@ -213,6 +213,10 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     return Yˢ
 end
 
+function scaling_variable(param::FrameworkParams, s, z = Z1)
+    return -s / R / _dot(get_m(param),z)
+end
+
 #TODO generalize
 function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
     param_self = model[SelfDiffusionCoefficient()]
