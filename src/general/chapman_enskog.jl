@@ -16,7 +16,7 @@ function ChapmanEnskogModel(comps::Vector{String}, σ::Vector{T},ε::Vector{T},M
     return ChapmanEnskogModel(comps, σ,ε,Mw,collision_integral)
 end
 function ChapmanEnskogModel(comps::String, σ::Float64,ε::Float64,Mw::Float64;collision_integral=KimMonroe())
-    return ChapmanEnskogModel(comps, [σ],[ε],[Mw],collision_integral)
+    return ChapmanEnskogModel([comps], [σ],[ε],[Mw],collision_integral)
 end
 Base.length(model::AbstractChapmanEnskogModel) = length(model.Mw)
 
@@ -112,7 +112,7 @@ end
 
 # Chapman-Enskog mixture function
 function property_CE(prop::AbstractTransportProperty, model::ChapmanEnskogModel, T, z)
-    Y₀_all = [property_CE(model, prop, T; i=i) for i in 1:length(model)]
+    Y₀_all = [property_CE(prop, model, T; i=i) for i in 1:length(model)]
     Y₀ = mix_CE(prop, model, Y₀_all, z)
     return Y₀
 end
