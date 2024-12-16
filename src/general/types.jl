@@ -50,6 +50,9 @@ end
 function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
                    p_range=(NaN,NaN); solute_name=missing) where
                    {P <: AbstractTransportProperty}
+
+
+    Mw isa Number && (Mw = [Mw])
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
     end

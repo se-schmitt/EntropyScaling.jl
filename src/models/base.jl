@@ -1,9 +1,18 @@
 #show methods for AbstractEntropyScalingParams
 function Base.show(io::IO,params::AbstractEntropyScalingParams)
-    print(io,typeof(model).name.name)
-    print(io,"(")
+    print(io,typeof(params).name.name)
+    print(io,"{")
     print(io,symbol(params.base.prop))
-    print(io,") with fields ")
+    print(io,"}(;")
+    print(io,join(fieldnames(typeof(params)),", "))
+    print(io,")")
+end
+
+function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParams)
+    print(io,typeof(params).name.name)
+    print(io,"{")
+    print(io,symbol(params.base.prop))
+    print(io,"} with fields: ")
     print(io,join(fieldnames(typeof(params)),", "))
 end
 
@@ -18,10 +27,14 @@ function Base.show(io::IO,::MIME"text/plain",model::AbstractEntropyScalingModel)
     Base.print_matrix(IOContext(io, :compact => true),model.components)
     println(io)
     print(io," Available properties: ")
-    np = length(model.params)
-    for i in 1:length(model.params)
-        print(io,name(transport_property(model.params[i])))
-        i != np && print(io,", ")
+    if model.params isa AbstractEntropyScalingParams
+        print(io,name(transport_property(model.params)))
+    else
+        np = length(model.params)
+        for i in 1:length(model.params)
+            print(io,name(transport_property(model.params[i])))
+            i != np && print(io,", ")
+        end
     end
     println(io)
     print(io," Equation of state: ")
@@ -69,10 +82,8 @@ end
 #when the param is just a AbstractEntropyScalingParam
 function getindex_prop(x::AbstractEntropyScalingParams,prop::P) where P <: AbstractTransportProperty
     T = get_prop_type(x)
-    if transport_compare_type(T,P)
-        return quote
-            getindex_prop_error(P)
-        end
+    if !transport_compare_type(T,P)
+        return getindex_prop_error(P)
     else
         return x
     end
@@ -90,7 +101,7 @@ so no function inside can be overloaded during a julia session.
     idx = findfirst(xi -> transport_compare_type(get_prop_type(xi),P),fieldtypes(T))
     if isnothing(idx)
         return quote
-            getindex_prop_error(P)
+            getindex_prop_error(prop)
         end
     else
         f = fieldtypes(T)[idx]
@@ -114,7 +125,6 @@ function reduced_entropy(param::AbstractEntropyScalingParams, s, z = Z1)
     return -s / R / _dot(get_m(param),z)
 end
 
-
 function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
     params_vec = Any[]
     PARAM = paramstype(MODEL)
@@ -131,9 +141,10 @@ function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:Abstra
     return MODEL(eos, params)
 end
 
+build_model(MODEL,components,params,eos) = MODEL(components,params,eos)
 build_model(::Type{MODEL},eos,params::Tuple) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
 build_model(::Type{MODEL},eos,params::AbstractVector) where MODEL = build_model(MODEL,eos,tuple(params...))
-
+build_model(::Type{MODEL},eos,params::AbstractEntropyScalingParams) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
 function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,αx;kwargs...) where PARAM <: AbstractEntropyScalingParams
     PARAM(prop,eos,αx,kwargs...)
 end
@@ -147,6 +158,6 @@ macro modelmethods(model,param)
         $model(eos,params::Tuple) = EntropyScaling.build_model($model,eos,params)
         $model(eos,params::AbstractVector) = EntropyScaling.build_model($model,eos,params)
         $model(eos,params::Dict{P}) where P<:EntropyScaling.AbstractTransportProperty = EntropyScaling.build_model($model,eos,params)
-        
+        $model(eos,params::$param) = EntropyScaling.build_model($model,eos,params)
     end |> esc
 end

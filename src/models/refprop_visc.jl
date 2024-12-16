@@ -10,11 +10,7 @@ struct RefpropRESParams{P,T} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end
 
-function RefpropRESParams(prop::AbstractTransportProperty,eos,αx,kwargs...)
-    σε = correspondence_principle.(split_model(eos))
-    σ,ε = first.(σε),last.(σε)
-    RefpropRESParams(αx, σ, ε, BaseParam(prop, get_Mw(eos)))
-end
+get_m(m::RefpropRESParams) = FillArrays.Fill(1.0,length(m.ε))
 
 """
     RefpropRESModel{T} <: AbstractEntropyScalingModel
@@ -29,7 +25,7 @@ end
 
 @modelmethods RefpropRESModel RefpropRESParams
 
-function scaling_model(param::RefpropRESParams, s, x=z1) where T
+function scaling_model(param::RefpropRESParams{Viscosity}, s, x=z1)
     g = (1.0,1.5,2.0,2.5)
     return generic_powerseries_scaling_model(param, s, x, g)
 end
@@ -51,7 +47,7 @@ function generic_powerseries_scaling_model(param, s, x, g)
     return LogExpFunctions.logexpm1(lnY⁺p1) # Y⁺
 end
 
-function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=[1.]; inv=true)
+function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true)
     k = !inv ? 1 : -1
     Y₀ = property_CE(param, T, z)
     if inv
@@ -63,11 +59,11 @@ end
 
 viscosity_refprop(T,Mw,σ,ε) = viscosity_CE(T, Mw, σ, ε, Ω_22_newfeld(T*kB/ε))
 
-function property_CE(param::RefpropRESParams{Viscosity}, T, z = [1.0]; mixing = nothing)
+function property_CE(param::RefpropRESParams{Viscosity}, T, z = Z1; mixing = nothing)
     Mw = param.base.Mw
     σ,ε = param.σ,param.ε
     prop = transport_property(param)
-    if length(param.Mw) == 1
+    if length(Mw) == 1
         Y₀ = viscosity_refprop(T,Mw[1],σ[1],ε[1])*one(eltype(z))
     else
         Y₀_all = viscosity_refprop.(T,Mw,σ,ε)

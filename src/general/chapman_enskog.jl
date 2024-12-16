@@ -84,7 +84,7 @@ function property_CE(param::AbstractEntropyScalingParams, T, z = Z1; mixing = no
     Mw = param.base.Mw
     σ,ε = param.σ,param.ε
     prop = transport_property(param)
-    if length(param.Mw) == 1
+    if length(Mw) == 1
         Y₀ = property_CE(param,prop,Mw[1],σ[1],ε[1],z)*one(eltype(z))
     else
         Y₀_all = property_CE.(param,prop,Mw,σ,ε,Ref.(z))
@@ -201,8 +201,8 @@ function correspondence_principle(Tc, pc)
 end
 
 function correspondence_principle(eos)
-    Tc,Pc,_ = crit_pure(eos)
-    return correspondence_principle(Tc, pc)
+    Tc,Pc = crit_pure(eos)
+    return correspondence_principle(Tc, Pc)
 end
 
 # Mixing rule from Wilke (1950) [DOI: 10.1063/1.1747673] and Mason and Saxena (1958) [DOI: 10.1063/1.1724352]
