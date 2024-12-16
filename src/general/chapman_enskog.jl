@@ -44,7 +44,7 @@ end
 
 Chapman-Enskog diffusion coefficient for the zero-density limit.
 """
-function self_diffusion_coefficient_CE(T, Mw, σ, ε, z = [1.], Ω11 = Ω_11(T*kB/ε))
+function self_diffusion_coefficient_CE(T, Mw, σ, ε, z = Z1, Ω11 = Ω_11(T*kB/ε))
     return 3/8 * √(Mw*kB*T/NA/π) / (σ^2*Ω11)
 end
 
@@ -64,7 +64,7 @@ end
 
 Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
 """
-function MS_diffusion_coefficient_CE(T, Mw, σ, ε, z = [1.], Ω11 = Ω_11(T*kB/ε))
+function MS_diffusion_coefficient_CE(T, Mw, σ, ε, z = Z1, Ω11 = Ω_11(T*kB/ε))
     return 3/8 * √(Mw*kB*T/NA/π) / (σ^2*Ω11)
 end
 
@@ -73,14 +73,14 @@ end
 
 Scaled Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
 """
-function MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, z = [1.], Ω11 = Ω_11(T*kB/ε))
+function MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, z = Z1, Ω11 = Ω_11(T*kB/ε))
     dBdT = second_virial_coefficient_dT(eos,T,z)/NA
     B = second_virial_coefficient(eos,T,z)/NA
     return 3/8/√π / (σ^2*Ω11) * (T*dBdT+B)^(2/3)
 end
 
 
-function property_CE(param::AbstractEntropyScalingParams, T, z = [1.0]; mixing = nothing)
+function property_CE(param::AbstractEntropyScalingParams, T, z = Z1; mixing = nothing)
     Mw = param.base.Mw
     σ,ε = param.σ,param.ε
     prop = transport_property(param)
@@ -93,7 +93,7 @@ function property_CE(param::AbstractEntropyScalingParams, T, z = [1.0]; mixing =
     return Y₀
 end
 
-function property_CE_plus(param::AbstractEntropyScalingParams, eos, T, z = [1.0]; mixing = nothing)
+function property_CE_plus(param::AbstractEntropyScalingParams, eos, T, z = Z1; mixing = nothing)
     σ,ε = param.σ,param.ε
     prop = transport_property(param)
     if length(param.Mw) == 1
@@ -106,18 +106,18 @@ function property_CE_plus(param::AbstractEntropyScalingParams, eos, T, z = [1.0]
 end
 
 #TODO call CE mixing rules in CE functions
-property_CE(prop::AbstractViscosity, T, Mw, σ, ε, z=[1.]) = viscosity_CE(T, Mw, σ, ε)
-property_CE_plus(prop::AbstractViscosity, eos, T, σ, ε, z=[1.]) = viscosity_CE_plus(eos, T, σ, ε)
-property_CE(prop::AbstractThermalConductivity, T, Mw, σ, ε, z=[1.]) = thermal_conductivity_CE(T, Mw, σ, ε)
-property_CE_plus(prop::AbstractThermalConductivity, eos, T, σ, ε, z=[1.]) = thermal_conductivity_CE_plus(eos, T, σ, ε)
-property_CE(prop::SelfDiffusionCoefficient, T, Mw, σ, ε, z=[1.]) = self_diffusion_coefficient_CE(T, Mw, σ, ε)
-property_CE_plus(prop::SelfDiffusionCoefficient, eos, T, σ, ε, z=[1.]) = self_diffusion_coefficient_CE_plus(eos, T, σ, ε)
+property_CE(prop::AbstractViscosity, T, Mw, σ, ε, z = Z1) = viscosity_CE(T, Mw, σ, ε)
+property_CE_plus(prop::AbstractViscosity, eos, T, σ, ε, z = Z1) = viscosity_CE_plus(eos, T, σ, ε)
+property_CE(prop::AbstractThermalConductivity, T, Mw, σ, ε, z = Z1) = thermal_conductivity_CE(T, Mw, σ, ε)
+property_CE_plus(prop::AbstractThermalConductivity, eos, T, σ, ε, z = Z1) = thermal_conductivity_CE_plus(eos, T, σ, ε)
+property_CE(prop::SelfDiffusionCoefficient, T, Mw, σ, ε, z = Z1) = self_diffusion_coefficient_CE(T, Mw, σ, ε)
+property_CE_plus(prop::SelfDiffusionCoefficient, eos, T, σ, ε, z = Z1) = self_diffusion_coefficient_CE_plus(eos, T, σ, ε)
 
-function property_CE(prop::P, T, Mw, σ, ε, z=[1.]) where 
+function property_CE(prop::P, T, Mw, σ, ε, z = Z1) where 
                     {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
     return MS_diffusion_coefficient_CE(T, Mw, σ, ε)
 end
-function property_CE_plus(prop::P, eos, T, σ, ε, z=[1.]) where
+function property_CE_plus(prop::P, eos, T, σ, ε, z = Z1) where
                     {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
     return MS_diffusion_coefficient_CE_plus(eos, T, σ, ε, z)
 end
@@ -187,6 +187,7 @@ end
 
 """
     correspondence_principle(Tc, pc)
+    correspondence_principle(eos)
 
 Calculate the LJ parameters from the critical temperature and pressure.
 """
@@ -199,6 +200,10 @@ function correspondence_principle(Tc, pc)
     return σ, ε
 end
 
+function correspondence_principle(eos)
+    Tc,Pc,_ = crit_pure(eos)
+    return correspondence_principle(Tc, pc)
+end
 
 # Mixing rule from Wilke (1950) [DOI: 10.1063/1.1747673] and Mason and Saxena (1958) [DOI: 10.1063/1.1724352]
 struct Wilke <: AbstractTransportPropertyMixing end
@@ -246,7 +251,7 @@ Mixing rule for Chapman-Enskog diffusion coefficient by Miller and Carman (1961)
 and Experiment for Certain Gas Mixtures. Trans. Faraday Soc. 1961, 57 (0), 2143–2150. 
     https://doi.org/10.1039/TF9615702143.
 """
-function mix_CE(::MasonSaxena,param::BaseParam, Y, x)
+function mix_CE(::MillerCarman,param::BaseParam, Y, x)
     return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end
 
