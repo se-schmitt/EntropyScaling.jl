@@ -17,6 +17,8 @@ abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
 abstract type AbstractTransportPropertyData end
 
+abstract type AbstractTransportPropertyMixing end
+
 struct Reference
     doi::String
     shortref::String
