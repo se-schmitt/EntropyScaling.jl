@@ -13,7 +13,7 @@ end
 function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z=[1.])
     param = model[Viscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
-    sˢ = reduced_entropy(param, s, z)
+    sˢ = scaling_variable(param, s, z)
     ηˢ = exp(scaling_model(param, sˢ, z))
     return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true)
 end
@@ -34,7 +34,7 @@ end
 function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z=[1.])
     param = model[ThermalConductivity()]
     s = entropy_conf(model.eos, ϱ, T, z)
-    sˢ = reduced_entropy(param, s, z)
+    sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
     return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true)
 end
@@ -58,7 +58,7 @@ end
 function ϱT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T)
     param = model[SelfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T)
-    sˢ = reduced_entropy(param, s)
+    sˢ = scaling_variable(param, s)
     Dˢ = exp(scaling_model(param, sˢ))
     return scaling(param, model.eos, Dˢ, T, ϱ, s; inv=true)
 end
@@ -80,7 +80,7 @@ end
 function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
     param = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
-    sˢ = reduced_entropy(param, s, z)
+    sˢ = scaling_variable(param, s, z)
     Dˢ = exp(scaling_model(param, sˢ, z))
     return scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
 end
