@@ -142,7 +142,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
 
             # Scaling
             s = entropy_conf.(eos, data.ϱ, data.T)
-            sˢ = reduced_entropy.(param,s)
+            sˢ = scaling_variable.(param,s)
             Yˢ = scaling.(param, eos, data.Y, data.T, data.ϱ, s)
 
             # Fit
@@ -208,7 +208,7 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     Y₀⁺min = mix_CE(prop, param.CE_model, param.Y₀⁺min, z)
     
     # Entropy
-    sˢ = reduced_entropy(param,s,z)
+    sˢ = scaling_variable(param,s,z)
     Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
     return Yˢ
 end
@@ -218,7 +218,7 @@ function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
     param_self = model[SelfDiffusionCoefficient()]
     param_inf = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
-    sˢ = reduced_entropy(param_self, s, z)
+    sˢ = scaling_variable(param_self, s, z)
     Di = similar(z)
 
     for i in 1:length(model.eos)

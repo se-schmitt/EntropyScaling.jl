@@ -135,8 +135,11 @@ get_m(m::AbstractEntropyScalingParams) = m.m
 #caching
 _eos_cache(eos) = eos
 
-#reduced entropy
-function reduced_entropy(param::AbstractEntropyScalingParams, s, z = Z1)
+# entropy scaling variable
+function scaling_variable(param::AbstractEntropyScalingParams, s, z = Z1)
+    return -s / R
+end
+function scaling_variable(param::FrameworkParams, s, z = Z1)
     return -s / R / _dot(get_m(param),z)
 end
 
