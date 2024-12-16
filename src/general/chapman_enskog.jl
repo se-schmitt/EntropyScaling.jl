@@ -1,15 +1,22 @@
+export ChapmanEnskogModel, CEPlusModel
+
 abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
 
 """
     ChapmanEnskogModel
 """
-struct ChapmanEnskogModel{T,P,C} <: AbstractChapmanEnskogModel
+struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
     σ::Vector{T} 
     ε::Vector{T}
     Mw::Vector{T}       #TODO differentiate between Mw and M_ref
     collision::C 
 end
-ChapmanEnskogModel(σ,ε,Mw,prop,col=KimMonroe()) = ChapmanEnskogModel(σ,ε,Mw,prop,col)
+function ChapmanEnskogModel(σ::Vector{T},ε::Vector{T},Mw::Vector{T};collision_integral=KimMonroe()) where {T} 
+    return ChapmanEnskogModel(σ,ε,Mw,collision_integral)
+end
+function ChapmanEnskogModel(σ::Float64,ε::Float64,Mw::Float64;collision_integral=KimMonroe())
+    return ChapmanEnskogModel([σ],[ε],[Mw],collision_integral)
+end
 Base.length(model::AbstractChapmanEnskogModel) = length(Mw)
 
 """
@@ -22,7 +29,7 @@ struct CEPlusModel{T,E,P,C} <: AbstractChapmanEnskogModel
     eos::E
     collision::C 
 end
-CEPlusModel(σ,ε,eos,prop,col=KimMonroe()) = CEPlusModel(σ,ε,get_Mw(eos),eos,prop,col)
+CEPlusModel(σ,ε,eos,col=KimMonroe()) = CEPlusModel(σ,ε,get_Mw(eos),eos,col)
 
 """
     viscosity_CE(model::ChapmanEnskogModel, T, z=[1.])
@@ -213,7 +220,7 @@ end
 Collision integrals from [Neufeld (1972)](https://doi.org/10.1063/1.1678363). The non-polynomial terms are neglected (as REFPROP 10.0 does)
 """
 function Ω_22_neufeld(T_red)
-    16145*(T_red)^−0.14874 + 0.52487*exp(−0.77320*T_red) + 2.16178*exp(−2.43787*T_red)
+    return 1.6145*(T_red)^(-0.14874) + 0.52487*exp(-0.77320*T_red) + 2.16178*exp(-2.43787*T_red)
 end
 
 """
