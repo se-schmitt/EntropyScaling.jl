@@ -98,3 +98,4 @@ transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransport
 
 transport_property(x::AbstractTransportProperty) = x
 transport_property(x::BaseParam) = x.prop
+transport_property(x::AbstractEntropyScalingParams) = x.base.prop
