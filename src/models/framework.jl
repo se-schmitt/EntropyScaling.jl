@@ -14,18 +14,18 @@ Structure to store the parameters of the framework model. The parameters are:
 struct FrameworkParams{P,T} <: AbstractEntropyScalingParams
     α::Matrix{T}
     m::Vector{Float64}
-    σ::Vector{Float64}
-    ε::Vector{Float64}
     Y₀⁺min::Vector{Float64}
+    CE_model::ChapmanEnskogModel
     base::BaseParam{P}
 end
 
 # Constructor for fitting
 function FrameworkParams(prop::AbstractTransportProperty, eos, data; solute=nothing)
     α0 = get_α0_framework(prop)
-    σ, ε, Y₀⁺min = init_framework_params(eos, prop; solute=solute)
-    base = BaseParam(prop, get_Mw(eos), data; solute=solute)
-    return FrameworkParams(α0, get_m(eos), σ, ε, Y₀⁺min, base)
+    Mw = get_Mw(eos)
+    CE_model, Y₀⁺min = init_framework_params(eos, prop; Mw=Mw, solute=solute)
+    base = BaseParam(prop, Mw, data; solute=solute)
+    return FrameworkParams(α0, get_m(eos), Y₀⁺min, CE_model, base)
 end
 
 # Constructor for existing parameters
@@ -34,8 +34,10 @@ function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
     size(α,1) == 5 || throw(DimensionMismatch("Parameter array 'α' must have 5 rows."))
     size(α,2) == length(eos) || throw(DimensionMismatch("Parameter array 'α' doesn't fit EOS model."))
 
-    σ, ε, Y₀⁺min = init_framework_params(eos, prop; solute=solute)
-    return FrameworkParams(α, convert(Vector{Float64},get_m(eos)), σ, ε, Y₀⁺min, BaseParam(prop, get_Mw(eos)))
+    Mw = get_Mw(eos)
+    CE_model, Y₀⁺min = init_framework_params(eos, prop; Mw=Mw, solute=solute)    
+    base = BaseParam(prop, Mw)
+    return FrameworkParams(α, convert(Vector{Float64},get_m(eos)), Y₀⁺min, CE_model, base)
 end
 
 # Constructor for merging multiple parameter sets
@@ -45,18 +47,21 @@ function FrameworkParams(self::FrameworkParams{<:SelfDiffusionCoefficient},
     what_inf = 1:length(self.base) .!= idiff
     new_self = deepcopy(self)
     new_self.α[:,what_inf] = inf.α[:,what_inf]
-    for k in [:m,:σ,:ε,:Y₀⁺min]
+    for k in [:m,:Y₀⁺min]
         getfield(new_self,k)[what_inf] = getfield(inf,k)[what_inf]
     end
-    new_self.base.Mw[what_inf] = inf.base.Mw[what_inf]
+    for k in [:σ,:ε,:Mw]
+        getfield(new_self.CE_model,k)[what_inf] = getfield(inf.CE_model,k)[what_inf]
+    end
+    # new_self.base.Mw[what_inf] = inf.base.Mw[what_inf] #TODO ensure used correctly
     
     return new_self
 end
 
-
 get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
-function init_framework_params(eos, prop; solute = nothing, calculate_Ymin = true)
+
+function init_framework_params(eos, prop; Mw, solute = nothing)
     # Calculation of σ and ε
     eos_pure = vcat(split_model(eos),isnothing(solute) ? [] : solute)
     cs = crit_pure.(eos_pure)
@@ -64,25 +69,26 @@ function init_framework_params(eos, prop; solute = nothing, calculate_Ymin = tru
     σε = correspondence_principle.(Tc,pc)
     (σ, ε) = [getindex.(σε,i) for i in 1:2]
 
+    !isnothing(solute) ? append!(Mw,get_Mw(solute)) : nothing
     if typeof(prop) == InfDiffusionCoefficient
         length(eos_pure) != 2 && error("Solvent and solute must each contain one component.")
-        σ = mean(σ)*ones(length(eos))
-        ε = geomean(ε)*ones(length(eos))
+        _1 = ones(Float64, length(eos))
+        σ = mean(σ)*_1
+        ε = geomean(ε)*_1
+        Mw = calc_M_CE(Mw)*_1
     end
+    CE_model = ChapmanEnskogModel(repeat([""],length(eos)),σ,ε,Mw)
 
     # Calculation of Ymin
     Ymin = Vector{Float64}(undef,length(eos))
-    if calculate_Ymin
-        for i in 1:length(eos)
-            optf = OptimizationFunction((x,p) -> property_CE_plus(prop, eos_pure[i], x[1], σ[i], ε[i]), AutoForwardDiff())
-            prob = OptimizationProblem(optf, [2*Tc[i]])
-            sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
-            Ymin[i] = sol.objective[1]
-        end
-    else
-        Ymin .= 0
+    for i in 1:length(eos)
+        optf = OptimizationFunction((x,p) -> property_CE_plus(prop, CE_model, eos, x[1]; i=i), AutoForwardDiff())
+        prob = OptimizationProblem(optf, [2*Tc[i]])
+        sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
+        Ymin[i] = sol.objective[1]
     end
-    return σ, ε, Ymin
+    
+    return CE_model, Ymin
 end
 
 """
@@ -155,7 +161,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
             α_fit = get_α0_framework(prop)
             α_fit[what_fit] .= sol.u
 
-            push!(params, FrameworkParams(float.(α_fit), param.m, param.σ, param.ε, param.Y₀⁺min, param.base))
+            push!(params, FrameworkParams(float.(α_fit), param.m, param.Y₀⁺min, param.CE_model, param.base))
         end
     end
     return FrameworkModel(eos, params)
@@ -195,22 +201,12 @@ W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
 
 function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     k = !inv ? 1 : -1
-    # Transport property scaling
-    if length(z) == 1
-        Y₀⁺ = property_CE_plus(param.base.prop, eos, T, param.σ[1], param.ε[1])
-    elseif param.base.prop isa InfDiffusionCoefficient
-        Y₀⁺ = property_CE_plus(MaxwellStefanDiffusionCoefficient(), eos, T, param.σ[1], param.ε[1], z)
-    else
-        Y₀⁺_all = property_CE_plus.(param.base.prop, split_model(eos), T, param.σ, param.ε, z)
-        Y₀⁺ = mix_CE(param.base, Y₀⁺_all, z)
-    end
-    return scaling_property(param, eos, Y, Y₀⁺, T, ϱ, s, z; inv)
-end
 
-#TODO: better name??
-function scaling_property(param::FrameworkParams, eos, Y, Y₀⁺, T, ϱ, s, z=[1.]; inv=false) 
-    k = !inv ? 1 : -1
-    Y₀⁺min = mix_CE(param.base, param.Y₀⁺min, z)
+    # Transport property scaling
+    prop = transport_property(param)
+    Y₀⁺ = property_CE_plus(prop, param.CE_model, eos, T, z)
+    Y₀⁺min = mix_CE(prop, param.CE_model, param.Y₀⁺min, z)
+    
     # Entropy
     sˢ = reduced_entropy(param,s,z)
     Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
