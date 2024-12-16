@@ -5,6 +5,7 @@ version = "0.2.0"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -22,6 +23,7 @@ MicthermExt = "MATLAB"
 [compat]
 Clapeyron = "0.6"
 DelimitedFiles = "1.9.1"
+FillArrays = "1.13.0"
 ForwardDiff = "0.10"
 LogExpFunctions = "0.3.29"
 MATLAB = "0.8"

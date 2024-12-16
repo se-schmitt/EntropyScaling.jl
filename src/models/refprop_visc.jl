@@ -10,6 +10,12 @@ struct RefpropRESParams{P,T} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end
 
+function RefpropRESParams(prop::AbstractTransportProperty,eos,αx,kwargs...)
+    σε = correspondence_principle.(split_model(eos))
+    σ,ε = first.(σε),last.(σε)
+    RefpropRESParams(αx, σ, ε, BaseParam(prop, get_Mw(eos)))
+end
+
 """
     RefpropRESModel{T} <: AbstractEntropyScalingModel
 
@@ -20,6 +26,8 @@ struct RefpropRESModel{E,FP} <: AbstractEntropyScalingModel
     params::FP
     eos::E
 end
+
+@modelmethods RefpropRESModel RefpropRESParams
 
 function scaling_model(param::RefpropRESParams, s, x=z1) where T
     g = (1.0,1.5,2.0,2.5)
@@ -53,7 +61,7 @@ function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=[1.]; inv=true)
     end
 end
 
-function viscosity_refprop(T,Mw,σ,ε) = viscosity_CE(T, Mw, σ, ε, Ω_22_newfeld(T*kB/ε))
+viscosity_refprop(T,Mw,σ,ε) = viscosity_CE(T, Mw, σ, ε, Ω_22_newfeld(T*kB/ε))
 
 function property_CE(param::RefpropRESParams{Viscosity}, T, z = [1.0]; mixing = nothing)
     Mw = param.base.Mw
