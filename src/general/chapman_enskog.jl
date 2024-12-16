@@ -1,3 +1,27 @@
+"""
+    ChapmanEnskogModel
+"""
+struct ChapmanEnskogModel{T,P,C} <: AbstractTransportPropertyModel
+    σ::T 
+    ε::T
+    Mw::T 
+    prop::P 
+    collision::C 
+end
+
+"""
+    ChapmanEnskogPlusModel
+"""
+struct ChapmanEnskogPlusModel{T,E,P,C} <: AbstractTransportPropertyModel
+    σ::T 
+    ε::T
+    eos::E
+    prop::P 
+    collision::C 
+end
+
+
+
 
 """
     viscosity_CE(T, Mw, σ, ε, Ω22 = Ω_22(T*kB/ε))

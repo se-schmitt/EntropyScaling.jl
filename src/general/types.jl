@@ -2,7 +2,8 @@ export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
 export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
 export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
 
-abstract type AbstractEntropyScalingModel end
+abstract type AbstractTransportPropertyModel end
+abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
