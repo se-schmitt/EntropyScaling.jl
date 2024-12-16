@@ -69,8 +69,6 @@ end
 #when the param is just a AbstractEntropyScalingParam
 function getindex_prop(x::AbstractEntropyScalingParams,prop::P) where P <: AbstractTransportProperty
     T = get_prop_type(x)
-    if 
-    idx = findfirst(Base.Fix1(transport_compare_type,P),x)
     if transport_compare_type(T,P)
         return quote
             getindex_prop_error(P)
@@ -112,7 +110,43 @@ get_m(m::AbstractEntropyScalingParams) = m.m
 _eos_cache(eos) = eos
 
 #reduced entropy
-function reduced_entropy(param::AbstractEntropyScalingParams, s, z=[1.])
+function reduced_entropy(param::AbstractEntropyScalingParams, s, z = Z1)
     return -s / R / _dot(get_m(param),z)
 end
 
+
+function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
+    params_vec = Any[]
+    PARAM = paramstype(MODEL)
+    for (prop, α) in param_dict
+        T = eltype(α)
+        if α isa Vector && length(eos) == 1
+            αx = convert(Array{T,2},reshape(α,length(α),1))
+        else
+            αx = convert(Array{T,2},α)
+        end
+        push!(params_vec, build_param(PARAM, prop, eos, αx))
+    end
+    params = tuple(params_vec...)
+    return MODEL(eos, params)
+end
+
+build_model(::Type{MODEL},eos,params::Tuple) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
+build_model(::Type{MODEL},eos,params::AbstractVector) where MODEL = build_model(MODEL,eos,tuple(params...))
+
+function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,αx;kwargs...) where PARAM <: AbstractEntropyScalingParams
+    PARAM(prop,eos,αx,kwargs...)
+end
+
+function paramstype end
+#a macro that automates some definitions of model methods.
+#TODO: handle fitting for arbitrary methods.
+macro modelmethods(model,param)
+    return quote
+        EntropyScaling.paramstype(::Type{<:$model}) = $param
+        $model(eos,params::Tuple) = EntropyScaling.build_model($model,eos,params)
+        $model(eos,params::AbstractVector) = EntropyScaling.build_model($model,eos,params)
+        $model(eos,params::Dict{P}) where P<:EntropyScaling.AbstractTransportProperty = EntropyScaling.build_model($model,eos,params)
+        
+    end |> esc
+end
