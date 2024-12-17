@@ -1,6 +1,7 @@
 using Test
 using EntropyScaling
 using Clapeyron
+using CoolProp
 using DelimitedFiles
 
 include("framework.jl")
