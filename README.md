@@ -6,7 +6,7 @@
 
 # EntropyScaling.jl
 
-Transport property modeling based on entropy scaling, equations of state (EOS) and more.
+Transport property modeling based on entropy scaling and equations of state (EOS).
 
 This package provides models for 
 - the viscosity,
@@ -17,7 +17,7 @@ Currently, the following models are available:
 - Chapman-Enskog models for gases
 - Entropy Scaling framework
 
-The documentation of the package can be found [here][docs-stable-url].
+The documentation of the package can be found [here][docs-dev-url].
 
 For the EOS calculations, additional packages need to be imported. Alternatively, custom EOS
 functions can be defined. Implementations of EOS models are *not* included in this package.
