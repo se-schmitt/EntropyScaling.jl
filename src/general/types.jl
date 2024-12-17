@@ -2,7 +2,8 @@ export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
 export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
 export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
 
-abstract type AbstractEntropyScalingModel end
+abstract type AbstractTransportPropertyModel end
+abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
@@ -16,6 +17,8 @@ Base.broadcastable(prop::AbstractTransportProperty) = Ref(prop)
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
 abstract type AbstractTransportPropertyData end
+
+abstract type AbstractTransportPropertyMixing end
 
 struct Reference
     doi::String
@@ -48,10 +51,13 @@ end
 function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
                    p_range=(NaN,NaN); solute_name=missing) where
                    {P <: AbstractTransportProperty}
+
+
+    Mw isa Number && (Mw = [Mw])
     if prop isa InfDiffusionCoefficient
         Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
     end
-    return BaseParam(prop, solute_name, Mw, ref, N_dat, T_range, p_range)
+    return BaseParam(prop, solute_name, convert(Vector{Float64},Mw), ref, N_dat, T_range, p_range)
 end
 
 Base.length(base::BaseParam) = length(base.Mw)
@@ -89,60 +95,3 @@ transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractViscosity
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractThermalConductivity,T2 <: AbstractThermalConductivity} = true
 #fallback
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransportProperty,T2 <: AbstractTransportProperty} = false
-
-
-"""
-    viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
-
-Viscosity `η(p,T,x)` (`[η] = Pa s`).
-"""
-viscosity
-
-"""
-    ϱT_viscosity(model::EntropyScalingModel, ϱ, T, z=[1.])
-
-Viscosity `η(ϱ,T,x)` (`[η] = Pa s`).
-"""
-ϱT_viscosity
-
-"""
-    thermal_conductivity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
-
-Thermal conductivity `λ(p,T,x)` (`[λ] = W m⁻¹ K⁻¹`).
-"""
-thermal_conductivity
-
-"""
-    ϱT_thermal_conductivity(model::EntropyScalingModel, ϱ, T, z=[1.])
-
-Thermal conductivity `λ(ϱ,T,x)` (`[λ] = W m⁻¹ K⁻¹`).
-"""
-ϱT_thermal_conductivity
-
-"""
-    self_diffusion_coefficient(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
-
-Self-diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
-"""
-self_diffusion_coefficient
-
-"""
-    ϱT_self_diffusion_coefficient(model::EntropyScalingModel, ϱ, T, z=[1.])
-
-Self-diffusion coefficient `D(ϱ,T,x)` (`[D] = m² s⁻¹`).
-"""
-ϱT_self_diffusion_coefficient
-
-"""
-    MS_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown)
-
-Maxwell-Stefan diffusion coefficient `Ð(p,T,x)` (`[Ð] = m² s⁻¹`).
-"""
-MS_diffusion_coefficient
-
-"""
-    ϱT_MS_diffusion_coefficient(model::EntropyScalingModel, ϱ, T, z)
-
-Maxwell-Stefan diffusion coefficient `Ð(ϱ,T,x)` (`[Ð] = m² s⁻¹`).
-"""
-ϱT_MS_diffusion_coefficient

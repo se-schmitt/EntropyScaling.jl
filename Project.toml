@@ -5,7 +5,9 @@ version = "0.2.0"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
 SimpleNonlinearSolve = "727e6d20-b764-4bd8-a329-72de5adea6c7"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
@@ -21,7 +23,9 @@ MicthermExt = "MATLAB"
 [compat]
 Clapeyron = "0.6"
 DelimitedFiles = "1.9.1"
+FillArrays = "1"
 ForwardDiff = "0.10"
+LogExpFunctions = "0.3"
 MATLAB = "0.8"
 Optimization = "4.0.5"
 SimpleNonlinearSolve = "2.0.0"
@@ -30,8 +34,9 @@ julia = "1.10"
 
 [extras]
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
+CoolProp = "e084ae63-2819-5025-826e-f8e611a84251"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Clapeyron", "DelimitedFiles"]
+test = ["Test", "Clapeyron", "DelimitedFiles", "CoolProp"]
