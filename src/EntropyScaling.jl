@@ -33,7 +33,7 @@ include("utils/misc.jl")
 # Models 
 include("models/base.jl")
 include("models/framework.jl")
-include("models/refprop_visc.jl")
+include("models/refprop_res.jl")
 
 # Extensions
 if !isdefined(Base,:get_extension)

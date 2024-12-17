@@ -5,16 +5,17 @@ export RefpropRESModel, RefpropRESParams
 """
 struct RefpropRESParams{P,T} <: AbstractEntropyScalingParams
     n::Matrix{T}
+    ξ::Vector{T}
     CE_model::ChapmanEnskogModel
     base::BaseParam{P}
 end
 
-function RefpropRESParams(prop::AbstractTransportProperty, n::Matrix{T}, σ::Vector{T}, 
+function RefpropRESParams(prop::AbstractTransportProperty, n::Matrix{T}, ξ::Vector{T}, σ::Vector{T}, 
                           ε::Vector{T}, Mw::Vector{T}) where T
     
-    CE_model = ChapmanEnskogModel(repeat([""],length(Mw)),σ,ε,Mw,collision_integral=Neufeld())
+    CE_model = ChapmanEnskogModel(repeat([""],length(Mw)),σ,ε,Mw,collision_integral=KimMonroe())
     base = BaseParam(prop, Mw)
-    return RefpropRESParams(n,CE_model,base)
+    return RefpropRESParams(n,ξ,CE_model,base)
 end
 
 """
@@ -38,14 +39,14 @@ function scaling_model(param::RefpropRESParams{Viscosity}, s, x=z1)
 end
 
 function generic_powerseries_scaling_model(param, s, x, g)
-    n = param.n
+    n, ξ = param.n, param.ξ
     lnY⁺p1 = zero(Base.promote_eltype(n,s,x,g))
     @assert length(g) <= size(n,1)
     @assert length(x) == size(n,2)
-    for i in 1:length(g)
+    for i in eachindex(g)
         ni = zero(Base.promote_eltype(n,x))
-        for j in 1:length(x)
-            ni += x[j]*n[i,j]
+        for j in eachindex(x)
+            ni += x[j]*n[i,j]/(ξ[j]^g[i])
         end
         lnY⁺p1 += ni*s^g[i]
     end
