@@ -7,35 +7,35 @@ fun_na_error(fname,eostype) = error("Function `$fname` needs to be defined for e
 
 Pressure `p` (`[p] = Pa`).
 """
-pressure(eos::Any, ϱ, T, z=[1.]) = fun_na_error("pressure",typeof(eos))
+pressure(eos::Any, ϱ, T, z=Z1) = fun_na_error("pressure",typeof(eos))
 
 """
     molar_density(eos, p, T, z=[1.]; phase=:unknown)
 
 Molar density `ϱ` (`[ϱ] = mol/m³`).
 """
-molar_density(eos::Any, p, T, z=[1.]; phase=:unknown) = fun_na_error("molar_density",typeof(eos))
+molar_density(eos::Any, p, T, z=Z1; phase=:unknown) = fun_na_error("molar_density",typeof(eos))
 
 """
     entropy_conf(eos, ϱ, T, z=[1.])
 
 Configurational (or residual) entropy `s_conf` (`[s_conf] = J/(mol K)`).
 """
-entropy_conf(eos::Any, ϱ, T, z=[1.]) = fun_na_error("entropy_conf",typeof(eos))
+entropy_conf(eos::Any, ϱ, T, z=Z1) = fun_na_error("entropy_conf",typeof(eos))
 
 """
     second_virial_coefficient(eos, T, z=[1.])
 
 Second virial coefficient `B` (`[B] = m³/mol`).
 """
-second_virial_coefficient(eos::Any, T, z=[1.]) = fun_na_error("second_virial_coefficient",typeof(eos))
+second_virial_coefficient(eos::Any, T, z=Z1) = fun_na_error("second_virial_coefficient",typeof(eos))
 
 """
     second_virial_coefficient_dT(eos, T, z=[1.])
 
 Temperature derivative of the second virial coefficient `dBdT` (`[dBdT] = m³/(mol K)`).
 """
-second_virial_coefficient_dT(eos::Any, T, z=[1.]) = ForwardDiff.derivative.(xT -> second_virial_coefficient(eos, xT, z), T)
+second_virial_coefficient_dT(eos::Any, T, z=Z1) = ForwardDiff.derivative(xT -> second_virial_coefficient(eos, xT, z), T)
 
 # Critical properties
 """

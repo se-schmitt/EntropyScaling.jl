@@ -35,9 +35,14 @@ end
 Scaled Chapman-Enskog viscosity for the zero-density limit.
 """
 function viscosity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
-    x = zeros(Int64,length(model)); x[i] = 1
-    dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-    B = second_virial_coefficient(eos,T,x)/NA
+    if length(eos) == 1
+        dBdT = second_virial_coefficient_dT(eos,T)/NA
+        B = second_virial_coefficient(eos,T)/NA
+    else
+        x = zeros(Int64,length(model)); x[i] = 1
+        dBdT = second_virial_coefficient_dT(eos,T,x)/NA
+        B = second_virial_coefficient(eos,T,x)/NA
+    end
     return 5/16/√π / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
@@ -56,9 +61,14 @@ end
 Scaled Chapman-Enskog thermal conductivity for the zero-density limit.
 """
 function thermal_conductivity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
-    x = zeros(Int64,length(model)); x[i] = 1
-    dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-    B = second_virial_coefficient(eos,T,x)/NA
+    if length(eos) == 1
+        dBdT = second_virial_coefficient_dT(eos,T)/NA
+        B = second_virial_coefficient(eos,T)/NA
+    else
+        x = zeros(Int64,length(model)); x[i] = 1
+        dBdT = second_virial_coefficient_dT(eos,T,x)/NA
+        B = second_virial_coefficient(eos,T,x)/NA
+    end
     return 75/64/√π / (model.σ[i]^2*Ω(ThermalConductivity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
@@ -77,9 +87,14 @@ end
 Scaled Chapman-Enskog self-diffusion coefficient for the zero-density limit.
 """
 function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
-    x = zeros(Int64,length(model)); x[i] = 1
-    dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-    B = second_virial_coefficient(eos,T,x)/NA
+    if length(eos) == 1
+        dBdT = second_virial_coefficient_dT(eos,T)/NA
+        B = second_virial_coefficient(eos,T)/NA
+    else
+        x = zeros(Int64,length(model)); x[i] = 1
+        dBdT = second_virial_coefficient_dT(eos,T,x)/NA
+        B = second_virial_coefficient(eos,T,x)/NA
+    end
     return 3/8/√π / (model.σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
@@ -112,9 +127,13 @@ end
 
 # Chapman-Enskog mixture function
 function property_CE(prop::AbstractTransportProperty, model::ChapmanEnskogModel, T, z)
-    Y₀_all = [property_CE(prop, model, T; i=i) for i in 1:length(model)]
-    Y₀ = mix_CE(prop, model, Y₀_all, z)
-    return Y₀
+    N_c = length(model)
+    if N_c == 1
+        return property_CE(prop, model, T; i=1) 
+    else
+        Y₀_all = [property_CE(prop, model, T; i=i) for i in 1:N_c]
+        return mix_CE(prop, model, Y₀_all, z)
+    end
 end
 
 function property_CE(prop::P, model::ChapmanEnskogModel, T, z=Z1) where 
@@ -129,9 +148,13 @@ property_CE(prop::SelfDiffusionCoefficient, model::ChapmanEnskogModel, T; i) = s
 
 # Scaled CE mixture function
 function property_CE_plus(prop::AbstractTransportProperty, model::ChapmanEnskogModel, eos, T, z)
-    Y₀⁺_all = [property_CE_plus(prop, model, eos, T; i=i) for i in 1:length(model)]
-    Y₀⁺ = mix_CE(prop, model, Y₀⁺_all, z)
-    return Y₀⁺
+    N_c = length(model)
+    if N_c == 1
+        return property_CE_plus(prop, model, eos, T; i=1)
+    else
+        Y₀⁺_all = [property_CE_plus(prop, model, eos, T; i=i) for i in 1:N_c]
+        return mix_CE(prop, model, Y₀⁺_all, z)
+    end
 end
 
 function property_CE_plus(prop::P, model::ChapmanEnskogModel, eos, T, z = Z1; i=0) where

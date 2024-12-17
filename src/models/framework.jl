@@ -199,7 +199,7 @@ end
 #sigmoid function with bias
 W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
 
-function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
+function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=Z1; inv=false)
     k = !inv ? 1 : -1
 
     # Transport property scaling
@@ -209,7 +209,8 @@ function scaling(param::FrameworkParams, eos, Y, T, ϱ, s, z=[1.]; inv=false)
     
     # Entropy
     sˢ = scaling_variable(param,s,z)
-    Yˢ = (W(sˢ)/Y₀⁺ + (1.0-W(sˢ))/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
+    Ws = W(sˢ)
+    Yˢ = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^k * plus_scaling(param.base, Y, T, ϱ, s, z; inv=inv)
     return Yˢ
 end
 

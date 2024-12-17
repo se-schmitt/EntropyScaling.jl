@@ -5,12 +5,12 @@ Viscosity `η(p,T,x)` (`[η] = Pa s`).
 """
 viscosity
 
-function viscosity(model::AbstractEntropyScalingModel, p, T, z=[1.]; phase=:unknown)
+function viscosity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     return ϱT_viscosity(model, ϱ, T, z)
 end
 
-function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z=[1.])
+function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z=Z1)
     param = model[Viscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
@@ -26,12 +26,12 @@ Thermal conductivity `λ(p,T,x)` (`[λ] = W m⁻¹ K⁻¹`).
 """
 thermal_conductivity
 
-function thermal_conductivity(model::AbstractEntropyScalingModel, p, T, z=[1.]; phase=:unknown)
+function thermal_conductivity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     return ϱT_thermal_conductivity(model, ϱ, T, z)
 end
 
-function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z=[1.])
+function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z=Z1)
     param = model[ThermalConductivity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
@@ -46,7 +46,7 @@ Self-diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
 """
 self_diffusion_coefficient
 
-function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=[1.]; phase=:unknown)
+function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
     if length(model) == 1
         return ϱT_self_diffusion_coefficient(model, ϱ, T)
