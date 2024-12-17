@@ -13,14 +13,10 @@ This package provides models for
 - the thermal conductivity, and
 - diffusion coefficients.
 
-Currently, the following models are available:
-- Chapman-Enskog models for gases
-- Entropy Scaling framework
-
 The documentation of the package can be found [here][docs-dev-url].
 
 For the EOS calculations, additional packages need to be imported. Alternatively, custom EOS
-functions can be defined. Implementations of EOS models are *not* included in this package.
+functions might be defined. Implementations of EOS models are *not* included in this package.
 
 ## Installation
 
