@@ -19,4 +19,10 @@ $$Y^{\rm s} = Y^{\rm s}\left(s_{\rm conf}\right).$$
 Entropy scaling enables the prediction of transport porperties in all fluid phases based on 
 few experimental data.
 
+## Installation
+
+## Available Transport Property Models
+
+## Compatible EOS Model Packages
+
 ...
