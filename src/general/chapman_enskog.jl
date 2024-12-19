@@ -20,8 +20,8 @@ Chapman-Enskog transport properties for the zero-density limit.
     ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe())  
 
 Input arguments can either be single values (pure) or vectors. 
-In case no parameters are provided, values are taken from Refs. [1,2] (if available).
-Mixture properties are calculated according to the models from Wilke [3] (viscosity), Mason and Saxen [4] (thermal conductivity), and Miller and Carman [5] (self-diffusion coefficient).
+In case no parameters are provided, values are taken *Poling et al. (2001)* or *Yang et al. (2022)* (if available).
+Mixture properties are calculated according to the models from *Wilke (1950)* (viscosity), *Mason and Saxen (1958)* (thermal conductivity), and *Miller and Carman (1961)* (self-diffusion coefficient).
 [* to be implemented]
 
 ## References
@@ -185,8 +185,8 @@ struct Neufeld <: AbstractCollisionIntegralMethod end
 Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for viscosity/thermal conductivity) at the specified temperature `T`.
 
 Two methods are implemented:
-- `KimMonroe()` [1] and
-- `Neufeld()` [2]
+- `KimMonroe()`: *Kim and Monroe (2014)* and
+- `Neufeld()`: *Neufeld et al. (1972)*
 
 ## References
 1.  S. U. Kim and C. W. Monroe: High-Accuracy Calculations of Sixteen Collision Integrals for Lennard-Jones (12-6) Gases and Their Interpolation to Parameterize Neon, Argon, and Krypton, Journal of Computational Physics 273 (2014) 358–373, DOI: https://doi.org/10.1016/j.jcp.2014.05.018.
