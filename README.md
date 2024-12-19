@@ -47,7 +47,7 @@ T = 300.
 η = viscosity_CE(T, Mw, σ, ε)
 ```
 
-**Entropy scaling framework in combination with [Clapeyron.jl](https://github.com/ClapeyronThermo/Clapeyron.jl)**
+**Fitting a new entropy scaling model**
 
 ```julia
 using EntropyScaling, Clapeyron
