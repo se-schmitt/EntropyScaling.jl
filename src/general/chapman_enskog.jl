@@ -20,6 +20,10 @@ function ChapmanEnskogModel(comps::String, σ::Float64,ε::Float64,Mw::Float64;c
 end
 Base.length(model::AbstractChapmanEnskogModel) = length(model.Mw)
 
+# TODO add references (LTD style)
+# TODO make CE also a models and use default functions `viscosity(...)` etc.
+# TODO add LJ parameters from Poling to database
+
 """
     viscosity_CE(model::ChapmanEnskogModel, T, z=[1.])
 
