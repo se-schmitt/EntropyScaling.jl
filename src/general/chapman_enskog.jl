@@ -3,18 +3,10 @@ export ChapmanEnskogModel
 abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
 
 # TODO add LJ parameters from Poling to database
-raw"""
+"""
     ChapmanEnskogModel <: AbstractTransportPropertyModel
 
 Chapman-Enskog transport properties for the zero-density limit.
-
-```math
-\begin{aligned}
-\eta_{\varrho \rightarrow 0}              &= \frac{5}{16} \sqrt{\frac{M k_{\rm B} T}{\pi N_{\rm A}}} \frac{1}{\sigma_{\rm CE}^2 \Omega^{(2,2)}} \\
-\lambda_{\varrho \rightarrow 0}	          &= \frac{75}{64} k_{\rm B} \sqrt{\frac{R T}{M \pi}} \frac{1}{\sigma_{\rm CE}^2 \Omega^{(2,2)}}\\
-D_{\varrho \rightarrow 0} \varrho^{\rm m} &= \frac{3}{8} \sqrt{\frac{M k_{\rm B} T}{\pi N_{\rm A}}} \frac{1}{\sigma_{\rm CE}^2 \Omega^{(1,1)}}
-\end{aligned}
-```
 
 ## Fields
 - `σ::Vector{T}`: Lennard-Jones size parameter (`[σ] = m`)
@@ -187,10 +179,10 @@ struct Neufeld <: AbstractCollisionIntegralMethod end
 Ω(prop::Union{Viscosity,ThermalConductivity},method::Neufeld,T_red) = Ω_22_neufeld(T_red)
 Ω(prop::DiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
 
-raw"""
+"""
     Ω(poperty::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
 
-Calculates the collision integral for a given `model` and `property` (``\Omega_{11}`` for diffusion coefficients and ``\Omega_{22}`` for viscosity/thermal conductivity) at the specified temperature `T`.
+Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for viscosity/thermal conductivity) at the specified temperature `T`.
 
 Two methods are implemented:
 - `KimMonroe()` [1] and
@@ -198,7 +190,7 @@ Two methods are implemented:
 
 ## References
 1.  S. U. Kim and C. W. Monroe: High-Accuracy Calculations of Sixteen Collision Integrals for Lennard-Jones (12-6) Gases and Their Interpolation to Parameterize Neon, Argon, and Krypton, Journal of Computational Physics 273 (2014) 358–373, DOI: https://doi.org/10.1016/j.jcp.2014.05.018.
-2.  P. D. Neufeld, A. R. Janzen, and R. A. Aziz: Empirical Equations to Calculate 16 of the Transport Collision Integrals Ω  ( l, s )*  for the Lennard‐Jones (12–6) Potential, The Journal of Chemical Physics 57 (1972) 1100–1102, DOI: https://doi.org/10.1063/1.1678363.
+2.  P. D. Neufeld, A. R. Janzen, and R. A. Aziz: Empirical Equations to Calculate 16 of the Transport Collision Integrals Ω(l,s)* for the Lennard‐Jones (12–6) Potential, The Journal of Chemical Physics 57 (1972) 1100–1102, DOI: https://doi.org/10.1063/1.1678363.
 """
 Ω(prop::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*kB/model.ε[i])
 
