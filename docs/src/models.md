@@ -8,9 +8,9 @@ Pages = ["models.md"]
 
 Chapman-Enskog models for transport properties at the zero-density limit based on the kinetic gas theory.
 
-"""@docs
+```@docs
 EntropyScaling.ChapmanEnskogModel
-"""
+```
 
 ## Entropy Scaling Models
 
@@ -24,10 +24,10 @@ Entropy scaling enables the prediction of transport porperties in all fluid phas
 
 ### Available Models
 
-"""@docs
+```@docs
 EntropyScaling.FrameworkModel
 EntropyScaling.RefpropRESModel
-"""
+```
 
 ### Fitting Entropy Scaling Parameters
 
