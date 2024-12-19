@@ -2,8 +2,42 @@ export ChapmanEnskogModel
 
 abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
 
-"""
-    ChapmanEnskogModel
+# TODO add LJ parameters from Poling to database
+raw"""
+    ChapmanEnskogModel <: AbstractTransportPropertyModel
+
+Chapman-Enskog transport properties for the zero-density limit.
+
+```math
+\begin{aligned}
+\eta_{\varrho \rightarrow 0}              &= \frac{5}{16} \sqrt{\frac{M k_{\rm B} T}{\pi N_{\rm A}}} \frac{1}{\sigma_{\rm CE}^2 \Omega^{(2,2)}} \\
+\lambda_{\varrho \rightarrow 0}	          &= \frac{75}{64} k_{\rm B} \sqrt{\frac{R T}{M \pi}} \frac{1}{\sigma_{\rm CE}^2 \Omega^{(2,2)}}\\
+D_{\varrho \rightarrow 0} \varrho^{\rm m} &= \frac{3}{8} \sqrt{\frac{M k_{\rm B} T}{\pi N_{\rm A}}} \frac{1}{\sigma_{\rm CE}^2 \Omega^{(1,1)}}
+\end{aligned}
+```
+
+## Fields
+- `σ::Vector{T}`: Lennard-Jones size parameter (`[σ] = m`)
+- `ε::Vector{T}`: Lennard-Jones energy parameter (`[ε] = J`)
+- `Mw::Vector{T}`: molar mass (`[Mw] = kg mol⁻¹`)
+- `collision::C`: collision integral method (`KimMonroe()` (default) or `Neufeld()`, see [`Ω`](@ref))
+
+## Constructors
+
+    ChapmanEnskogModel(components; collision_integral=KimMonroe())*  
+    ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe())  
+
+Input arguments can either be single values (pure) or vectors. 
+In case no parameters are provided, values are taken from Refs. [1,2] (if available).
+Mixture properties are calculated according to the models from Wilke [3] (viscosity), Mason and Saxen [4] (thermal conductivity), and Miller and Carman [5] (self-diffusion coefficient).
+[* to be implemented]
+
+## References
+1.  B. E. Poling, J. M. Prausnitz, and J. P. O’Connell: The Properties of Gases and Liquids, 5th, ed. McGraw-Hill, New York (2001).
+2.  X. Yang, X. Xiao, M. Thol, M. Richter, and I. H. Bell: Linking Viscosity to Equations of State Using Residual Entropy Scaling Theory, Int. J. Thermophys. 43 (2022) 183, DOI: https://doi.org/10.1007/s10765-022-03096-9.
+3.  C. R. Wilke: A Viscosity Equation for Gas Mixtures, The Journal of Chemical Physics 18 (1950) 517–519, DOI: https://doi.org/10.1063/1.1747673.
+4.  E. A. Mason and S. C. Saxena: Approximate Formula for the Thermal Conductivity of Gas Mixtures, The Physics of Fluids 1 (1958) 361–369, DOI: https://doi.org/10.1063/1.1724352.
+5.  L. Miller and P. C. Carman: Self-Diffusion in Mixtures. Part 4. -- Comparison of Theory and Experiment for Certain Gas Mixtures, Trans. Faraday Soc. 57 (1961) 2143–2150, DOI: https://doi.org/10.1039/TF9615702143.
 """
 struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
     components::Vector{String}
@@ -20,24 +54,14 @@ function ChapmanEnskogModel(comps::String, σ::Float64,ε::Float64,Mw::Float64;c
 end
 Base.length(model::AbstractChapmanEnskogModel) = length(model.Mw)
 
-# TODO add references (LTD style)
-# TODO make CE also a models and use default functions `viscosity(...)` etc.
-# TODO add LJ parameters from Poling to database
-
-"""
-    viscosity_CE(model::ChapmanEnskogModel, T, z=[1.])
-
-Chapman-Enskog viscosity for the zero-density limit.
-"""
+# Viscosity
+function viscosity(model::ChapmanEnskogModel, p, T, z=Z1)
+    return property_CE(Viscosity(), model, T, z)
+end
 function viscosity(model::ChapmanEnskogModel, T; i=1)
     return 5/16 * √(model.Mw[i]*kB*T/NA/π) / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i))
 end
 
-"""
-    viscosity_CE_plus(model::ChapmanEnskogModel, eos, T, z=[1.])
-
-Scaled Chapman-Enskog viscosity for the zero-density limit.
-"""
 function viscosity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
@@ -50,20 +74,14 @@ function viscosity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     return 5/16/√π / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
-"""
-    thermal_conductivity(model::ChapmanEnskogModel, T, z=[1.])
-
-Chapman-Enskog thermal conductivity for the zero-density limit.
-"""
+# Thermal conductivity
+function thermal_conductivity(model::ChapmanEnskogModel, p, T, z=Z1)
+    return property_CE(ThermalConductivity(), model, T, z)
+end
 function thermal_conductivity(model::ChapmanEnskogModel, T; i=1)
     return 75/64 * kB * √(R*T/model.Mw[i]/π) / (model.σ[i]^2*Ω(ThermalConductivity(),model,T;i=i))
 end
 
-"""
-    thermal_conductivity_CE_plus(model:ChapmanEnskogModel, eos, T, z=[1.])
-
-Scaled Chapman-Enskog thermal conductivity for the zero-density limit.
-"""
 function thermal_conductivity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
@@ -76,20 +94,14 @@ function thermal_conductivity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     return 75/64/√π / (model.σ[i]^2*Ω(ThermalConductivity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
-"""
-    self_diffusion_coefficient(model, T, z = [1.0])
-
-Chapman-Enskog diffusion coefficient for the zero-density limit.
-"""
+# Self-diffusion coefficient
+function self_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z=Z1)
+    return property_CE(SelfDiffusionCoefficient(), model, T, z)
+end
 function self_diffusion_coefficient(model::ChapmanEnskogModel, T; i=1)
     return 3/8 * √(model.Mw[i]*kB*T/NA/π) / (model.σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i))
 end
 
-"""
-    self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z=[1.])
-
-Scaled Chapman-Enskog self-diffusion coefficient for the zero-density limit.
-"""
 function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
@@ -102,21 +114,15 @@ function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i
     return 3/8/√π / (model.σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
-"""
-    MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=[1.])
-
-Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
-"""
-function MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=[1.])
+# Maxwell-Stefan diffusion coefficient
+function MS_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z)
+    return MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z)
+end
+function MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=Z1)
     length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
     return 3/8 * √(model.Mw[1]*kB*T/NA/π) / (model.σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1))
 end
 
-"""
-    MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z=[1.])
-
-Scaled Chapman-Enskog mutual diffusion coefficient for the zero-density limit.
-"""
 function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z = Z1; i=0)
     length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
     if i != 0
@@ -181,13 +187,22 @@ struct Neufeld <: AbstractCollisionIntegralMethod end
 Ω(prop::Union{Viscosity,ThermalConductivity},method::Neufeld,T_red) = Ω_22_neufeld(T_red)
 Ω(prop::DiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
 
+raw"""
+    Ω(poperty::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
+
+Calculates the collision integral for a given `model` and `property` (``\Omega_{11}`` for diffusion coefficients and ``\Omega_{22}`` for viscosity/thermal conductivity) at the specified temperature `T`.
+
+Two methods are implemented:
+- `KimMonroe()` [1] and
+- `Neufeld()` [2]
+
+## References
+1.  S. U. Kim and C. W. Monroe: High-Accuracy Calculations of Sixteen Collision Integrals for Lennard-Jones (12-6) Gases and Their Interpolation to Parameterize Neon, Argon, and Krypton, Journal of Computational Physics 273 (2014) 358–373, DOI: https://doi.org/10.1016/j.jcp.2014.05.018.
+2.  P. D. Neufeld, A. R. Janzen, and R. A. Aziz: Empirical Equations to Calculate 16 of the Transport Collision Integrals Ω  ( l, s )*  for the Lennard‐Jones (12–6) Potential, The Journal of Chemical Physics 57 (1972) 1100–1102, DOI: https://doi.org/10.1063/1.1678363.
+"""
 Ω(prop::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*kB/model.ε[i])
 
-"""
-    Ω_22(T_red)
-
-Collision integrals from [Kim and Monroe (2014)](https://www.doi.org/10.1016/j.jcp.2014.05.018).
-"""
+# Ω_22
 function Ω_22(T_red)
     A = -0.92032979
     BCi = ( (   2.3508044,      1.6330213      ),
@@ -209,11 +224,7 @@ function Ω_22(T_red)
     return Ω22
 end
 
-"""
-    Ω_11(T_red)
-
-Collision integrals from [Kim and Monroe (2014)](https://www.doi.org/10.1016/j.jcp.2014.05.018).
-"""
+# Ω_11
 function Ω_11(T_red)
     A = -1.1036729
     BCi = ( (   2.6431984,      1.6690746      ),
@@ -235,21 +246,12 @@ function Ω_11(T_red)
     return Ω11
 end
 
-"""
-    Ω_22_neufeld(T_red)
-
-Collision integrals from [Neufeld (1972)](https://doi.org/10.1063/1.1678363). The non-polynomial terms are neglected (as REFPROP 10.0 does)
-"""
+# Ω_22_neufeld
 function Ω_22_neufeld(T_red)
     return 1.6145*(T_red)^(-0.14874) + 0.52487*exp(-0.77320*T_red) + 2.16178*exp(-2.43787*T_red)
 end
 
-"""
-    correspondence_principle(Tc, pc)
-    correspondence_principle(eos)
-
-Calculate the LJ parameters from the critical temperature and pressure.
-"""
+# Correspondence principle
 function correspondence_principle(Tc, pc)
     Tc_LJ = 1.321
     pc_LJ = 0.129
@@ -264,22 +266,9 @@ function correspondence_principle(eos)
     return correspondence_principle(Tc, Pc)
 end
 
-# Mixing rule from Wilke (1950) [DOI: 10.1063/1.1747673] and Mason and Saxena (1958) [DOI: 10.1063/1.1724352]
+# Viscosity, thermal conductivity: Wilke and Mason and Saxena
 struct Wilke <: AbstractTransportPropertyMixing end
-"""
-    mix_CE(::Wilke,param::BaseParam, Y, x)
-    mix_CE(param::BaseParam{Viscosity}, Y, x)
-    mix_CE(param::BaseParam{ThermalConductivity}, Y, x)
 
-Mixing rule for Chapman-Enskog transport properties by Wilke (1950) for Viscosity and by 
-Mason and Saxena (1958) for ThermalConductivity.
-
-## References
-(1) Wilke, C. R. A Viscosity Equation for Gas Mixtures. The Journal of Chemical Physics 
-1950, 18 (4), 517–519. https://doi.org/10.1063/1.1747673.
-(2) Mason, E. A.; Saxena, S. C. Approximate Formula for the Thermal Conductivity of Gas 
-Mixtures. The Physics of Fluids 1958, 1 (5), 361–369. https://doi.org/10.1063/1.1724352.
-"""
 function mix_CE(::Wilke,model::AbstractChapmanEnskogModel, Y, x)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
     enum_M = enumerate(model.Mw)
@@ -293,18 +282,9 @@ function mix_CE(::Wilke,model::AbstractChapmanEnskogModel, Y, x)
     return Y₀_mix
 end
 
+# Self-diffusion: Miller and Carman
 struct MillerCarman <: AbstractTransportPropertyMixing end
-"""
-    mix_CE(::MillerCarman,param::BaseParam, Y, x)
-    mix_CE(param::BaseParam{DiffusionCoefficient}, Y, x)
 
-Mixing rule for Chapman-Enskog diffusion coefficient by Miller and Carman (1961).
-
-## References
-(1) Miller, L.; Carman, P. C. Self-Diffusion in Mixtures. Part 4. -- Comparison of Theory 
-and Experiment for Certain Gas Mixtures. Trans. Faraday Soc. 1961, 57 (0), 2143–2150. 
-    https://doi.org/10.1039/TF9615702143.
-"""
 function mix_CE(::MillerCarman,model::AbstractChapmanEnskogModel, Y, x)
     return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end

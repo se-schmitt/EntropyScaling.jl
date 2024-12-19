@@ -6,10 +6,11 @@ Pages = ["models.md"]
 
 ## Chapman-Enskog Models
 
-Chapman-Enskog models for transport properties at the zero-density limit based on the kinetic gas theory.
+Chapman-Enskog model the for transport properties at the zero-density limit based on the kinetic gas theory.
 
 ```@docs
 EntropyScaling.ChapmanEnskogModel
+EntropyScaling.Ω
 ```
 
 ## Entropy Scaling Models
