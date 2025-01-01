@@ -25,13 +25,28 @@ Entropy scaling model based on Refprop EOS.
 
 ## References
 """
-struct RefpropRESModel{E,FP} <: AbstractEntropyScalingModel
+struct RefpropRESModel{E,P} <: AbstractEntropyScalingModel
     components::Vector{String}
-    params::FP
+    params::P
     eos::E
 end
 
 @modelmethods RefpropRESModel RefpropRESParams
+
+function RefpropRESModel(eos, components::Vector{String})
+    params = RefpropRESParams[]
+    for prop in [Viscosity()]   #TODO add thermal conductivity
+        out = load_params(RefpropRESModel, prop, components)
+        if !ismissing(out)
+            ξ, n1, n2, n3, n4, refs = out
+            CE_model = ChapmanEnskogModel(components; Mw=get_Mw(eos), ref_id="10.1007/s10765-022-03096-9")
+            base = BaseParam(prop, get_Mw(eos), refs)
+            push!(params, RefpropRESParams(permutedims(hcat(n1,n2,n3,n4)),ξ,CE_model,base))
+        end
+    end
+    isempty(params) ? throw(MissingException("No parameters found for system [$(join(components,", "))]")) : nothing
+    return RefpropRESModel(components, Tuple(params), eos)
+end
 
 function scaling_model(param::RefpropRESParams{Viscosity}, s, x=z1)
     g = (1.0,1.5,2.0,2.5)
