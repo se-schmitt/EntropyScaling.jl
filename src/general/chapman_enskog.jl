@@ -36,14 +36,28 @@ struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
     σ::Vector{T} 
     ε::Vector{T}
     Mw::Vector{T}
+    ref::Vector{Reference}
     collision::C 
 end
-function ChapmanEnskogModel(comps::Vector{String}, σ::Vector{T},ε::Vector{T},Mw::Vector{T};collision_integral=KimMonroe()) where {T} 
-    return ChapmanEnskogModel(comps, σ,ε,Mw,collision_integral)
+
+function ChapmanEnskogModel(comps::Vector{String}, σ::Vector{T}, ε::Vector{T}, Mw::Vector{T}; collision_integral=KimMonroe()) where {T} 
+    return ChapmanEnskogModel(comps, σ, ε, Mw, Reference[], collision_integral)
 end
-function ChapmanEnskogModel(comps::String, σ::Float64,ε::Float64,Mw::Float64;collision_integral=KimMonroe())
-    return ChapmanEnskogModel([comps], [σ],[ε],[Mw],collision_integral)
+
+function ChapmanEnskogModel(comps::String, σ::Float64, ε::Float64, Mw::Float64; collision_integral=KimMonroe())
+    return ChapmanEnskogModel([comps], [σ], [ε], [Mw], Reference[], collision_integral)
 end
+
+ChapmanEnskogModel(comps::String; kwargs...) = ChapmanEnskogModel([comps]; kwargs...)
+function ChapmanEnskogModel(comps::Vector{String}; Mw=[], ref="", ref_id="", collision_integral=KimMonroe())
+    out = load_params(ChapmanEnskogModel, "", comps; ref, ref_id)
+    Mw_db, ε, σ, refs = out 
+    if isempty(Mw)
+        Mw = Mw_db
+    end
+    return ChapmanEnskogModel(comps, σ.*1e-10, ε.*kB, Mw, refs, collision_integral)
+end
+
 Base.length(model::AbstractChapmanEnskogModel) = length(model.Mw)
 
 # Viscosity
