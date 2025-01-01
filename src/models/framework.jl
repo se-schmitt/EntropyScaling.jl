@@ -6,8 +6,6 @@ export FrameworkModel, FrameworkParams
 Structure to store the parameters of the framework model. The parameters are:
 - `α`: a matrix of size `(nparams,ncomponents)` containing the parameters of the corresponding transport property
 - `m`: a vector of length `ncomponents` containing segment information
-- `σ`: a vector of length `ncomponents` containing the molecular size parameters
-- `ε`: a vector of length `ncomponents` containing the dispersion energies
 - `Y₀⁺min`: vector of length `ncomponents` containing the minimum scaled property
 - `base`: a `BaseParam` containing molecular weight, transport property and fitting information.
 """
@@ -96,9 +94,9 @@ end
 
 A generic entropy scaling model.
 """
-struct FrameworkModel{E,FP} <: AbstractEntropyScalingModel
+struct FrameworkModel{E,P} <: AbstractEntropyScalingModel
     components::Vector{String}
-    params::FP
+    params::P
     eos::E
 end
 
