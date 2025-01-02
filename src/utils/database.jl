@@ -28,7 +28,7 @@ end
 
 function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, components; ref="", ref_id="")
     db_path = get_db_path(MODEL, prop)
-    return load_params(db_path, components; ref=ref, ref_id=ref_id)
+    return load_params(db_path, lowercase.(components); ref=ref, ref_id=ref_id)
 end
 
 function get_db_path(MODEL::Type{<:AbstractTransportPropertyModel}, prop)
