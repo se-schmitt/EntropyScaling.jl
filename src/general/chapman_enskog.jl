@@ -16,13 +16,32 @@ Chapman-Enskog transport properties for the zero-density limit.
 
 ## Constructors
 
-    ChapmanEnskogModel(components; collision_integral=KimMonroe())*  
-    ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe())  
+    ChapmanEnskogModel(components; collision_integral=KimMonroe())
+    ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe(), ref="", ref_id="")  
 
 Input arguments can either be single values (pure) or vectors. 
 In case no parameters are provided, values are taken *Poling et al. (2001)* or *Yang et al. (2022)* (if available).
+The keywords `ref` (short reference) and `ref_id` (DOI or ISBN) enable the specification of the reference.
 Mixture properties are calculated according to the models from *Wilke (1950)* (viscosity), *Mason and Saxen (1958)* (thermal conductivity), and *Miller and Carman (1961)* (self-diffusion coefficient).
-[* to be implemented]
+
+## Example
+
+```julia
+using EntropyScaling 
+
+# Construction with custom parameters
+σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3            # from Poling et al.
+model_methane = ChapmanEnskogModel("methane",σ,ε,Mw)
+
+η_mix = viscosity(model_methane, NaN, 300.)
+D_mix = self_diffusion_coefficient(model_methane, NaN, 300.)
+
+# Construction from database
+model_mix = ChapmanEnskogModel(["butane","methanol"]; ref="Poling et al. (2001)")
+
+η_mix = viscosity(model_mix, NaN, 300., [.5,.5])
+D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])  
+```
 
 ## References
 1.  B. E. Poling, J. M. Prausnitz, and J. P. O’Connell: The Properties of Gases and Liquids, 5th, ed. McGraw-Hill, New York (2001).

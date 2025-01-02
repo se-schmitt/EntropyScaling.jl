@@ -22,9 +22,44 @@ end
 """
     RefpropRESModel{T} <: AbstractEntropyScalingModel
 
-Entropy scaling model based on Refprop EOS.
+Entropy scaling model based on Refprop EOS from *Yang et al. (2022)*.
+
+A database provides ready-to-use models for the viscosity of several fluids.
+The model can favourably be used in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) and [`Coolprop.jl`](https://github.com/CoolProp/CoolProp.jl) (see examples).
+
+## Parameters 
+
+- `n::Matrix{T}`: component-specific *or* global (group) parameters
+- `ξ::Vector{T}`: component-specific scaling parameter in case global parameters are used (`ξ = 1` for individual fits)
+- `σ::Vector{T}`: LJ size parameter for the Chapman-Enskog model 
+- `ε::Vector{T}`: LJ energy parameter for the Chapman-Enskog model
+
+## Constructors
+
+    RefpropRESModel(eos, params::Dict{P})
+
+Default constructor (see above).
+
+    RefpropRESModel(eos, components)
+    RefpropRESModel(components)         -> only works with `Clapeyron.jl` and `Coolprop.jl`
+
+Creates a ES model using the parameters provided in the database (recommended).
+
+## Example
+
+```julia 
+using EntropyScaling, Clapeyron, CoolProp
+
+model_pure = RefpropRESModel("R134a")
+η_pure = viscosity(model_pure, 1e5, 300.; phase=:liquid)
+
+model_mix = RefpropRESModel(["decane","butane"])
+η_mix = viscosity(model_mix, 1e5, 300., [.5,.5])
+```
 
 ## References
+1. X. Yang, X. Xiao, M. Thol, M. Richter, and I. H. Bell: Linking Viscosity to Equations of State Using Residual Entropy Scaling Theory, Int. J. Thermophys. 43 (2022) 183, DOI: https://doi.org/10.1007/s10765-022-03096-9.
+
 """
 struct RefpropRESModel{E,P} <: AbstractEntropyScalingModel
     components::Vector{String}

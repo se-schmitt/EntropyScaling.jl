@@ -1,14 +1,5 @@
 export FrameworkModel, FrameworkParams
 
-"""
-    FrameworkParams{P<:AbstractTransportProperty,T<:Number}
-
-Structure to store the parameters of the framework model. The parameters are:
-- `α`: a matrix of size `(nparams,ncomponents)` containing the parameters of the corresponding transport property
-- `m`: a vector of length `ncomponents` containing segment information
-- `Y₀⁺min`: vector of length `ncomponents` containing the minimum scaled property
-- `base`: a `BaseParam` containing molecular weight, transport property and fitting information.
-"""
 struct FrameworkParams{P,T} <: AbstractEntropyScalingParams
     α::Matrix{T}
     m::Vector{Float64}
@@ -92,7 +83,58 @@ end
 """
     FrameworkModel{T} <: AbstractEntropyScalingModel
 
-A generic entropy scaling model.
+Entropy scaling framework from *Schmitt et al. (2024)*.
+
+The entropy scaling framework provides a physical way to model transport properties 
+(viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.
+It enables fitting new models using only few experimental data.
+
+## Parameters
+
+- `α::Matrix{T}`: component-specific parameters (size: `5 x N_components`)
+
+`m` (segment parameter of molecular-based EOS) and `Y₀⁺min` (minimum of the scaled 
+zero-density transport property) are additional internal parameters (not to be set at 
+construction).
+
+## Constructors
+
+    FrameworkModel(eos, params::Dict{P})
+
+Default constructor (see above).
+
+    FrameworkModel(eos, datasets::Vector{TransportPropertyData}; 
+        opts::FitOptions=FitOptions(), 
+        solute=nothing
+    )
+
+Constructor for fitting new parameters `α` to experimental data (only applicable to pure components).
+`datasets` needs to be a vector containing [`TransportPropertyData`](@ref).
+`opts` enables controling the fitting procedure through [`FitOptions`](@ref).
+`solute` should be an EOS model of the solute (only applicable when fitting diffusion coeffficients at infinite dilution).
+    
+## Example 
+
+```julia
+using EntropyScaling, Clapeyron
+
+# Load experimental sample data for n-butane
+(T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data()
+data = ViscosityData(T_exp, [], ϱ_exp, η_exp, :unknown)
+
+# Create EOS model
+eos_model = PCSAFT("butane")
+
+# Create entropy scaling model (fit of parameters)
+model = FrameworkModel(eos_model, [data])
+
+# Calculation of the viscostiy at state
+η = viscosity(model, 0.1e6, 300.)
+```
+
+## Reference
+
+1. S. Schmitt, H. Hasse, and S. Stephan: Entropy Scaling Framework for Transport Properties Using Molecular-Based Equations of State, Journal of Molecular Liquids 395 (2024) 123811, DOI: https://doi.org/10.1016/j.molliq.2023.123811.
 """
 struct FrameworkModel{E,P} <: AbstractEntropyScalingModel
     components::Vector{String}
@@ -102,6 +144,7 @@ end
 
 @modelmethods FrameworkModel FrameworkParams
 
+#TODO revise cite method (also cite parameters)
 function cite_model(::FrameworkModel)
     print("Entropy Scaling Framework:\n---\n" *
           "(1) Schmitt, S.; Hasse, H.; Stephan, S. Entropy Scaling Framework for " *
@@ -111,7 +154,7 @@ function cite_model(::FrameworkModel)
     return nothing
 end
 
-
+# Method for fitting parameters
 function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(),
                         solute=nothing) where TPD <: TransportPropertyData
     # Check eos and solute
@@ -164,7 +207,6 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
     end
     return FrameworkModel(eos, params)
 end
-
 
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
 function scaling_model(param::FrameworkParams{<:AbstractViscosity}, s, x=[1.])
