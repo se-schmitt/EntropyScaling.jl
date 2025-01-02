@@ -10,9 +10,10 @@ struct RefpropRESParams{P,T} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end
 
-function RefpropRESParams(prop::AbstractTransportProperty, n::Matrix{T}, ξ::Vector{T}, σ::Vector{T}, 
-                          ε::Vector{T}, Mw::Vector{T}) where T
+function RefpropRESParams(prop::AbstractTransportProperty, eos, n::Matrix{T}, ξ::Vector{T}, 
+                          σ::Vector{T}, ε::Vector{T}) where T
     
+    Mw = convert(typeof(ξ),get_Mw(eos))
     CE_model = ChapmanEnskogModel(repeat([""],length(Mw)),σ,ε,Mw,collision_integral=KimMonroe())
     base = BaseParam(prop, Mw)
     return RefpropRESParams(n,ξ,CE_model,base)

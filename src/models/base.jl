@@ -144,14 +144,8 @@ end
 function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
     params_vec = Any[]
     PARAM = paramstype(MODEL)
-    for (prop, α) in param_dict
-        T = eltype(α)
-        if α isa Vector && length(eos) == 1
-            αx = convert(Array{T,2},reshape(α,length(α),1))
-        else
-            αx = convert(Array{T,2},α)
-        end
-        push!(params_vec, build_param(PARAM, prop, eos, αx))
+    for (prop, ps) in param_dict
+        push!(params_vec, build_param(PARAM, prop, eos, ps))
     end
     params = tuple(params_vec...)
     return MODEL(eos, params)
@@ -161,13 +155,14 @@ build_model(MODEL,components,params,eos) = MODEL(components,params,eos)
 build_model(::Type{MODEL},eos,params::Tuple) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
 build_model(::Type{MODEL},eos,params::AbstractVector) where MODEL = build_model(MODEL,eos,tuple(params...))
 build_model(::Type{MODEL},eos,params::AbstractEntropyScalingParams) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
-function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,αx;kwargs...) where PARAM <: AbstractEntropyScalingParams
-    PARAM(prop,eos,αx,kwargs...)
+function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,ps) where PARAM <: AbstractEntropyScalingParams
+    PARAM(prop,eos,ps...)
 end
 
 function paramstype end
 #a macro that automates some definitions of model methods.
 #TODO: handle fitting for arbitrary methods.
+#TODO: check if all methods work
 macro modelmethods(model,param)
     return quote
         EntropyScaling.paramstype(::Type{<:$model}) = $param
