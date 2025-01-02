@@ -7,11 +7,10 @@
         ξ_ace = [1.]
         σ_ace = [0.467e-9]
         ε_ace = [519*EntropyScaling.kB]
-        Mw_ace = [58.07914e-3]
 
-        model_ace = RefpropRESModel(SingleFluid("acetone"),[
-            RefpropRESParams(Viscosity(), ni_ace, ξ_ace, σ_ace, ε_ace, Mw_ace)
-        ])
+        model_ace = RefpropRESModel(SingleFluid("acetone"),Dict(
+            Viscosity() => [ni_ace, ξ_ace, σ_ace, ε_ace]
+        ))
         @test viscosity(model_ace,1.3922e4,281.005)/1e-6 ≈ 371.6 rtol=1e-4
 
         # cyclopentane
@@ -19,11 +18,10 @@
         ξ_cyc = [0.9492]
         σ_cyc = [0.518e-9]
         ε_cyc = [406.33*EntropyScaling.kB]
-        Mw_cyc = [70.1329e-3]
 
-        model_cyc = RefpropRESModel(SingleFluid("cyclopentane"),[
-            RefpropRESParams(Viscosity(), ni_cyc, ξ_cyc, σ_cyc, ε_cyc, Mw_cyc)
-        ])
+        model_cyc = RefpropRESModel(SingleFluid("cyclopentane"),Dict(
+            Viscosity() => [ni_cyc, ξ_cyc, σ_cyc, ε_cyc]
+        ))
         @test viscosity(model_cyc,1.4244e4,273.15)/1e-6 ≈ 567.0 rtol=1e-4
 
         # Test database
@@ -43,11 +41,10 @@
         ξ_mix = [1., 1.]
         σ_mix = [0.686e-9, 0.367e-9]
         ε_mix = [490.51, 174].*EntropyScaling.kB
-        Mw_mix = [142.28168, 16.0428].*1e-3
 
-        model_mix = RefpropRESModel(MultiFluid(["decane","methane"]),[
-            RefpropRESParams(Viscosity(), ni_mix, ξ_mix, σ_mix, ε_mix, Mw_mix)
-        ])
+        model_mix = RefpropRESModel(MultiFluid(["decane","methane"]),Dict(
+            Viscosity() => [ni_mix, ξ_mix, σ_mix, ε_mix]
+        ))
         @test viscosity(model_mix,3.565407e6,289.996,[0.8680,1-0.8680])/1e-6 ≈ 925.02 rtol = 1e-5
 
         # Test database
