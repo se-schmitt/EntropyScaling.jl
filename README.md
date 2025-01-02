@@ -32,40 +32,48 @@ using EntropyScaling
 
 ## Examples
 
-**Chapman-Enskog viscosity of methane**
+**Chapman-Enskog viscosity (zero-density limit) of methane**
 
 ```julia
-using EntropyScaling
+julia> using EntropyScaling
 
-# Parameters from Poling et al. (2001)
-σ = 3.758e-10                   # size parameter ([σ] = m)
-ε = 148.6*EntropyScaling.kB     # energy parameter ([ε] = J)
-Mw = 16.0425e-3                 # molar mass ([Mw] = kg/mol)
+julia> model = ChapmanEnskog("methane")
+ChapmanEnskogModel{methane}
+ σ: [3.758] Å
+ ε: [148.6] K
+ M: [0.01604] kg/m³
+ Collision integral: KimMonroe
 
-# Calculate gas viscosity of methane at 300 K
-T = 300.
-η = viscosity_CE(T, Mw, σ, ε)
+julia> η = viscosity(model, NaN, 300.)      # gas viscosity of methane at 300 K in Pa s
+1.1189976373570321e-5
 ```
 
 **Fitting a new entropy scaling model**
 
 ```julia
-using EntropyScaling, Clapeyron
+julia> using EntropyScaling, Clapeyron
 
-# Load sample data
-(T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data()
-data = ViscosityData(T_exp, [], ϱ_exp, η_exp, :unknown)
+julia> (T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data();    # Load sample data
+┌ Info: Experimental data for the viscosity of n-butane.
+└       Units: [T] = K, [ϱ] = mol/m³, [η] = Pa·s
 
-# Create EOS model
-eos_model = PCSAFT("butane")
+julia> data = ViscosityData(T_exp, [], ϱ_exp, η_exp, :unknown)
+TransportPropertyData{Viscosity}
+    15 data points.
 
-# Create entropy scaling model (fit of parameters)
-model = FrameworkModel(eos_model, [data])
+julia> eos_model = PCSAFT("butane")                     # Clapeyron.jl EOS model
+PCSAFT{BasicIdeal, Float64} with 1 component:
+ "butane"
+Contains parameters: Mw, segment, sigma, epsilon, epsilon_assoc, bondvol
 
-# Calculation of the viscostiy at state
-p = 0.1e6                                       # Pa
-T = 300.                                        # K
-η = viscosity(model, p, T)
+julia> model = FrameworkModel(eos_model, [data])        # Fit model parameters
+FrameworkModel with 1 component:
+ "butane"
+ Available properties: viscosity
+ Equation of state: Clapeyron.EoSVectorParam{PCSAFT{BasicIdeal, Float64}}("butane")
+
+julia> η = viscosity(model, 1e5, 300.; phase=:liquid)   # viscostiy at p=1 bar and T=300 K
+0.0001605897169488518
 ```
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
