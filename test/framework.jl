@@ -8,8 +8,7 @@
         data_pure = [
             ViscosityData(raw_η[:,1], [], raw_η[:,2], raw_η[:,3], :unknown)
             ThermalConductivityData(raw_λ[:,1], [], raw_λ[:,2], raw_λ[:,3], :unknown)
-            SelfDiffusionCoefficientData(raw_D[:,1], [], raw_D[:,2]
-            , raw_D[:,3], :unknown)
+            SelfDiffusionCoefficientData(raw_D[:,1], [], raw_D[:,2], raw_D[:,3], :unknown)
         ]
         fit_opts = FitOptions(;
             what_fit=Dict(
@@ -50,9 +49,9 @@
             
             # ES model 
             model = FrameworkModel(eos_model,Dict(
-                Viscosity() => [0.;-14.165;13.97;-2.382;0.501;;],
-                ThermalConductivity() => [3.962;98.222;-82.974;20.079;1.073;;],
-                SelfDiffusionCoefficient() => [0.;0.;0.;-3.507;-0.997;;]
+                Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
+                ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
+                SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
             ))
 
             @test viscosity(model, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-5
@@ -63,18 +62,17 @@
         @testset "Mixtures" begin
             # ES models
             model_1 = FrameworkModel(PCSAFT(["benzene","hexane"]), Dict(
-                ThermalConductivity() => hcat(
+                ThermalConductivity() => [hcat(
                     [6.492054, 0.0, 0.0, 1.985553, 3.126438],
-                    [9.756965, 0.0, 0.0, 1.657211, 5.058428]),
+                    [9.756965, 0.0, 0.0, 1.657211, 5.058428])],
             ))
             model_2 = FrameworkModel(PCSAFT(["hexane", "dodecane"]), Dict(
-                SelfDiffusionCoefficient() => hcat(
+                SelfDiffusionCoefficient() => [hcat(
                     [0.0, 0.0, 0.0, -2.5414, -1.9186],
-                    [0.0, 0.0, 0.0, -4.6610, -3.2021]
-                ),
-                InfDiffusionCoefficient() => hcat(
+                    [0.0, 0.0, 0.0, -4.6610, -3.2021])],
+                InfDiffusionCoefficient() => [hcat(
                     [0.0, 0.0, 0.0, -2.5463, -1.8070],
-                    [0.0, 0.0, 0.0, -4.0610, -3.4267]),
+                    [0.0, 0.0, 0.0, -4.0610, -3.4267])],
             ))
 
             @test thermal_conductivity(model_1, 0.1e6, 294.7, [.5,.5]) ≈ 1.338512e-1 rtol=1e-5
