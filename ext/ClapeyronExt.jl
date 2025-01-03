@@ -39,4 +39,8 @@ ES._eos_cache(eos::EoSModel) = CL.EoSVectorParam(eos)
 ES._eos_cache(eos::CL.EoSVectorParam) = eos
 ES._eos_cache(eos::MultiFluid) = eos
 
+# Model specific wrapper 
+ES.RefpropRESModel(comps::String) = RefpropRESModel([comps])
+ES.RefpropRESModel(comps::Vector{String}) = RefpropRESModel(MultiFluid(comps), comps)
+
 end #module
