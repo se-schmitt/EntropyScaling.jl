@@ -1,0 +1,227 @@
+substance,Mw/(kg/mol),ε/(kB*K),σ/Å,ref,ref_id
+"argon",0.039900,93.300000,3.542000,"Poling et al. (2001)",978-0-07-011682-5
+"helium",0.004003,10.220000,2.551000,"Poling et al. (2001)",978-0-07-011682-5
+"krypton",0.083800,178.900000,3.655000,"Poling et al. (2001)",978-0-07-011682-5
+"neon",0.020180,32.800000,2.820000,"Poling et al. (2001)",978-0-07-011682-5
+"xenon",0.131290,231.000000,4.047000,"Poling et al. (2001)",978-0-07-011682-5
+"air",0.02896,78.600000,3.711000,"Poling et al. (2001)",978-0-07-011682-5
+"arsine|arsenic trihydride|arsane",0.077946,259.800000,4.145000,"Poling et al. (2001)",978-0-07-011682-5
+"boron trichloride|trichloroborane",0.117200,337.700000,5.127000,"Poling et al. (2001)",978-0-07-011682-5
+"boron trifluoride|trifluoroborane|boron fluoride|borane, trifluoro-|trifluoroboron",0.067810,186.300000,4.198000,"Poling et al. (2001)",978-0-07-011682-5
+"trimethyl borate",0.103920,396.700000,5.503000,"Poling et al. (2001)",978-0-07-011682-5
+"bromine",0.159810,507.900000,4.296000,"Poling et al. (2001)",978-0-07-011682-5
+"carbon tetrachloride|tetrachloromethane|r10",0.153800,322.700000,5.947000,"Poling et al. (2001)",978-0-07-011682-5
+"carbon tetrafluoride|tetrafluoromethane|r14",0.088004,134.000000,4.662000,"Poling et al. (2001)",978-0-07-011682-5
+"chloroform|trichloromethane|r20",0.119370,340.200000,5.389000,"Poling et al. (2001)",978-0-07-011682-5
+"dichloromethane|methylene chloride|r30",0.084930,356.300000,4.898000,"Poling et al. (2001)",978-0-07-011682-5
+"bromomethane|methyl bromide",0.094940,449.200000,4.118000,"Poling et al. (2001)",978-0-07-011682-5
+"chloromethane|methyl chloride|r40",0.050490,350.000000,4.182000,"Poling et al. (2001)",978-0-07-011682-5
+"methanol|methyl alcohol",0.032042,481.800000,3.626000,"Poling et al. (2001)",978-0-07-011682-5
+"methane|methyl hydride|marsh gas|biogas|fire damp",0.016043,148.600000,3.758000,"Poling et al. (2001)",978-0-07-011682-5
+"formaldehyde|formalin|methanal|paraformaldehyde",0.030026,91.700000,3.690000,"Poling et al. (2001)",978-0-07-011682-5
+"carbonyl sulfide|carbon oxysulfide|carbonyl sulphide|carbon oxide sulfide",0.060080,336.000000,4.130000,"Poling et al. (2001)",978-0-07-011682-5
+"carbon dioxide|carbonic anhydride|dry ice",0.044009,195.200000,3.941000,"Poling et al. (2001)",978-0-07-011682-5
+"carbon disulfide|carbon disulphide|carbon bisulfide",0.076150,467.000000,4.483000,"Poling et al. (2001)",978-0-07-011682-5
+"acetylene|ethyne|acetylen|narcylen|ethine|vinylene",0.026040,231.800000,4.033000,"Poling et al. (2001)",978-0-07-011682-5
+"ethylene|ethene|acetene|elayl|olefiant gas",0.028050,224.700000,4.163000,"Poling et al. (2001)",978-0-07-011682-5
+"ethane",0.030070,215.700000,4.443000,"Poling et al. (2001)",978-0-07-011682-5
+"chloroethane|ethyl chloride|ethane, chloro-",0.064510,300.000000,4.898000,"Poling et al. (2001)",978-0-07-011682-5
+"ethanol|ethyl alcohol|alcohol",0.046070,362.600000,4.530000,"Poling et al. (2001)",978-0-07-011682-5
+"cyanogen|oxalonitrile|ethanedinitrile|dicyan|carbon nitride|dicyanogen|nitriloacetonitrile|oxalyl cyanide|oxalic acid dinitrile",0.052030,348.600000,4.361000,"Poling et al. (2001)",978-0-07-011682-5
+"dimethyl ether|methoxymethane|methyl ether",0.046070,395.000000,4.307000,"Poling et al. (2001)",978-0-07-011682-5
+"propylene|propene|prop-1-ene|1-propene|methylethylene|methylethene",0.042080,298.900000,4.678000,"Poling et al. (2001)",978-0-07-011682-5
+"propyne|methylacetylene|prop-1-yne",0.040060,251.800000,4.761000,"Poling et al. (2001)",978-0-07-011682-5
+"cyclopropane|trimethylene",0.042080,248.900000,4.807000,"Poling et al. (2001)",978-0-07-011682-5
+"propane|n-propane|dimethylmethane|r290",0.044100,237.100000,5.118000,"Poling et al. (2001)",978-0-07-011682-5
+"1-propanol|propanol|propan-1-ol|propyl alcohol|n-propanol",0.060100,576.700000,4.549000,"Poling et al. (2001)",978-0-07-011682-5
+"acetone|2-propanone",0.058080,560.200000,4.600000,"Poling et al. (2001)",978-0-07-011682-5
+"methyl acetate",0.074080,469.800000,4.936000,"Poling et al. (2001)",978-0-07-011682-5
+"butane|n-butane|r600",0.058120,531.400000,4.687000,"Poling et al. (2001)",978-0-07-011682-5
+"isobutane|2-methylpropane",0.058120,330.100000,5.278000,"Poling et al. (2001)",978-0-07-011682-5
+"diethyl ether|ether|ethyl ether|ethoxyethane",0.074120,313.800000,5.678000,"Poling et al. (2001)",978-0-07-011682-5
+"ethyl acetate",0.088110,521.300000,5.205000,"Poling et al. (2001)",978-0-07-011682-5
+"pentane|n-pentane",0.072150,341.100000,5.784000,"Poling et al. (2001)",978-0-07-011682-5
+"neopentane|2,2-dimethylpropane",0.072150,193.400000,6.464000,"Poling et al. (2001)",978-0-07-011682-5
+"benzene|benzol",0.078110,412.300000,5.349000,"Poling et al. (2001)",978-0-07-011682-5
+"cyclohexane",0.084160,297.100000,6.182000,"Poling et al. (2001)",978-0-07-011682-5
+"hexane|n-hexane",0.086180,399.300000,5.949000,"Poling et al. (2001)",978-0-07-011682-5
+"chlorine",0.070900,316.000000,4.217000,"Poling et al. (2001)",978-0-07-011682-5
+"fluorine",0.037997,112.600000,3.357000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrogen bromide|hydrobromic acid",0.080910,449.000000,3.353000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrogen cyanide|hydrocyanic acid|formonitrile|prussic acid|cyanwasserstoff|blausaeure|formic anammonide|zaclondiscoids|evercyn|cyclon",0.027025,569.100000,3.630000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrochloric acid|hydrogen chloride",0.036460,344.700000,3.339000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrofluoric acid|hydrogen fluoride",0.020006,330.000000,3.148000,"Poling et al. (2001)",978-0-07-011682-5
+"hydriodic acid|hydrogen iodide",0.127912,288.700000,4.211000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrogen",0.002016,59.700000,2.827000,"Poling et al. (2001)",978-0-07-011682-5
+"water",0.018015,809.100000,2.641000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrogen peroxide",0.034015,289.300000,4.196000,"Poling et al. (2001)",978-0-07-011682-5
+"hydrogen sulfide|sulfane|hydrosulfuric acid|dihydrogen monosulfide|stink damp|hydrogen sulphide|dihydrogen sulfide|sulfureted hydrogen",0.034080,301.100000,3.623000,"Poling et al. (2001)",978-0-07-011682-5
+"mercury",0.200590,750.000000,2.969000,"Poling et al. (2001)",978-0-07-011682-5
+"mercuric bromide|mercury(ii) bromide|mercury dibromide",0.360400,686.200000,5.080000,"Poling et al. (2001)",978-0-07-011682-5
+"mercuric chloride|dichloromercury|mercury(ii) chloride|sublimate|mercury bichloride|corrosive sublimate|mercury dichloride|mercuric bichloride",0.271500,750.000000,4.550000,"Poling et al. (2001)",978-0-07-011682-5
+"mercuric iodide|mercury(ii) iodide|mercury diiodide|diiodomercury",0.454400,695.600000,5.625000,"Poling et al. (2001)",978-0-07-011682-5
+"iodine",0.253809,474.200000,5.160000,"Poling et al. (2001)",978-0-07-011682-5
+"ammonia|azane",0.017031,558.300000,2.900000,"Poling et al. (2001)",978-0-07-011682-5
+"nitric oxide|nitrogen monoxide|mononitrogen monoxide",0.030006,116.700000,3.492000,"Poling et al. (2001)",978-0-07-011682-5
+"nitrosyl chloride|nitrogen oxychloride|nitrosonium chloride",0.065460,395.300000,4.112000,"Poling et al. (2001)",978-0-07-011682-5
+"nitrogen",0.028014,71.400000,3.798000,"Poling et al. (2001)",978-0-07-011682-5
+"nitrous oxide|laughing gas|dinitrogen oxide|dinitrogen monoxide|factitious air|nitrogen protoxide|nitrogen oxide (n2o)",0.044013,232.400000,3.828000,"Poling et al. (2001)",978-0-07-011682-5
+"oxygen",0.031999,106.700000,3.467000,"Poling et al. (2001)",978-0-07-011682-5
+"phosphine",0.033998,251.500000,3.981000,"Poling et al. (2001)",978-0-07-011682-5
+"sulfur hexafluoride|sulphur hexafluoride",0.146060,222.100000,5.128000,"Poling et al. (2001)",978-0-07-011682-5
+"sulfur dioxide|sulphur dioxide|sulfurous anhydride",0.064070,335.400000,4.112000,"Poling et al. (2001)",978-0-07-011682-5
+"tetrafluorosilane|silicon tetrafluoride|perfluorosilane",0.104079,171.900000,4.880000,"Poling et al. (2001)",978-0-07-011682-5
+"silane",0.032117,207.600000,4.084000,"Poling et al. (2001)",978-0-07-011682-5
+"tin(iv) bromide|tetrabromostannane|stannane, tetrabromo-|stannic bromide|tin tetrabromide",0.438330,563.700000,6.388000,"Poling et al. (2001)",978-0-07-011682-5
+"uranium hexafluoride|hexafluorouranium|uranium fluoride|uranium fluoride (uf6)",0.352019,236.800000,5.967000,"Poling et al. (2001)",978-0-07-011682-5
+"*|13butadiene",NaN,337.600000,4.890000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1-butene|but-1-ene|1butene",0.056110,319.000000,5.200000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|1butyne",NaN,343.000000,4.850000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|1pentene",NaN,369.800000,5.350000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|22dimethylbutane",NaN,389.100000,5.750000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|23dimethylbutane",NaN,397.500000,5.740000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|3methylpentane",NaN,401.810000,5.750000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"acetone|2-propanone",0.058080,519.000000,4.670000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|acetylene",NaN,244.800000,3.910000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"ammonia|azane",0.017031,386.000000,2.957000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"argon",0.039900,143.200000,3.350000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"benzene|benzol",0.078110,412.300000,5.350000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"butane|n-butane|r600",0.058120,280.510000,5.730000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"undecane|n-undecane|c11",0.156310,445.750000,7.810000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dodecane|n-dodecane|c12",0.170330,522.592000,7.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c16",NaN,810.800000,7.770000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c1cc6",NaN,281.100000,5.940000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c22",NaN,515.830000,10.620000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"cis-2-butene|c2butene",0.056110,259.000000,5.510000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c3cc6",NaN,500.910000,6.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c4f10",NaN,179.000000,6.940000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c5f12",NaN,195.000000,7.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|c6f14",NaN,160.000000,8.050000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"trifluoromethyl iodide|trifluoroiodomethane|r13t1|cf3i",0.195910,314.800000,4.930000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|chlorine",NaN,257.000000,4.400000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|chlorobenzene",NaN,502.100000,5.470000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"formaldehyde|formalin|methanal|paraformaldehyde|co",0.030026,103.697000,3.610000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"carbon dioxide|carbonic anhydride|dry ice|co2",0.044009,251.196000,3.750000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"carbonyl sulfide|carbon oxysulfide|carbonyl sulphide|carbon oxide sulfide|cos",0.060080,335.000000,4.130000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|cyclobutene",NaN,355.800000,4.680000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"cyclohexane|cyclohex",0.084160,297.100000,6.180000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"cyclopentane|cyclopen",0.070130,406.330000,5.180000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|cyclopro",NaN,248.900000,4.810000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"deuterium|dideuterium|d2",0.004028,39.300000,2.950000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"deuterium oxide|d2o",0.020028,809.100000,2.640000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"octamethylcyclotetrasiloxane|d4",0.296610,465.700000,7.980000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"decamethylcyclopentasiloxane|d5",0.370770,491.000000,8.640000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dodecamethylcyclohexasiloxane|d6",0.444920,512.800000,9.450000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|dea",NaN,584.850000,5.430000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"decane",0.142280,490.510000,6.860000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"diethyl ether|ether|ethyl ether|ethoxyethane|dee",0.074120,370.600000,5.300000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dimethyl carbonate|dmc",0.090080,442.309000,5.110000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dimethyl ether|methoxymethane|methyl ether|dme",0.046070,317.937000,4.310000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"ethylbenzene|ebenzene",0.106160,490.050000,5.780000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|eglycol",NaN,570.950000,4.480000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"ethane",0.030070,245.000000,4.370000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"ethanol|ethyl alcohol|alcohol",0.046070,362.600000,4.530000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"ethylene|ethene|acetene|elayl|olefiant gas",0.028050,224.700000,4.160000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"oxirane|ethylene oxide|ethyleneoxide",0.044050,372.370000,4.200000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"fluorine",0.037997,112.600000,3.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"hydrogen sulfide|sulfane|hydrosulfuric acid|dihydrogen monosulfide|stink damp|hydrogen sulphide|dihydrogen sulfide|sulfureted hydrogen|h2s",0.034080,296.280000,3.730000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"hydrochloric acid|hydrogen chloride|hcl",0.036460,257.800000,3.550000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"helium",0.004003,10.220000,2.550000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"heptane|n-heptane",0.100200,400.000000,6.490000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"hexane|n-hexane",0.086180,399.300000,5.950000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"hydrogen",0.002016,59.700000,2.830000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"isobutylene|isobutene|2-methylprop-1-ene|2-methylpropene|ibutene",0.056110,425.000000,4.780000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"2-methylpentane|isohexane|ihexane",0.086180,395.200000,5.800000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|ioctane",NaN,431.990000,6.300000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"isopentane|2-methylbutane|ipentane",0.072150,365.560000,5.450000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"isobutane|2-methylpropane|isobutan",0.058120,418.000000,5.092200,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"krypton",0.083800,178.900000,3.650000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"decamethyltetrasiloxane|md2m",0.310680,476.000000,8.490000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dodecamethylpentasiloxane|md3m",0.384840,499.500000,9.110000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"tetradecamethylhexasiloxane|md4m",0.458990,518.700000,9.760000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"octamethyltrisiloxane|mdm",0.236530,447.940000,7.700000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|mea",NaN,533.150000,4.610000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methane|methyl hydride|marsh gas|biogas|fire damp",0.016043,174.000000,3.670000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methanol|methyl alcohol",0.032042,481.800000,3.630000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|milprf23699",NaN,738.505500,10.644270,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methyl linoleate|mlinolea",0.294500,634.500000,8.700000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methyl linolenate|mlinolen",0.292500,613.040000,8.550000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"hexamethyldisiloxane|mm",0.162380,357.000000,7.190000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methyl oleate|moleate",0.296500,621.000000,8.700000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methyl palmitate|methyl hexadecanoate|mpalmita",0.270500,599.540000,8.390000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methyl stearate|mstearat",0.298500,615.420000,8.740000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"m-xylene|mxylene",0.106160,489.870000,5.800000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"nitrous oxide|laughing gas|dinitrogen oxide|dinitrogen monoxide|factitious air|nitrogen protoxide|nitrogen oxide (n2o)|n2o",0.044013,232.400000,3.830000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"neon",0.020180,45.580000,2.710000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"neopentane|2,2-dimethylpropane|neopentn",0.072150,255.650000,6.460000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|nf3",NaN,175.000000,4.150000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"nitrogen",0.028014,100.017000,3.650000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"nonane|n-nonane",0.128250,472.127000,6.640000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"3-pentanone, 1,1,1,2,2,4,5,5,5-nonafluoro-4-(trifluoromethyl)-|novec649",NaN,350.800000,6.510000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"octane|n-octane",0.114230,452.090000,6.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|orthohyd",NaN,0.000000,0.000000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"oxygen",0.031999,116.200000,3.430000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"o-xylene|1,2-dimethylbenzene|1,2-xylene|oxylene",0.106160,500.480000,5.820000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|parahyd",NaN,59.700000,2.830000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"pentane|n-pentane",0.072150,349.440000,5.790000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|poe5",NaN,706.741800,9.838000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|poe7",NaN,746.446400,10.871880,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|poe9",NaN,770.269200,11.877030,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|propadiene",NaN,316.000000,4.480000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"propane|n-propane|dimethylmethane|r290",0.044100,263.880000,4.970000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"propylene|propene|prop-1-ene|1-propene|methylethylene|methylethene|propylen",0.042080,298.900000,4.680000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|propyleneoxide",NaN,387.600000,4.680000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"propyne|methylacetylene|prop-1-yne",0.040060,251.800000,4.760000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"p-xylene|1,4-dimethylbenzene|para-xylene|pxylene",0.106160,489.300000,5.810000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"trichlorofluoromethane|fluorotrichloromethane|rmf|r11",0.137360,363.609000,5.450000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|r1123",NaN,263.400000,4.450000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,2-trichlorotrifluoroethane|rtf|r113",0.187370,376.035000,6.020000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dichlorotetrafluoroethane|1,2-dichlorotetrafluoroethane|r114",0.170920,174.000000,6.480000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"chloropentafluoroethane|r115",0.154460,201.900000,5.880000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"hexafluoroethane|perfluoroethane|r116",0.138010,226.160000,5.250000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dichlorodifluoromethane|r12",0.120910,297.240000,5.190000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|r1216",NaN,285.000000,5.140000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|r1224ydz",NaN,340.420000,5.300000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"2,2-dichloro-1,1,1-trifluoroethane|r123",0.152930,275.160000,5.910000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1-chloro-3,3,3-trifluoro-1-propene|1-chloro-3,3,3-trifluoroprop-1-ene|r1233zde",0.130490,349.080000,5.240000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"2,3,3,3-tetrafluoropropene|r1234yf",0.114040,281.140000,5.330000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,3,3,3-tetrafluoroprop-1-ene|r1234zee",0.114040,303.800000,5.000000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1-propene, 1,3,3,3-tetrafluoro-, (1z)-|r1234zez",NaN,336.110000,5.100000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"2-chloro-1,1,1,2-tetrafluoroethane|r124",0.136470,275.800000,5.500000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"3,3,3-trifluoropropene|r1243zf",0.096050,299.300000,4.970000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"pentafluoroethane|r125",0.120020,237.077000,5.230000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"chlorotrifluoromethane|trifluoromethyl chloride|r13",0.104460,204.000000,4.970000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|r1336mzzz",NaN,352.970000,5.580000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1,2-tetrafluoroethane|r134a",0.102030,288.820000,5.060000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"carbon tetrafluoride|tetrafluoromethane|r14",0.088004,164.440000,4.540000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1-dichloro-1-fluoroethane|r141b",0.116950,370.440000,5.490000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1-chloro-1,1-difluoroethane|r142b",0.100490,278.200000,5.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1-trifluoroethane|r143a",0.084040,301.760000,4.830000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|r150",NaN,445.960000,4.960000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1-difluoroethane|difluoroethane|r152a",0.066050,354.840000,4.610000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"fluoroethane|ethane, fluoro-|ethyl fluoride|r161",0.048060,320.390000,4.460000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"dichlorofluoromethane|dichloromonofluoromethane|rf 21|r21",0.102920,358.600000,4.700000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"perfluoropropane|perflutren|octafluoropropane|r218",0.188020,266.350000,5.800000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"chlorodifluoromethane|difluorochloromethane|r22",0.086470,284.724000,4.670000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1,2,3,3,3-heptafluoropropane|r227ea",0.170030,289.340000,5.750000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"trifluoromethane|fluoroform|r23",0.070014,243.910000,4.280000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1,2,3,3-hexafluoropropane|r236ea",0.152040,318.330000,5.600000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1,3,3,3-hexafluoropropane|r236fa",0.152040,307.240000,5.640000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,2,2,3-pentafluoropropane|r245ca",0.134050,355.410000,5.130000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1,3,3-pentafluoropropane|r245fa",0.134050,259.890000,5.850000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"difluoromethane|r32",0.052023,289.650000,4.100000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,1,1,3,3-pentafluorobutane|r365mfc",0.148070,365.280000,5.490000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"chloromethane|methyl chloride|r40",0.050490,330.600000,4.190000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methyl fluoride|fluoromethane|r41",0.034033,244.880000,4.120000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"octafluorocyclobutane|perfluorocyclobutane|rc-318|rc318",0.200030,308.410000,5.550000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"methane, trifluoromethoxy-|re143a",NaN,300.104000,4.850000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|re245cb2",NaN,621.000000,8.700000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|re245fa2",NaN,353.280000,5.360000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|re347mcc",NaN,347.570000,5.870000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"sulfur hexafluoride|sulphur hexafluoride|sf6",0.146060,222.100000,5.130000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"sulfur dioxide|sulphur dioxide|sulfurous anhydride|so2",0.064070,363.000000,4.030000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"trans-2-butene|2-butene|t2butene",0.056110,259.000000,5.510000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"toluene|methylbenzene",0.092140,469.900000,5.510000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"*|vinylchloride",NaN,337.460000,4.550000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"water",0.018015,809.100000,2.640000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"xenon",0.131290,300.000000,3.297000,"Yang et al. (2022)",10.1007/s10765-022-03096-9

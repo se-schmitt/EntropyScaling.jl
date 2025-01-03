@@ -9,7 +9,7 @@ const Z1 = FillArrays.Fill(1.0,1)
 get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))
 const (kB, NA, R) = get_kBNAR()
 
-const DB_PATH = normpath(Base.pkgdir(EntropyScaling),"data")
+const DB_PATH = normpath(Base.pkgdir(EntropyScaling),"database")
 
 #equivalent to a' * b, but with general iterators
 function _dot(a,b)
@@ -29,6 +29,7 @@ include("general/properties.jl")
 include("utils/data.jl")
 include("utils/thermo.jl")
 include("utils/misc.jl")
+include("utils/database.jl")
 
 # Models 
 include("models/base.jl")

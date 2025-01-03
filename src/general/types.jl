@@ -22,7 +22,7 @@ abstract type AbstractTransportPropertyMixing end
 
 struct Reference
     doi::String
-    shortref::String
+    short::String
 end
 Reference() = Reference("", "NA")
 
@@ -30,7 +30,7 @@ struct BaseParam{P} <: AbstractParam
     prop::P
     solute_name::Union{Missing,String}
     Mw::Vector{Float64}
-    param_ref::Vector{Reference}
+    ref::Vector{Reference}
     N_data::Int
     T_range::Tuple{Float64,Float64}
     p_range::Tuple{Float64,Float64}
