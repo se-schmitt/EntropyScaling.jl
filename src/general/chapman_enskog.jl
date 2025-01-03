@@ -16,13 +16,13 @@ Chapman-Enskog transport properties for the zero-density limit.
 
 ## Constructors
 
-    ChapmanEnskogModel(components; collision_integral=KimMonroe())
-    ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe(), ref="", ref_id="")  
+- `ChapmanEnskogModel(components; collision_integral=KimMonroe(), ref="", ref_id="")`: database constructor
+- `ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe())`: custom parameters constructor
 
-Input arguments can either be single values (pure) or vectors. 
-In case no parameters are provided, values are taken *Poling et al. (2001)* or *Yang et al. (2022)* (if available).
+Input arguments can either be single values (pure) or vectors.
 The keywords `ref` (short reference) and `ref_id` (DOI or ISBN) enable the specification of the reference.
-Mixture properties are calculated according to the models from *Wilke (1950)* (viscosity), *Mason and Saxen (1958)* (thermal conductivity), and *Miller and Carman (1961)* (self-diffusion coefficient).
+Currently, parameters from *Poling et al. (2001)* and *Yang et al. (2022)* are in the database.
+Mixture properties are calculated according to the models from *Wilke (1950)* (viscosity), *Mason and Saxen (1958)* (thermal conductivity), and *Miller and Carman (1961)* (self-diffusion).
 
 ## Example
 
