@@ -99,19 +99,15 @@ construction).
 
 ## Constructors
 
-    FrameworkModel(eos, params::Dict{P})
-
-Default constructor (see above).
-
-    FrameworkModel(eos, datasets::Vector{TransportPropertyData}; 
+- `FrameworkModel(eos, params::Dict{P})`: Default constructor (see above).
+- ```FrameworkModel(eos, datasets::Vector{TransportPropertyData}; 
         opts::FitOptions=FitOptions(), 
         solute=nothing
-    )
-
-Constructor for fitting new parameters `α` to experimental data (only applicable to pure components).
-`datasets` needs to be a vector containing [`TransportPropertyData`](@ref).
-`opts` enables controling the fitting procedure through [`FitOptions`](@ref).
-`solute` should be an EOS model of the solute (only applicable when fitting diffusion coeffficients at infinite dilution).
+    )```
+    Constructor for fitting new parameters `α` to experimental data (only applicable to pure components).
+    `datasets` needs to be a vector containing [`TransportPropertyData`](@ref).
+    `opts` enables controling the fitting procedure through [`FitOptions`](@ref).
+    `solute` should be an EOS model of the solute (only applicable when fitting diffusion coeffficients at infinite dilution).
     
 ## Example 
 
