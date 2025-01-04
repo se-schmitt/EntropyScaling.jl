@@ -2,7 +2,7 @@ module UnitfulExt
 
 using EntropyScaling
 using Unitful
-import Unitful: Pa, K, W, m, J, mol
+import Unitful: Pa, K, W, m, J, mol, s
 
 const ES = EntropyScaling
 
