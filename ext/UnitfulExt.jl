@@ -33,9 +33,7 @@ function ES.ViscosityData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Union{Unitful.Pressure,Any},VR<:Union{MolarDensity,Any}}
 
     if length(p_data) == 0
@@ -44,8 +42,6 @@ function ES.ViscosityData(
             p_data,
             ϱ_data .|> mol/m^3 .|> ustrip,
             phase,
-            doi,
-            short
         )
     elseif length(ϱ_data) == 0
         return ES.ViscosityData(
@@ -53,8 +49,6 @@ function ES.ViscosityData(
             p_data .|> Pa .|> ustrip,
             ϱ_data,
             phase,
-            doi,
-            short
         )
     else
         error("Either pressure or density must be provided.")
@@ -80,17 +74,13 @@ end
 function ES.ViscosityData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Unitful.Pressure}
     return ES.ViscosityData(
         T_data .|> K .|> ustrip,
         p_data .|> Pa .|> ustrip,
         [],
         phase,
-        doi,
-        short
     )
 end
 
@@ -110,9 +100,7 @@ end
 function ES.ViscosityData(
         T_data::AbstractVector{T},
         ϱ_data::AbstractVector{VR},
-        phase::Symbol,
-        doi::String="",
-        short::String=""
+        phase::Union{Symbol,Vector{Symbol}},
     ) where {T<:Unitful.Temperature, VR<:MolarDensity}
 
     return ES.ViscosityData(
@@ -120,8 +108,6 @@ function ES.ViscosityData(
         [],
         ϱ_data .|> mol/m^3 .|> ustrip,
         phase,
-        doi,
-        short
     )
 end
 
@@ -145,9 +131,7 @@ function ES.ThermalConductivityData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Union{Unitful.Pressure,Any},VR<:Union{MolarDensity,Any}}
 
     if length(p_data) == 0
@@ -156,8 +140,6 @@ function ES.ThermalConductivityData(
             p_data,
             ϱ_data .|> mol/m^3 .|> ustrip,
             phase,
-            doi,
-            short
         )
     elseif length(ϱ_data) == 0
         return ES.ThermalConductivityData(
@@ -165,8 +147,6 @@ function ES.ThermalConductivityData(
             p_data .|> Pa .|> ustrip,
             ϱ_data,
             phase,
-            doi,
-            short
         )
     else
         error("Either pressure or density must be provided.")
@@ -191,9 +171,7 @@ end
 function ES.ThermalConductivityData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Unitful.Pressure}
 
     return ES.ThermalConductivityData(
@@ -201,8 +179,6 @@ function ES.ThermalConductivityData(
         p_data .|> Pa .|> ustrip,
         [],
         phase,
-        doi,
-        short
     )
 
 end
@@ -224,9 +200,7 @@ end
 function ES.ThermalConductivityData(
     T_data::AbstractVector{T},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, VR<:MolarDensity}
 
     return ES.ThermalConductivityData(
@@ -234,8 +208,6 @@ function ES.ThermalConductivityData(
         [],
         ϱ_data .|> mol/m^3 .|> ustrip,
         phase,
-        doi,
-        short
     )
 
 end
@@ -259,9 +231,7 @@ function ES.SelfDiffusionCoefficientData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Union{Unitful.Pressure,Any},VR<:Union{MolarDensity,Any}}
 
     if length(p_data) == 0
@@ -270,8 +240,6 @@ function ES.SelfDiffusionCoefficientData(
             p_data,
             ϱ_data .|> mol/m^3 .|> ustrip,
             phase,
-            doi,
-            short
         )
     elseif length(ϱ_data) == 0
         return ES.SelfDiffusionCoefficientData(
@@ -279,8 +247,6 @@ function ES.SelfDiffusionCoefficientData(
             p_data .|> Pa .|> ustrip,
             ϱ_data,
             phase,
-            doi,
-            short
         )
     else
         error("Either pressure or density must be provided.")
@@ -305,9 +271,7 @@ end
 function ES.SelfDiffusionCoefficientData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Unitful.Pressure}
 
     return ES.SelfDiffusionCoefficientData(
@@ -315,8 +279,6 @@ function ES.SelfDiffusionCoefficientData(
         p_data .|> Pa .|> ustrip,
         [],
         phase,
-        doi,
-        short
     )
 
 end
@@ -338,9 +300,7 @@ end
 function ES.SelfDiffusionCoefficientData(
     T_data::AbstractVector{T},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, VR<:MolarDensity}
 
     return ES.SelfDiffusionCoefficientData(
@@ -348,8 +308,6 @@ function ES.SelfDiffusionCoefficientData(
         [],
         ϱ_data .|> mol/m^3 .|> ustrip,
         phase,
-        doi,
-        short
     )
 
 end
@@ -373,9 +331,7 @@ function ES.InfDiffusionCoefficientData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Union{Unitful.Pressure,Any},VR<:Union{MolarDensity,Any}}
 
     if length(p_data) == 0
@@ -384,8 +340,6 @@ function ES.InfDiffusionCoefficientData(
             p_data,
             ϱ_data .|> mol/m^3 .|> ustrip,
             phase,
-            doi,
-            short
         )
     elseif length(ϱ_data) == 0
         return ES.InfDiffusionCoefficientData(
@@ -393,8 +347,6 @@ function ES.InfDiffusionCoefficientData(
             p_data .|> Pa .|> ustrip,
             ϱ_data,
             phase,
-            doi,
-            short
         )
     else
         error("Either pressure or density must be provided.")
@@ -419,9 +371,7 @@ end
 function ES.InfDiffusionCoefficientData(
     T_data::AbstractVector{T},
     p_data::AbstractVector{P},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, P<:Unitful.Pressure}
 
     return ES.InfDiffusionCoefficientData(
@@ -429,8 +379,6 @@ function ES.InfDiffusionCoefficientData(
         p_data .|> Pa .|> ustrip,
         [],
         phase,
-        doi,
-        short
     )
 
 end
@@ -452,9 +400,7 @@ end
 function ES.InfDiffusionCoefficientData(
     T_data::AbstractVector{T},
     ϱ_data::AbstractVector{VR},
-    phase::Symbol,
-    doi::String="",
-    short::String=""
+    phase::Union{Symbol,Vector{Symbol}},
 ) where {T<:Unitful.Temperature, VR<:MolarDensity}
 
     return ES.InfDiffusionCoefficientData(
@@ -462,8 +408,6 @@ function ES.InfDiffusionCoefficientData(
         [],
         ϱ_data .|> mol/m^3 .|> ustrip,
         phase,
-        doi,
-        short
     )
 
 end
