@@ -1,27 +1,4 @@
-# Models
-
-```@index
-Pages = ["models.md"]
-```
-
-## Chapman-Enskog Models
-
-Chapman-Enskog model the for transport properties at the zero-density limit based on the kinetic gas theory.
-
-```math
-\begin{aligned}
-\eta_{\varrho \rightarrow 0}              &= \frac{5}{16} \sqrt{\frac{M k_{\rm B} T}{\pi N_{\rm A}}} \frac{1}{\sigma^2 \Omega^{(2,2)}} \\
-\lambda_{\varrho \rightarrow 0}	          &= \frac{75}{64} k_{\rm B} \sqrt{\frac{R T}{M \pi}} \frac{1}{\sigma^2 \Omega^{(2,2)}}\\
-D_{\varrho \rightarrow 0} \varrho^{\rm m} &= \frac{3}{8} \sqrt{\frac{M k_{\rm B} T}{\pi N_{\rm A}}} \frac{1}{\sigma^2 \Omega^{(1,1)}}
-\end{aligned}
-```
-
-```@docs
-EntropyScaling.ChapmanEnskogModel
-EntropyScaling.Ω
-```
-
-## Entropy Scaling Models
+# Entropy Scaling Models
 
 Entropy scaling makes use of the fact that transport properies can be scaled such that the
 scaled transport property $Y^{\rm s}$ is a univariate function of the configurational (or 
@@ -31,7 +8,10 @@ $$Y^{\rm s} = Y^{\rm s}\left(s_{\rm conf}\right).$$
 
 Entropy scaling enables the prediction of transport porperties in all fluid phases.
 
-### Models
+The following entropy scaling models are currently implemented:
+
+- Entropy Scaling Framework [schmitt_entropy_2024](@cite) ([`FrameworkModel`](@ref))
+- Refprop Residual Entropy Scaling (RES) Model [yang_linking_2022](@cite) ([`RefpropRESModel`](@ref))
 
 All models are similarly structured with the following fields:
 
@@ -50,12 +30,17 @@ Here, `a`, `b`, and `c` are the parameters (note that `a_η`, `b_η`, ... are ve
 Lists of the parameters are given below in the repective 'Parameters' sections.
 Additional model-specific constructors are also given below.
 
+## Framework Model
 ```@docs
 EntropyScaling.FrameworkModel
+```
+
+## Refprop RES Model
+```@docs
 EntropyScaling.RefpropRESModel
 ```
 
-### Fitting Utilities
+## Fitting Utilities
 
 Some entropy scaling models allow the fitting of substance-specific parameters to experimental data.
 Therefore, a unified interface is provided including the handling of the data and the fit options.
