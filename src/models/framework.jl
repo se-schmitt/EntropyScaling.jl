@@ -42,7 +42,6 @@ function FrameworkParams(self::FrameworkParams{<:SelfDiffusionCoefficient},
     for k in [:σ,:ε,:Mw]
         getfield(new_self.CE_model,k)[what_inf] = getfield(inf.CE_model,k)[what_inf]
     end
-    # new_self.base.Mw[what_inf] = inf.base.Mw[what_inf] #TODO ensure used correctly
     
     return new_self
 end
