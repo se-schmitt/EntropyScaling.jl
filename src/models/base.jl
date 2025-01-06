@@ -162,7 +162,6 @@ end
 function paramstype end
 #a macro that automates some definitions of model methods.
 #TODO: handle fitting for arbitrary methods.
-#TODO: check if all methods work
 macro modelmethods(model,param)
     return quote
         EntropyScaling.paramstype(::Type{<:$model}) = $param
