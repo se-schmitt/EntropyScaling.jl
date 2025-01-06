@@ -83,13 +83,13 @@ end
 """
     FrameworkModel{T} <: AbstractEntropyScalingModel
 
-Entropy scaling framework from *Schmitt et al. (2024)*.
+Entropy scaling framework [schmitt_entropy_2024](@cite).
 
 The entropy scaling framework provides a physical way to model transport properties 
 (viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.
 It enables fitting new models using only few experimental data.
 
-## Parameters
+# Parameters
 
 - `α::Matrix{T}`: component-specific parameters (size: `5 x N_components`)
 
@@ -97,19 +97,16 @@ It enables fitting new models using only few experimental data.
 zero-density transport property) are additional internal parameters (not to be set at 
 construction).
 
-## Constructors
+# Constructors
 
 - `FrameworkModel(eos, params::Dict{P})`: Default constructor (see above).
-- ```FrameworkModel(eos, datasets::Vector{TransportPropertyData}; 
-        opts::FitOptions=FitOptions(), 
-        solute=nothing
-    )```
+- `FrameworkModel(eos, datasets::Vector{TransportPropertyData}; opts::FitOptions=FitOptions(), solute=nothing)`:
     Constructor for fitting new parameters `α` to experimental data (only applicable to pure components).
-    `datasets` needs to be a vector containing [`TransportPropertyData`](@ref).
+    `datasets` contains the experimental data, see [`TransportPropertyData`](@ref).
     `opts` enables controling the fitting procedure through [`FitOptions`](@ref).
-    `solute` should be an EOS model of the solute (only applicable when fitting diffusion coeffficients at infinite dilution).
+    `solute` is an EOS model of the solute (optional, for fitting diff. coeff. at infinite dilution).
     
-## Example 
+# Example 
 
 ```julia
 using EntropyScaling, Clapeyron
@@ -127,10 +124,6 @@ model = FrameworkModel(eos_model, [data])
 # Calculation of the viscostiy at state
 η = viscosity(model, 0.1e6, 300.)
 ```
-
-## Reference
-
-1. S. Schmitt, H. Hasse, and S. Stephan: Entropy Scaling Framework for Transport Properties Using Molecular-Based Equations of State, Journal of Molecular Liquids 395 (2024) 123811, DOI: https://doi.org/10.1016/j.molliq.2023.123811.
 """
 struct FrameworkModel{E,P} <: AbstractEntropyScalingModel
     components::Vector{String}

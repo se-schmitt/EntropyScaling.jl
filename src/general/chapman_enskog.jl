@@ -8,23 +8,23 @@ abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
 
 Chapman-Enskog transport properties for the zero-density limit.
 
-## Fields
+# Fields
 - `σ::Vector{T}`: Lennard-Jones size parameter (`[σ] = m`)
 - `ε::Vector{T}`: Lennard-Jones energy parameter (`[ε] = J`)
 - `Mw::Vector{T}`: molar mass (`[Mw] = kg mol⁻¹`)
 - `collision::C`: collision integral method (`KimMonroe()` (default) or `Neufeld()`, see [`Ω`](@ref))
 
-## Constructors
+# Constructors
 
 - `ChapmanEnskogModel(components; collision_integral=KimMonroe(), ref="", ref_id="")`: database constructor
 - `ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe())`: custom parameters constructor
 
 Input arguments can either be single values (pure) or vectors.
 The keywords `ref` (short reference) and `ref_id` (DOI or ISBN) enable the specification of the reference.
-Currently, parameters from *Poling et al. (2001)* and *Yang et al. (2022)* are in the database.
-Mixture properties are calculated according to the models from *Wilke (1950)* (viscosity), *Mason and Saxen (1958)* (thermal conductivity), and *Miller and Carman (1961)* (self-diffusion).
+Currently, parameters from [poling_properties_2001](@citet) and [yang_linking_2022](@citet) are in the database.
+Mixture properties are calculated according to the models from [wilke_viscosity_1950](@citet) (viscosity), [mason_approximate_1958](@citet) (thermal conductivity), and [miller_self-diffusion_1961](@citet) (self-diffusion).
 
-## Example
+# Example
 
 ```julia
 using EntropyScaling 
@@ -42,13 +42,6 @@ model_mix = ChapmanEnskogModel(["butane","methanol"]; ref="Poling et al. (2001)"
 η_mix = viscosity(model_mix, NaN, 300., [.5,.5])
 D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])  
 ```
-
-## References
-1.  B. E. Poling, J. M. Prausnitz, and J. P. O’Connell: The Properties of Gases and Liquids, 5th, ed. McGraw-Hill, New York (2001).
-2.  X. Yang, X. Xiao, M. Thol, M. Richter, and I. H. Bell: Linking Viscosity to Equations of State Using Residual Entropy Scaling Theory, Int. J. Thermophys. 43 (2022) 183, DOI: https://doi.org/10.1007/s10765-022-03096-9.
-3.  C. R. Wilke: A Viscosity Equation for Gas Mixtures, The Journal of Chemical Physics 18 (1950) 517–519, DOI: https://doi.org/10.1063/1.1747673.
-4.  E. A. Mason and S. C. Saxena: Approximate Formula for the Thermal Conductivity of Gas Mixtures, The Physics of Fluids 1 (1958) 361–369, DOI: https://doi.org/10.1063/1.1724352.
-5.  L. Miller and P. C. Carman: Self-Diffusion in Mixtures. Part 4. -- Comparison of Theory and Experiment for Certain Gas Mixtures, Trans. Faraday Soc. 57 (1961) 2143–2150, DOI: https://doi.org/10.1039/TF9615702143.
 """
 struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
     components::Vector{String}
@@ -218,12 +211,8 @@ struct Neufeld <: AbstractCollisionIntegralMethod end
 Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for viscosity/thermal conductivity) at the specified temperature `T`.
 
 Two methods are implemented:
-- `KimMonroe()`: *Kim and Monroe (2014)* and
-- `Neufeld()`: *Neufeld et al. (1972)*
-
-## References
-1.  S. U. Kim and C. W. Monroe: High-Accuracy Calculations of Sixteen Collision Integrals for Lennard-Jones (12-6) Gases and Their Interpolation to Parameterize Neon, Argon, and Krypton, Journal of Computational Physics 273 (2014) 358–373, DOI: https://doi.org/10.1016/j.jcp.2014.05.018.
-2.  P. D. Neufeld, A. R. Janzen, and R. A. Aziz: Empirical Equations to Calculate 16 of the Transport Collision Integrals Ω(l,s)* for the Lennard‐Jones (12–6) Potential, The Journal of Chemical Physics 57 (1972) 1100–1102, DOI: https://doi.org/10.1063/1.1678363.
+- `KimMonroe()` [kim_high-accuracy_2014](@cite)
+- `Neufeld()` [neufeld_empirical_1972](@cite)
 """
 Ω(prop::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*kB/model.ε[i])
 
