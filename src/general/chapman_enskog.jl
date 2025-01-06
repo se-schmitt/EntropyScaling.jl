@@ -2,7 +2,6 @@ export ChapmanEnskogModel
 
 abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
 
-# TODO add LJ parameters from Poling to database
 """
     ChapmanEnskogModel <: AbstractTransportPropertyModel
 
