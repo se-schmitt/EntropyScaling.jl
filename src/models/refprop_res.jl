@@ -92,12 +92,48 @@ function generic_powerseries_scaling_model(param, s, x, g)
     return LogExpFunctions.logexpm1(lnY⁺p1) # Y⁺
 end
 
-function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true)
+function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η_pure=nothing)
     k = !inv ? 1 : -1
-    Y₀ = property_CE(transport_property(param), param.CE_model, T, z)
+    tp = transport_property(param)
+
+    if tp == ThermalConductivity
+        each_ind = eachindex(z)
+        λ₀ = [thermal_conductivity(param.CE_model, T; i) for i in each_ind]
+        η₀ = [viscosity(param.CE_model, T; i) for i in each_ind]
+        pure_eos = split_model(eos)
+        cₚ₀ = isobaric_heat_capacity.(pure_eos, 1e-10, T)
+        λ_int = thermal_conductivity_internal.(η₀, cₚ, get_Mw(eos))
+        cₚ = isobaric_heat_capacity.(pure_eos, ϱ, T)
+        cᵥ = ischoric_heat_capacity.(pure_eos, ϱ, T)
+        λ_c = thermal_conductivity_critical.()
+        Y₀ = _Y₀ + λ_int + λ_c
+    else
+        Y₀ = property_CE(tp, param.CE_model, T, z)    
+    end
+
     if inv
         return plus_scaling(param.base, Y, T, ϱ, s, z; inv=true) + Y₀
     else
         return plus_scaling(param.base, Y - Y₀, ϱ, s, z; inv=false)
     end
+end
+
+function ϱT_thermal_conductivity(model::RefpropRESModel, ϱ, T, z=Z1)
+    param = model[ThermalConductivity()]
+    s = entropy_conf(model.eos, ϱ, T, z)
+    sˢ = scaling_variable(param, s, z)
+    λˢ = scaling_model(param, sˢ, z)
+    η_pure = [ϱT_viscosity(model, ϱ, T, OneElement(length(z),i)) for i in eachindex(z)]
+    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η_pure)
+end
+
+function thermal_conductivity_internal(η₀, cₚ, M)
+    f_int = 1.32e-3
+    return f_int*η₀/M * (cₚ - 5/2*R)
+end
+
+function thermal_conductivity_critical(ϱ, T, η, cₚ, cᵥ, )
+    R₀ = 1.03
+    Ω_c = 2.0/π * ((cₚ-cᵥ)/cₚ*atan(qd*ξ) + cᵥ/cₚ*qd*ξ)
+    return ϱ*cₚ*R₀*kB*T/(6π*η*ξ) * (Ω_c-Ω₀_c)
 end
