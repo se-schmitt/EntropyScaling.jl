@@ -12,11 +12,17 @@ ES.molar_density(eos::CL.EoSVectorParam, p, T, z = SA1; phase=:unknown) = ES.mol
 
 #note: On Clapeyron, each EoSModel can set its own gas constant. here we divide by that and multiply 
 #by the constant used by EntropyScaling, so calculations are consistent between models
-ES.entropy_conf(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_entropy_res(eos, 1.0./ϱ, T, z)*ES.R/CL.Rgas(eos)
+ES.entropy_conf(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_entropy_res(eos, 1.0/ϱ, T, z)*ES.R/CL.Rgas(eos)
 ES.entropy_conf(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = ES.entropy_conf(eos.model, ϱ, T, z)
 
 ES.second_virial_coefficient(eos::EoSModel, T, z = SA1) = second_virial_coefficient(eos, T, z)
 ES.second_virial_coefficient(eos::CL.EoSVectorParam, T, z = SA1) = ES.second_virial_coefficient(eos.model, T, z)
+
+ES.isobaric_heat_capacity(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_isobaric_heat_capacity(eos, 1.0/ϱ, T, z)
+ES.isobaric_heat_capacity(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = ES.isobaric_heat_capacity(eos.model, ϱ, T, z)
+
+ES.isochoric_heat_capacity(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_isochoric_heat_capacity(eos, 1.0/ϱ, T, z)
+ES.isochoric_heat_capacity(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = ES.isochoric_heat_capacity(eos.model, ϱ, T, z)
 
 # Critical properties
 ES.crit_pure(eos::EoSModel) = crit_pure(eos)[1:2]

@@ -63,8 +63,6 @@ function ϱT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, 
     return scaling(param, model.eos, Dˢ, T, ϱ, s; inv=true)
 end
 
-
-
 """
     MS_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown)
 

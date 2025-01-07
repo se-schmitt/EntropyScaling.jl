@@ -37,6 +37,20 @@ Temperature derivative of the second virial coefficient `dBdT` (`[dBdT] = m³/(m
 """
 second_virial_coefficient_dT(eos::Any, T, z=Z1) = ForwardDiff.derivative(xT -> second_virial_coefficient(eos, xT, z), T)
 
+"""
+    isobaric_heat_capacity(eos, ϱ, T, z=[1.])
+
+Isobaric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
+"""
+isobaric_heat_capacity(eos::Any, ϱ, T, z=Z1)
+
+"""
+    isochoric_heat_capacity(eos, ϱ, T, z=[1.])
+
+Isochoric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
+"""
+isochoric_heat_capacity(eos::Any, ϱ, T, z=Z1)
+
 # Critical properties
 """
     crit_pure(eos)
