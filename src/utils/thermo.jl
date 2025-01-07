@@ -42,14 +42,14 @@ second_virial_coefficient_dT(eos::Any, T, z=Z1) = ForwardDiff.derivative(xT -> s
 
 Isobaric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
 """
-isobaric_heat_capacity(eos::Any, ϱ, T, z=Z1)
+isobaric_heat_capacity(eos::Any, ϱ, T, z=Z1) = fun_na_error("isobaric_heat_capacity",typeof(eos))
 
 """
     isochoric_heat_capacity(eos, ϱ, T, z=[1.])
 
 Isochoric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
 """
-isochoric_heat_capacity(eos::Any, ϱ, T, z=Z1)
+isochoric_heat_capacity(eos::Any, ϱ, T, z=Z1) = fun_na_error("isochoric_heat_capacity",typeof(eos))
 
 # Critical properties
 """
