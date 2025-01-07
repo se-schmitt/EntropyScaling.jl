@@ -282,13 +282,13 @@ end
 # Viscosity, thermal conductivity: Wilke and Mason and Saxena
 struct Wilke <: AbstractTransportPropertyMixing end
 
-function mix_CE(::Wilke,model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(::Wilke,model::AbstractChapmanEnskogModel, Y, x; YΦ=Y)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
     enum_M = enumerate(model.Mw)
     for (i,Mi) in enum_M
         xΦ = zero(Y₀_mix)
         for (j,Mj) in enum_M
-            xΦ += x[j] * (1+√(Y[i]/Y[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj))
+            xΦ += x[j] * (1+√(YΦ[i]/YΦ[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj))
         end
         Y₀_mix += x[i]*Y[i]/xΦ
     end
