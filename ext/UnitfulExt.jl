@@ -5,6 +5,7 @@ using Unitful
 import Unitful: Pa, K, W, m, J, mol, s
 
 const ES = EntropyScaling
+Z1 = ES.Z1
 
 ## Define base Units for dispatch
 
@@ -443,6 +444,63 @@ function ES.InfDiffusionCoefficientData(
     )
 
 end
+
+## Implementation for transport property calculation functions
+
+
+"""
+
+    ES.viscosity(
+        model::AM,
+        p::P_unit,
+        T::T_unit,
+        z=Z1;
+        phase=:unknown,
+        output_unit=(Pa*s)
+    ) where {AM<:ES.AbstractEntropyScalingModel,P_unit<:Unitful.Pressure,T_unit<:Unitful.Temperature}
+
+
+Calculate the viscosity of a fluid using the given model.
+
+# Arguments
+
+- `model`: EntropyScalingModel object.
+- `p::Unitful.Pressure`: Pressure in any unit system.
+- `T::Unitful.Temperature`: Temperature in any unit system.
+- `z::Vector{Float64}`: Composition.
+- `phase::Symbol=:unkown`: Phase of the fluid.
+- `output_unit::Unitful.Unit=Pa*s`: Output unit compatible with viscosity.
+
+# Returns
+
+- `Unitful.Quantity`: Viscosity of the fluid.
+
+
+"""
+function ES.viscosity(
+        model::AM,
+        p::P_unit,
+        T::T_unit,
+        z=Z1;
+        phase=:unknown,
+        output_unit=(Pa*s)
+    ) where {AM<:ES.AbstractEntropyScalingModel,P_unit<:Unitful.Pressure,T_unit<:Unitful.Temperature}
+
+    visc = ES.viscosity(
+        model,
+        p |> Pa |> ustrip,
+        T |> K |> ustrip,
+        z,
+        phase = phase
+    )*Pa*s
+
+    return uconvert(output_unit, visc)
+end
+
+
+
+
+
 
 
 
