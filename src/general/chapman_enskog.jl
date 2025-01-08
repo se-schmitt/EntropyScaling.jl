@@ -275,8 +275,8 @@ function correspondence_principle(Tc, pc)
 end
 
 function correspondence_principle(eos)
-    Tc,Pc = crit_pure(eos)
-    return correspondence_principle(Tc, Pc)
+    Tc,pc,_ = crit_pure(eos)
+    return correspondence_principle(Tc, pc)
 end
 
 # Viscosity, thermal conductivity: Wilke and Mason and Saxena
