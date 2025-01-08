@@ -25,7 +25,14 @@ ES.isochoric_heat_capacity(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_isochoric_heat
 ES.isochoric_heat_capacity(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = ES.isochoric_heat_capacity(eos.model, ϱ, T, z)
 
 # Critical properties
-ES.crit_pure(eos::EoSModel) = crit_pure(eos)
+ES.crit_pure(eos::EoSModel) = begin
+    Tc,pc,vc = crit_pure(eos)
+    return Tc,pc,1/vc
+end
+ES.crit_mix(eos::EoSModel, z) = begin
+    Tc,pc,vc = crit_mix(eos, z)
+    return Tc,pc,1/vc
+end
 
 # Utility functions
 ES.split_model(eos::EoSModel) = split_model(eos)
