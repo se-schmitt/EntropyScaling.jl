@@ -3,23 +3,25 @@ export RefpropRESModel, RefpropRESParams
 struct RefpropRESParams{P,T} <: AbstractEntropyScalingParams
     n::Matrix{T}
     ξ::Vector{T}
+    crit::Dict{Symbol,Vector{T}}
     CE_model::ChapmanEnskogModel
     base::BaseParam{P}
 end
 
 function RefpropRESParams(prop::AbstractTransportProperty, eos, n::Matrix{T}, ξ::Vector{T}, 
-                          σ::Vector{T}, ε::Vector{T}) where T
+                          σ::Vector{T}, ε::Vector{T}, 
+                          crit::Dict{Symbol,Vector{T}}=Dict{Symbol,Vector{T}}()) where T
     
     Mw = convert(typeof(ξ),get_Mw(eos))
     CE_model = ChapmanEnskogModel(repeat([""],length(Mw)),σ,ε,Mw,collision_integral=KimMonroe())
     base = BaseParam(prop, Mw)
-    return RefpropRESParams(n,ξ,CE_model,base)
+    return RefpropRESParams(n,ξ,crit,CE_model,base)
 end
 
 """
     RefpropRESModel{T} <: AbstractEntropyScalingModel
 
-Entropy scaling model based on Refprop EOS [yang_linking_2022](@cite). 
+Entropy scaling model based on Refprop EOS [yang_linking_2022,yang_entropy_2021](@cite). 
 
 A database provides ready-to-use models for the viscosity of several fluids.
 The model can favourably be used in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) and [`Coolprop.jl`](https://github.com/CoolProp/CoolProp.jl) (see examples).
@@ -30,6 +32,7 @@ The model can favourably be used in combination with [`Clapeyron.jl`](https://gi
 - `ξ::Vector{T}`: component-specific scaling parameter in case global parameters are used (`ξ = 1` for individual fits)
 - `σ::Vector{T}`: LJ size parameter for the Chapman-Enskog model 
 - `ε::Vector{T}`: LJ energy parameter for the Chapman-Enskog model
+- `crit::Dict{Symbol,Vector}`: parameters for critical contribution of thermal conductivity (keys: `:φ0`, `:Γ`, `:qD`, and `:Tref`)
 
 ## Constructors
 
@@ -59,20 +62,26 @@ end
 
 function RefpropRESModel(eos, components::Vector{String})
     params = RefpropRESParams[]
-    for prop in [Viscosity()]   #TODO add thermal conductivity
+    for prop in [Viscosity(),ThermalConductivity()]
         out = load_params(RefpropRESModel, prop, components)
         if !ismissing(out)
-            ξ, n1, n2, n3, n4, refs = out
+            if prop == ThermalConductivity()
+                ξ, n1, n2, n3, n4, φ0, Γ, qD, Tref, refs = out
+                crit = Dict(:φ0 => φ0, :Γ => Γ, :qD => qD, :Tref => Tref)
+            else
+                ξ, n1, n2, n3, n4, refs = out
+                crit = Dict{Symbol,Vector{eltype(ξ)}}()
+            end
             CE_model = ChapmanEnskogModel(components; Mw=get_Mw(eos), ref_id="10.1007/s10765-022-03096-9")
             base = BaseParam(prop, get_Mw(eos), refs)
-            push!(params, RefpropRESParams(permutedims(hcat(n1,n2,n3,n4)),ξ,CE_model,base))
+            push!(params, RefpropRESParams(permutedims(hcat(n1,n2,n3,n4)),ξ,crit,CE_model,base))
         end
     end
     isempty(params) ? throw(MissingException("No parameters found for system [$(join(components,", "))]")) : nothing
     return RefpropRESModel(components, Tuple(params), eos)
 end
 
-function scaling_model(param::RefpropRESParams{Viscosity}, s, x=z1)
+function scaling_model(param::RefpropRESParams, s, x=z1)
     g = (1.0,1.5,2.0,2.5)
     return generic_powerseries_scaling_model(param, s, x, g)
 end
@@ -92,23 +101,21 @@ function generic_powerseries_scaling_model(param, s, x, g)
     return LogExpFunctions.logexpm1(lnY⁺p1) # Y⁺
 end
 
-function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η_pure=nothing)
+function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η=nothing)
     k = !inv ? 1 : -1
     tp = transport_property(param)
 
-    if tp == ThermalConductivity
+    if tp == ThermalConductivity()
         each_ind = eachindex(z)
         λ₀ = [thermal_conductivity(param.CE_model, T; i) for i in each_ind]
         η₀ = [viscosity(param.CE_model, T; i) for i in each_ind]
         pure_eos = split_model(eos)
         cₚ₀ = isobaric_heat_capacity.(pure_eos, 1e-10, T)
-        λ_int = thermal_conductivity_internal.(η₀, cₚ, get_Mw(eos))
-        cₚ = isobaric_heat_capacity.(pure_eos, ϱ, T)
-        cᵥ = ischoric_heat_capacity.(pure_eos, ϱ, T)
-        λ_c = thermal_conductivity_critical.()
-        Y₀ = _Y₀ + λ_int + λ_c
+        λ_int = thermal_conductivity_internal.(η₀, cₚ₀, get_Mw(eos))
+        Δλ_c = thermal_conductivity_critical(param.crit, eos, ϱ, T, η, z)
+        Y₀ = mix_CE(MasonSaxena(), param.CE_model, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
     else
-        Y₀ = property_CE(tp, param.CE_model, T, z)    
+        Y₀ = property_CE(tp, param.CE_model, T, z)
     end
 
     if inv
@@ -123,17 +130,35 @@ function ϱT_thermal_conductivity(model::RefpropRESModel, ϱ, T, z=Z1)
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    η_pure = [ϱT_viscosity(model, ϱ, T, OneElement(length(z),i)) for i in eachindex(z)]
-    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η_pure)
+    η = ϱT_viscosity(model, ϱ, T, z)
+    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η)
 end
 
 function thermal_conductivity_internal(η₀, cₚ, M)
-    f_int = 1.32e-3
+    f_int = 1.32
     return f_int*η₀/M * (cₚ - 5/2*R)
 end
 
-function thermal_conductivity_critical(ϱ, T, η, cₚ, cᵥ, )
-    R₀ = 1.03
-    Ω_c = 2.0/π * ((cₚ-cᵥ)/cₚ*atan(qd*ξ) + cᵥ/cₚ*qd*ξ)
-    return ϱ*cₚ*R₀*kB*T/(6π*η*ξ) * (Ω_c-Ω₀_c)
+function thermal_conductivity_critical(crit_param, eos, ϱ, T, η, z)
+    # Constants
+    RD = 1.02
+    ν_γ = 0.63 / 1.239
+
+    # Parameters 
+    φ0, Γ, qD, Tref = [_dot(crit_param[k],z) for k in (:φ0, :Γ, :qD, :Tref)]
+    
+    # EOS
+    cₚ = isobaric_heat_capacity(eos, ϱ, T)
+    cᵥ = isochoric_heat_capacity(eos, ϱ, T)
+    ∂ϱ∂p = ForwardDiff.derivative(xp -> molar_density(eos, xp, T), pressure(eos, ϱ, T))
+    ∂ϱ∂p_Tref = ForwardDiff.derivative(xp -> molar_density(eos, xp, Tref), pressure(eos, ϱ, Tref))
+    _, pc, ϱc = crit_mix(eos, z)
+    
+    cᵥ_cₚ = cᵥ/cₚ
+    ϱr = ϱ/ϱc
+    φ = φ0 * (pc/ϱc*ϱr/Γ * (∂ϱ∂p - Tref/T*∂ϱ∂p_Tref))^(ν_γ)
+    qDφ = qD*φ
+    ΔΩ = 2/π * ((1-cᵥ_cₚ)*atan(qDφ) + cᵥ_cₚ*qDφ - 1 + exp(-qDφ/(1+qDφ/3*(qDφ/ϱr)^2)))
+    
+    return ϱ*cₚ*RD*kB*T/(6π*η*φ) * ΔΩ
 end
