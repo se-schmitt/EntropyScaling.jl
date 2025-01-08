@@ -59,6 +59,13 @@ Critical point of pure component (`Tc`, `pc`, `ϱc`) (`[Tc] = K`, `[pc] = Pa`, `
 """
 crit_pure(eos::Any) = fun_na_error("crit_pure",typeof(eos))
 
+"""
+    crit_mix(eos, x)
+
+Critical point of a mixture at given composition (`Tc`, `pc`, `ϱc`) (`[Tc] = K`, `[pc] = Pa`, `[ϱc] = mol/m³`).
+"""
+crit_mix(eos::Any, z) = fun_na_error("crit_mix",typeof(eos))
+
 # Utility functions
 """
     split_model(eos)
