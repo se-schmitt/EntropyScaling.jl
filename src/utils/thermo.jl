@@ -55,7 +55,7 @@ isochoric_heat_capacity(eos::Any, ϱ, T, z=Z1) = fun_na_error("isochoric_heat_ca
 """
     crit_pure(eos)
 
-Critical point of pure component (`Tc`, `pc`) (`[Tc] = K`, `[pc] = Pa`).
+Critical point of pure component (`Tc`, `pc`, `ϱc`) (`[Tc] = K`, `[pc] = Pa`, `[ϱc] = mol/m³`).
 """
 crit_pure(eos::Any) = fun_na_error("crit_pure",typeof(eos))
 
