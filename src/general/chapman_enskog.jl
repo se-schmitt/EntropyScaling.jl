@@ -281,8 +281,9 @@ end
 
 # Viscosity, thermal conductivity: Wilke and Mason and Saxena
 struct Wilke <: AbstractTransportPropertyMixing end
+struct MasonSaxena <: AbstractTransportPropertyMixing end
 
-function mix_CE(::Wilke,model::AbstractChapmanEnskogModel, Y, x; YΦ=Y)
+function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractChapmanEnskogModel, Y, x; YΦ=Y)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
     enum_M = enumerate(model.Mw)
     for (i,Mi) in enum_M
@@ -306,8 +307,12 @@ function mix_CE(prop::DiffusionCoefficient, model::AbstractChapmanEnskogModel,Y,
     return mix_CE(MillerCarman(),model,Y,x)
 end
 
-function mix_CE(prop::Union{Viscosity, ThermalConductivity}, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, Y, x)
     return mix_CE(Wilke(),model,Y,x)
+end
+
+function mix_CE(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, Y, x)
+    return mix_CE(MasonSaxena(),model,Y,x)
 end
 
 calc_M_CE(Mw) = 2.0/sum(inv,Mw)
