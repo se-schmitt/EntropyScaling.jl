@@ -467,15 +467,13 @@ Calculate the viscosity of a fluid using the given model.
 - `model`: EntropyScalingModel object.
 - `p::Unitful.Pressure`: Pressure in any unit system.
 - `T::Unitful.Temperature`: Temperature in any unit system.
-- `z::Vector{Float64}`: Composition.
+- `z::Vector{Float64}=[1.0]`: Composition.
 - `phase::Symbol=:unkown`: Phase of the fluid.
-- `output_unit::Unitful.Unit=Pa*s`: Output unit compatible with viscosity.
+- `output_unit=Pa*s`: Output unit compatible with viscosity.
 
 # Returns
 
-- `Unitful.Quantity`: Viscosity of the fluid.
-
-
+- `Unitful.Quantity`: Viscosity of the fluid with the unit of `output_unit`.
 """
 function ES.viscosity(
         model::AM,
@@ -486,7 +484,7 @@ function ES.viscosity(
         output_unit=(Pa*s)
     ) where {AM<:ES.AbstractEntropyScalingModel,P_unit<:Unitful.Pressure,T_unit<:Unitful.Temperature}
 
-    visc = ES.viscosity(
+    η = ES.viscosity(
         model,
         p |> Pa |> ustrip,
         T |> K |> ustrip,
@@ -494,11 +492,59 @@ function ES.viscosity(
         phase = phase
     )*Pa*s
 
-    return uconvert(output_unit, visc)
+    return uconvert(output_unit, η)
 end
 
 
 
+"""
+
+    ES.themal_conductivity(
+        model::AM,
+        p::P_unit,
+        T::T_unit,
+        z=Z1;
+        phase=:unknown,
+        output_unit=(W/(m*K))
+    ) where {AM<:ES.AbstractEntropyScalingModel,P_unit<:Unitful.Pressure,T_unit<:Unitful.Temperature}
+
+
+Calculate the thermal conductivity of a fluid using the given model.
+
+# Arguments
+
+- `model`: EntropyScalingModel object.
+- `p::Unitful.Pressure`: Pressure in any unit system.
+- `T::Unitful.Temperature`: Temperature in any unit system.
+- `z::Vector{Float64}=[1.0]`: Composition.
+- `phase::Symbol=:unkown`: Phase of the fluid.
+- `output_unit=W/(m*K)`: Output unit compatible with thermal conductivity.
+
+# Returns
+
+- `Unitful.Quantity`: Thermal conductivity of the fluid with the unit of `output_unit`.
+"""
+function ES.thermal_conductivity(
+        model::AM,
+        p::P_unit,
+        T::T_unit,
+        z=Z1;
+        phase=:unknown,
+        output_unit=(W/m/K)
+    ) where {AM<:ES.AbstractEntropyScalingModel,P_unit<:Unitful.Pressure,T_unit<:Unitful.Temperature}
+
+
+    λ = ES.thermal_conductivity(
+        model,
+        p |> Pa |> ustrip,
+        T |> K |> ustrip,
+        z,
+        phase = phase
+    )*W/m/K
+
+    return uconvert(output_unit, λ)
+
+end
 
 
 

@@ -1,0 +1,89 @@
+@testset "Unitful Extension" begin
+    
+    import Unitful: K, °C, bar, atm, Pa, s, mol, m, percent, W
+    import Unitful: btu, hr, ft, Ra, cP, μPa, mW
+
+    Ts = collect(LinRange(10,60,20)*°C)
+    Ps = [1bar,2bar,5bar,50bar,1000.0bar]
+
+    fluid = "Toluene"
+
+    ϱ = typeof(1.0*mol/m^3)[]
+    λ = typeof(1.0*W/m/K)[]
+    η = typeof(1.0*Pa*s)[]
+
+    PT = []
+    P_data = typeof(1.0Pa)[]
+    T_data = typeof(1.0K)[]
+    for T in Ts
+        for p in Ps
+            push!(ϱ, PropsSI("DMOLAR","P",p,"T",T,fluid))
+            push!(λ, PropsSI("L","P", p,"T", T, fluid))
+            push!(η, PropsSI("VISCOSITY", "P", p, "T", T, fluid))
+            push!(PT, (p,T))
+            push!(P_data, p)
+            push!(T_data, T)
+        end
+    end
+
+
+    data_eta_unit_density = ViscosityData(T_data, ϱ, η)
+    data_lamb_unit_density = ThermalConductivityData(T_data, ϱ, λ)
+
+    @testset "Viscosity data generation" begin
+        
+        data_eta_unit_pressure = ViscosityData(T_data, P_data, η)
+
+        data_eta_ustrip_pressure = ViscosityData(ustrip.(T_data .|> K), ustrip.(P_data .|> Pa), [], ustrip.(η), :unknown)
+        data_eta_ustrip_density = ViscosityData(ustrip.(T_data .|> K), [], ustrip.(ϱ), ustrip.(η), :unknown)
+
+        @test all(data_eta_unit_pressure.T .== data_eta_ustrip_pressure.T)
+        @test all(data_eta_unit_pressure.p .== data_eta_ustrip_pressure.p)
+        @test all(data_eta_unit_pressure.Y .== data_eta_ustrip_pressure.Y)
+        @test all(data_eta_unit_density.T .== data_eta_ustrip_density.T)
+        @test all(data_eta_unit_density.Y .== data_eta_ustrip_density.Y)
+
+        data_lamb_unit_pressure = ThermalConductivityData(T_data, P_data, λ)
+
+        data_lamb_ustrip_pressure = ThermalConductivityData(ustrip.(T_data .|> K), ustrip.(P_data .|> Pa), [], ustrip.(λ), :unknown)
+        data_lamb_ustrip_density = ThermalConductivityData(ustrip.(T_data .|> K), [], ustrip.(ϱ), ustrip.(λ), :unknown)
+
+        @test all(data_lamb_unit_pressure.T .== data_lamb_ustrip_pressure.T)
+        @test all(data_lamb_unit_pressure.p .== data_lamb_ustrip_pressure.p)
+        @test all(data_lamb_unit_pressure.Y .== data_lamb_ustrip_pressure.Y)
+        @test all(data_lamb_unit_density.T .== data_lamb_ustrip_density.T)
+        @test all(data_lamb_unit_density.Y .== data_lamb_ustrip_density.Y)
+    end
+
+    ## Properties
+    eos_model = PCSAFT(fluid)
+
+    model_eta = FrameworkModel(eos_model, [data_eta_unit_density])
+    model_lamb = FrameworkModel(eos_model, [data_lamb_unit_density])
+
+    @testset "Viscosity" begin
+        for (i,(p,t)) ∈ enumerate(PT)
+            @test viscosity(model_eta, p, t) ≈ η[i] rtol =1E-1
+        end
+    end
+
+    @testset "Thermal Conductivity" begin
+        for (i,(p,t)) ∈ enumerate(PT)
+            @test thermal_conductivity(model_lamb, p, t) ≈ λ[i] rtol = 1E-1
+        end
+    end
+
+    @testset "Unit Conversions" begin
+        
+        T = 25.0°C
+        P = 1.0bar
+
+        η_calc = viscosity(model_eta, P, T, output_unit = cP)
+        λ_calc = thermal_conductivity(model_lamb, P, T, output_unit = btu/(hr*ft*Ra))
+
+        @test η_calc ≈ 552.57μPa*s rtol = 1E-1
+        @test λ_calc ≈ 130.35mW/m/K rtol = 1E-1
+
+    end
+
+end
