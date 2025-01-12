@@ -14,7 +14,7 @@ function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z=Z1)
     param = model[Viscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
-    ηˢ = exp(scaling_model(param, sˢ, z))
+    ηˢ = scaling_model(param, sˢ, z)
     return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true)
 end
 
@@ -59,7 +59,7 @@ function ϱT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, 
     param = model[SelfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T)
     sˢ = scaling_variable(param, s)
-    Dˢ = exp(scaling_model(param, sˢ))
+    Dˢ = scaling_model(param, sˢ)
     return scaling(param, model.eos, Dˢ, T, ϱ, s; inv=true)
 end
 
@@ -79,6 +79,6 @@ function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T,
     param = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
-    Dˢ = exp(scaling_model(param, sˢ, z))
+    Dˢ = scaling_model(param, sˢ, z)
     return scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
 end
