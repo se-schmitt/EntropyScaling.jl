@@ -1,6 +1,6 @@
 
 @testset "RefpropRES" begin
-    @testset "Pure" begin
+    @testset "Pure Viscosity" begin
         # Comparison to table S5 of https://doi.org/10.1007/s10765-022-03096-9
         # acetone
         ni_ace = [-0.501124;1.194414;-0.521023;0.079149;;]
@@ -32,7 +32,7 @@
         @test viscosity(model_cyc,1e5,300.) ≈ viscosity(model_cyc_db,1e5,300.)
     end
 
-    @testset "Mixtures" begin
+    @testset "Mixtures Viscosity" begin
         # Comparison to table S7 of https://doi.org/10.1007/s10765-022-03096-9
         # decane + methane
         ni_dec = [-0.435268;0.876185;-0.314288;0.039133;;]
@@ -51,4 +51,20 @@
         model_mix_db = RefpropRESModel(["decane","methane"])
         @test viscosity(model_mix, 1e5, 300., [.5,.5]) ≈ viscosity(model_mix_db, 1e5, 300., [.5,.5])
     end 
+
+    @testset "Pure Th. Cond." begin
+        model_hex = RefpropRESModel("n-hexane")
+        model_r13 = RefpropRESModel("R13")
+
+        # Test against Yang et al. (2021) (10.1021/acs.iecr.1c02154)
+        @test thermal_conductivity(model_hex, 0.101e6, 183.16) ≈ 0.1571 atol=1e-4
+        @test thermal_conductivity(model_r13, 0.109e6, 193.10) ≈ 0.0886 atol=1e-4
+    end
+
+    @testset "Mix Th. Cond." begin
+        model_mix = RefpropRESModel(["R134a","R1234yf"])
+
+        # Test against Yang et al. (2021) (10.1021/acs.iecr.1c02154)
+        @test thermal_conductivity(model_mix, 1.01e6, 254.86, [0.504,0.496]) ≈ 0.0879 atol=1e-3
+    end
 end
