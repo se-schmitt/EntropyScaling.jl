@@ -181,11 +181,11 @@ substance,Mw/(kg/mol),ε/(kB*K),σ/Å,ref,ref_id
 "hexafluoroethane|perfluoroethane|r116",0.138010,226.160000,5.250000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "dichlorodifluoromethane|r12",0.120910,297.240000,5.190000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "*|r1216",NaN,285.000000,5.140000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
-"*|r1224ydz",NaN,340.420000,5.300000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"cis-1-chloro-2,3,3,3-tetrafluoropropene|r1224yd(z)|r1224ydz",NaN,340.420000,5.300000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "2,2-dichloro-1,1,1-trifluoroethane|r123",0.152930,275.160000,5.910000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
-"1-chloro-3,3,3-trifluoro-1-propene|1-chloro-3,3,3-trifluoroprop-1-ene|r1233zde",0.130490,349.080000,5.240000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1-chloro-3,3,3-trifluoro-1-propene|1-chloro-3,3,3-trifluoroprop-1-ene|r1233zd(e)|r1233zde",0.130490,349.080000,5.240000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "2,3,3,3-tetrafluoropropene|r1234yf",0.114040,281.140000,5.330000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
-"1,3,3,3-tetrafluoroprop-1-ene|r1234zee",0.114040,303.800000,5.000000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
+"1,3,3,3-tetrafluoroprop-1-ene|trans-1,3,3,3-tetrafluoropropene|r1234ze(e)|r1234zee",0.114040,303.800000,5.000000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "1-propene, 1,3,3,3-tetrafluoro-, (1z)-|r1234zez",NaN,336.110000,5.100000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "2-chloro-1,1,1,2-tetrafluoroethane|r124",0.136470,275.800000,5.500000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
 "3,3,3-trifluoropropene|r1243zf",0.096050,299.300000,4.970000,"Yang et al. (2022)",10.1007/s10765-022-03096-9
