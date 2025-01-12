@@ -14,7 +14,7 @@ pressure(eos::Any, ϱ, T, z=Z1) = fun_na_error("pressure",typeof(eos))
 
 Molar density `ϱ` (`[ϱ] = mol/m³`).
 """
-molar_density(eos::Any, p, T, z=Z1; phase=:unknown) = fun_na_error("molar_density",typeof(eos))
+molar_density(eos::Any, p, T, z=Z1; phase=:unknown, ϱ0=nothing) = fun_na_error("molar_density",typeof(eos))
 
 """
     entropy_conf(eos, ϱ, T, z=[1.])
@@ -37,13 +37,34 @@ Temperature derivative of the second virial coefficient `dBdT` (`[dBdT] = m³/(m
 """
 second_virial_coefficient_dT(eos::Any, T, z=Z1) = ForwardDiff.derivative(xT -> second_virial_coefficient(eos, xT, z), T)
 
+"""
+    isobaric_heat_capacity(eos, ϱ, T, z=[1.])
+
+Isobaric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
+"""
+isobaric_heat_capacity(eos::Any, ϱ, T, z=Z1) = fun_na_error("isobaric_heat_capacity",typeof(eos))
+
+"""
+    isochoric_heat_capacity(eos, ϱ, T, z=[1.])
+
+Isochoric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
+"""
+isochoric_heat_capacity(eos::Any, ϱ, T, z=Z1) = fun_na_error("isochoric_heat_capacity",typeof(eos))
+
 # Critical properties
 """
     crit_pure(eos)
 
-Critical point of pure component (`Tc`, `pc`) (`[Tc] = K`, `[pc] = Pa`).
+Critical point of pure component (`Tc`, `pc`, `ϱc`) (`[Tc] = K`, `[pc] = Pa`, `[ϱc] = mol/m³`).
 """
 crit_pure(eos::Any) = fun_na_error("crit_pure",typeof(eos))
+
+"""
+    crit_mix(eos, x)
+
+Critical point of a mixture at given composition (`Tc`, `pc`, `ϱc`) (`[Tc] = K`, `[pc] = Pa`, `[ϱc] = mol/m³`).
+"""
+crit_mix(eos::Any, z) = fun_na_error("crit_mix",typeof(eos))
 
 # Utility functions
 """

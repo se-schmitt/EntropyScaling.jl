@@ -62,6 +62,7 @@ end
 ChapmanEnskogModel(comps::String; kwargs...) = ChapmanEnskogModel([comps]; kwargs...)
 function ChapmanEnskogModel(comps::Vector{String}; Mw=[], ref="", ref_id="", collision_integral=KimMonroe())
     out = load_params(ChapmanEnskogModel, "", comps; ref, ref_id)
+    ismissing(out) ? throw(MissingException("No CE parameters found for system [$(join(comps,", "))]")) : nothing
     Mw_db, ε, σ, refs = out 
     if isempty(Mw)
         Mw = Mw_db
@@ -275,20 +276,21 @@ function correspondence_principle(Tc, pc)
 end
 
 function correspondence_principle(eos)
-    Tc,Pc = crit_pure(eos)
-    return correspondence_principle(Tc, Pc)
+    Tc,pc,_ = crit_pure(eos)
+    return correspondence_principle(Tc, pc)
 end
 
 # Viscosity, thermal conductivity: Wilke and Mason and Saxena
 struct Wilke <: AbstractTransportPropertyMixing end
+struct MasonSaxena <: AbstractTransportPropertyMixing end
 
-function mix_CE(::Wilke,model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractChapmanEnskogModel, Y, x; YΦ=Y)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
     enum_M = enumerate(model.Mw)
     for (i,Mi) in enum_M
         xΦ = zero(Y₀_mix)
         for (j,Mj) in enum_M
-            xΦ += x[j] * (1+√(Y[i]/Y[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj))
+            xΦ += x[j] * (1+√(YΦ[i]/YΦ[j])*√√(Mj/Mi))^2 / √(8*(1+Mi/Mj))
         end
         Y₀_mix += x[i]*Y[i]/xΦ
     end
@@ -306,8 +308,12 @@ function mix_CE(prop::DiffusionCoefficient, model::AbstractChapmanEnskogModel,Y,
     return mix_CE(MillerCarman(),model,Y,x)
 end
 
-function mix_CE(prop::Union{Viscosity, ThermalConductivity}, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, Y, x)
     return mix_CE(Wilke(),model,Y,x)
+end
+
+function mix_CE(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, Y, x)
+    return mix_CE(MasonSaxena(),model,Y,x)
 end
 
 calc_M_CE(Mw) = 2.0/sum(inv,Mw)

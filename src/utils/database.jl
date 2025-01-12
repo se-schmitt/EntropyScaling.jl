@@ -12,9 +12,11 @@ function load_params(file::String, components::Vector{String}; ref="", ref_id=""
     subs = split.(data[:,j_subs][:],"|")
     i_components = [findfirst(in.(c,subs) .&& what_refs) for c in components]
     if any(isnothing.(i_components)) 
-        msg = "Components ['$(join(components[isnothing.(i_components)],"', '"))'] not found in database '$file'!"
-        @info msg
-        return []
+        # comps_str = join(components[isnothing.(i_components)],"', '")
+        # _file = file[length(DB_PATH)+2:end]
+        # msg = "Components ['$comps_str'] not found in database '$_file'!"
+        # @info msg
+        return missing
     else
         refs_short = unique(String.(data[i_components,j_ref]))
         refs_id = unique(String.(data[i_components,j_ref_id]))
@@ -32,6 +34,7 @@ function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, compon
 end
 
 function get_db_path(MODEL::Type{<:AbstractTransportPropertyModel}, prop)
-    return normpath(DB_PATH, replace(string(MODEL),"Model"=>"")*"_"*name(prop)*".csv")
+    fn = replace(string(MODEL),"Model"=>"")*"_"*replace(name(prop)," "=>"_")*".csv"
+    return normpath(DB_PATH, fn)
 end
 get_db_path(::Type{ChapmanEnskogModel}, prop) = normpath(DB_PATH, "ChapmanEnskog.csv")

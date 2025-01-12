@@ -175,16 +175,16 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
             Yˢ = scaling.(param, eos, data.Y, data.T, data.ϱ, s)
 
             # Fit
+            f_log(x) = prop isa ThermalConductivity ? x : log(x)
             function resid!(du, p, xy)
                 (xs,ys) = xy
                 param.α[what_fit] .= p
-                du .= scaling_model.(param,xs) .- ys
+                du .= f_log.(scaling_model.(param,xs)) .- ys
                 return nothing
             end
-            Yˢ_fit = prop == ThermalConductivity() ? Yˢ : log.(Yˢ)
             prob = NonlinearLeastSquaresProblem(
                 NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
-                randn(sum(what_fit)), (sˢ, Yˢ_fit),
+                randn(sum(what_fit)), (sˢ, f_log.(Yˢ)),
             )
             sol = solve(prob, SimpleGaussNewton(), reltol=1e-8)
             α_fit = get_α0_framework(prop)
@@ -199,7 +199,7 @@ end
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
 function scaling_model(param::FrameworkParams{<:AbstractViscosity}, s, x=[1.])
     g = (-1.6386, 1.3923)
-    return generic_scaling_model(param, s, x, g)
+    return exp(generic_scaling_model(param, s, x, g))
 end
 function scaling_model(param::FrameworkParams{<:AbstractThermalConductivity}, s, x=[1.])
     g = (-1.9107, 1.0725)
@@ -207,7 +207,7 @@ function scaling_model(param::FrameworkParams{<:AbstractThermalConductivity}, s,
 end
 function scaling_model(param::FrameworkParams{<:DiffusionCoefficient}, s, x=[1.])
     g =  (0.6632, 9.4714)
-    return generic_scaling_model(param, s, x, g)
+    return exp(generic_scaling_model(param, s, x, g))
 end
 
 function generic_scaling_model(param::FrameworkParams, s, x, g)
@@ -256,7 +256,7 @@ function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
 
     for i in 1:length(model.eos)
         param = FrameworkParams(param_self, param_inf, i)
-        Dˢ = exp(scaling_model(param, sˢ, z))
+        Dˢ = scaling_model(param, sˢ, z)
         Di[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
     end
 
