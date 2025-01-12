@@ -26,7 +26,7 @@ Entropy scaling model based on Refprop EOS [yang_linking_2022,yang_entropy_2021]
 A database provides ready-to-use models for the viscosity of several fluids.
 The model can favourably be used in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) and [`Coolprop.jl`](https://github.com/CoolProp/CoolProp.jl) (see examples).
 
-## Parameters 
+# Parameters 
 
 - `n::Matrix{T}`: component-specific *or* global (group) parameters
 - `ξ::Vector{T}`: component-specific scaling parameter in case global parameters are used (`ξ = 1` for individual fits)
@@ -34,13 +34,17 @@ The model can favourably be used in combination with [`Clapeyron.jl`](https://gi
 - `ε::Vector{T}`: LJ energy parameter for the Chapman-Enskog model
 - `crit::Dict{Symbol,Vector}`: parameters for critical contribution of thermal conductivity (keys: `:φ0`, `:Γ`, `:qD`, and `:Tref`)
 
-## Constructors
+# Constructors
 
 - `RefpropRESModel(eos, params::Dict{P})`: Default constructor (see above).
 - `RefpropRESModel(eos, components)`: Creates a ES model using the parameters provided in the database (recommended). 
     `RefpropRESModel(components)` creates the EOS model on-the-fly (only works if `Clapeyron.jl` and `Coolprop.jl` are loaded).
 
-## Example
+!!! info
+    The default CoolProp EOS is used here which does not necessarily match the choice of the original papers. 
+    This might lead to slight deviations to the values in the original papers (especially for the thermal conductivity).
+
+# Example
 
 ```julia 
 using EntropyScaling, Clapeyron, CoolProp
@@ -83,12 +87,17 @@ end
 
 function scaling_model(param::RefpropRESParams, s, x=z1)
     g = (1.0,1.5,2.0,2.5)
-    return generic_powerseries_scaling_model(param, s, x, g)
+    return exp(powerseries_scaling_model(param, s, x, g)) - 1.
 end
 
-function generic_powerseries_scaling_model(param, s, x, g)
+function scaling_model(param::RefpropRESParams{P}, s, x=z1) where P <: ThermalConductivity
+    g = (1.0,1.5,2.0,2.5)
+    return powerseries_scaling_model(param, s, x, g)
+end
+
+function powerseries_scaling_model(param, s, x, g)
     n, ξ = param.n, param.ξ
-    lnY⁺p1 = zero(Base.promote_eltype(n,s,x,g))
+    Y⁺ = zero(Base.promote_eltype(n,s,x,g))
     @assert length(g) <= size(n,1)
     @assert length(x) == size(n,2)
     for i in eachindex(g)
@@ -96,9 +105,9 @@ function generic_powerseries_scaling_model(param, s, x, g)
         for j in eachindex(x)
             ni += x[j]*n[i,j]/(ξ[j]^g[i])
         end
-        lnY⁺p1 += ni*s^g[i]
+        Y⁺ += ni*s^g[i]
     end
-    return LogExpFunctions.logexpm1(lnY⁺p1) # Y⁺
+    return Y⁺ # Y⁺
 end
 
 function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η=nothing)
@@ -148,17 +157,22 @@ function thermal_conductivity_critical(crit_param, eos, ϱ, T, η, z)
     φ0, Γ, qD, Tref = [_dot(crit_param[k],z) for k in (:φ0, :Γ, :qD, :Tref)]
     
     # EOS
-    cₚ = isobaric_heat_capacity(eos, ϱ, T)
-    cᵥ = isochoric_heat_capacity(eos, ϱ, T)
-    ∂ϱ∂p = ForwardDiff.derivative(xp -> molar_density(eos, xp, T), pressure(eos, ϱ, T))
-    ∂ϱ∂p_Tref = ForwardDiff.derivative(xp -> molar_density(eos, xp, Tref), pressure(eos, ϱ, Tref))
-    _, pc, ϱc = crit_mix(eos, z)
+    ∂ϱ∂p = ForwardDiff.derivative(xp -> molar_density(eos, xp, T, z; ϱ0=ϱ), pressure(eos, ϱ, T, z))
+    ∂ϱ∂p_Tref = ForwardDiff.derivative(xp -> molar_density(eos, xp, Tref, z; ϱ0=ϱ), pressure(eos, ϱ, Tref, z))
+    Δ∂ϱ∂p = ∂ϱ∂p - Tref/T*∂ϱ∂p_Tref
+    if Δ∂ϱ∂p < 0
+        return 0.0
+    else
+        cₚ = isobaric_heat_capacity(eos, ϱ, T, z)
+        cᵥ = isochoric_heat_capacity(eos, ϱ, T, z)
+        _, pc, ϱc = crit_mix(eos, z)
     
-    cᵥ_cₚ = cᵥ/cₚ
-    ϱr = ϱ/ϱc
-    φ = φ0 * (pc/ϱc*ϱr/Γ * (∂ϱ∂p - Tref/T*∂ϱ∂p_Tref))^(ν_γ)
-    qDφ = qD*φ
-    ΔΩ = 2/π * ((1-cᵥ_cₚ)*atan(qDφ) + cᵥ_cₚ*qDφ - 1 + exp(-qDφ/(1+qDφ/3*(qDφ/ϱr)^2)))
-    
-    return ϱ*cₚ*RD*kB*T/(6π*η*φ) * ΔΩ
+        cᵥ_cₚ = cᵥ/cₚ
+        ϱr = ϱ/ϱc
+        φ = φ0 * (pc/ϱc*ϱr/Γ * Δ∂ϱ∂p)^(ν_γ)
+        qDφ = qD*φ
+        ΔΩ = 2/π * ((1-cᵥ_cₚ)*atan(qDφ) + cᵥ_cₚ*qDφ - 1 + exp(-qDφ/(1+qDφ/3*(qDφ/ϱr)^2)))
+        
+        return ϱ*cₚ*RD*kB*T/(6π*η*φ) * ΔΩ
+    end
 end
