@@ -14,7 +14,7 @@ pressure(eos::Any, ϱ, T, z=Z1) = fun_na_error("pressure",typeof(eos))
 
 Molar density `ϱ` (`[ϱ] = mol/m³`).
 """
-molar_density(eos::Any, p, T, z=Z1; phase=:unknown) = fun_na_error("molar_density",typeof(eos))
+molar_density(eos::Any, p, T, z=Z1; phase=:unknown, ϱ0=nothing) = fun_na_error("molar_density",typeof(eos))
 
 """
     entropy_conf(eos, ϱ, T, z=[1.])
