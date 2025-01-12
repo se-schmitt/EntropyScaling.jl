@@ -62,6 +62,7 @@ end
 ChapmanEnskogModel(comps::String; kwargs...) = ChapmanEnskogModel([comps]; kwargs...)
 function ChapmanEnskogModel(comps::Vector{String}; Mw=[], ref="", ref_id="", collision_integral=KimMonroe())
     out = load_params(ChapmanEnskogModel, "", comps; ref, ref_id)
+    ismissing(out) ? throw(MissingException("No CE parameters found for system [$(join(comps,", "))]")) : nothing
     Mw_db, ε, σ, refs = out 
     if isempty(Mw)
         Mw = Mw_db
