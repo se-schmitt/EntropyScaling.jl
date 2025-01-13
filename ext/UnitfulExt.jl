@@ -466,6 +466,32 @@ function ES.InfDiffusionCoefficientData(
 end
 
 
+"""
+    ES.TransportPropertyData(
+        T_data::AbstractVector{T},
+        pϱ_data::AbstractVector{Prho},
+        Y_data::AbstractVector{eta},
+        phase::Union{Symbol,Vector{Symbol}}=:unknown
+    ) where {
+        AP<:ES.AbstractTransportProperty,
+        T<:Unitful.Temperature,
+        P<:Unitful.Pressure,
+        Prho<:Union{MolarDensity,Unitful.Pressure},
+        eta<:Visc
+    }
+
+Creates a TransportPropertyData object for Viscosity data.
+
+# Arguments
+- `T_data::AbstractVector{T}`: Vector of temperatures.
+- `pϱ_data::AbstractVector{Prho}`: Vector of molar densities or pressures.
+- `Y_data::AbstractVector{eta}`: Vector of viscosities.
+- `phase::Union{Symbol,Vector{Symbol}}`: Phase of the data.
+
+# Returns
+- `TransportPropertyData`: TransportPropertyData struct.
+
+"""
 function ES.TransportPropertyData(
     T_data::Vector{T},
     pϱ_data::Vector{Prho},
@@ -478,33 +504,92 @@ function ES.TransportPropertyData(
         T_data,
         pϱ_data,
         η_data .|> Pa * s,
-        phase
+        phase,
     )
 end
 
+"""
+    ES.TransportPropertyData(
+        T_data::AbstractVector{T},
+        pϱ_data::AbstractVector{Prho},
+        λ_data::AbstractVector{lamb},
+        phase::Union{Symbol,Vector{Symbol}}=:unknown
+    ) where {
+        AP<:ES.AbstractTransportProperty,
+        T<:Unitful.Temperature,
+        P<:Unitful.Pressure,
+        lamb<:ThermalCond
+    }
+
+Creates a TransportPropertyData object for ThermalConductivity data.
+
+# Arguments
+- `T_data::AbstractVector{T}`: Vector of temperatures.
+- `pϱ_data::AbstractVector{Prho}`: Vector of molar densities or pressures.
+- `λ_data::AbstractVector{lamb}`: Vector of thermal conductivities.
+- `phase::Union{Symbol,Vector{Symbol}}`: Phase of the data.
+
+# Returns
+- `TransportPropertyData`: TransportPropertyData struct.
+"""
 function ES.TransportPropertyData(
     T_data::Vector{T},
     pϱ_data::Vector{Prho},
-    λ_data::Vector{λ},
+    λ_data::Vector{lamb},
     phase::Union{Symbol,Vector{Symbol}} = :unknown,
-) where {T<:Unitful.Temperature,Prho<:Union{MolarDensity,Unitful.Pressure},λ<:ThermalCond}
+) where {
+    T<:Unitful.Temperature,
+    Prho<:Union{MolarDensity,Unitful.Pressure},
+    lamb<:ThermalCond,
+}
 
     return ES.TransportPropertyData(
         ES.ThermalConductivity(),
         T_data,
         pϱ_data,
         λ_data .|> W / (m * K),
-        phase
+        phase,
     )
 end
 
+
+"""
+    ES.TransportPropertyData(
+        T_data::AbstractVector{T},
+        Pϱ_data::AbstractVector{Prho},
+        D_data::AbstractVector{DC},
+        phase::Union{Symbol,Vector{Symbol}}=:unknown,
+        self_or_inf::Symbol=:self
+    ) where {
+        AP<:ES.AbstractTransportProperty,
+        T<:Unitful.Temperature,
+        Prho<:Union{MolarDensity,Unitful.Pressure},
+        DC<:DiffusionCoefficient
+    }
+
+Creates a TransportPropertyData object for SelfDiffusionCoefficient or InfDiffusionCoefficient data.
+
+# Arguments
+- `T_data::AbstractVector{T}`: Vector of temperatures.
+- `Pϱ_data::AbstractVector{Prho}`: Vector of molar densities or pressures.
+- `D_data::AbstractVector{DC}`: Vector of diffusion coefficients.
+- `phase::Union{Symbol,Vector{Symbol}}`: Phase of the data.
+- `self_or_inf::Symbol`: Either :self or :inf.
+
+# Returns
+- `TransportPropertyData`: TransportPropertyData struct.
+"""
 function ES.TransportPropertyData(
     T_data::Vector{T},
     Pϱ_data::Vector{Prho},
     D_data::Vector{DC},
     phase::Union{Symbol,Vector{Symbol}} = :unknown,
-    self_or_inf::Symbol = :self
-) where {T<:Unitful.Temperature,Prho<:Union{MolarDensity,Unitful.Pressure},DC<:DiffusionCoefficient}
+    self_or_inf::Symbol = :self,
+) where {
+    T<:Unitful.Temperature,
+    Prho<:Union{MolarDensity,Unitful.Pressure},
+    DC<:DiffusionCoefficient,
+}
 
     if self_or_inf == :self
         return ES.TransportPropertyData(
@@ -512,7 +597,7 @@ function ES.TransportPropertyData(
             T_data,
             Pϱ_data,
             D_data .|> m^2 / s,
-            phase
+            phase,
         )
     elseif self_or_inf == :inf
         return ES.TransportPropertyData(
@@ -520,21 +605,51 @@ function ES.TransportPropertyData(
             T_data,
             Pϱ_data,
             D_data .|> m^2 / s,
-            phase
+            phase,
         )
     else
         error("self_or_inf must be either :self or :inf.")
     end
 end
 
+"""
+    ES.TransportPropertyData(
+        prop::AP,
+        T_data::AbstractVector{T},
+        p_data::AbstractVector{P},
+        Y_data::AbstractVector{ELD},
+        phase::Union{Symbol,Vector{Symbol}}=:unknown
+    ) where {
+        AP<:ES.AbstractTransportProperty,
+        T<:Unitful.Temperature,
+        P<:Unitful.Pressure,
+        ELD<:Union{Visc,ThermalCond,DiffusionCoefficient}
+    }
 
+Creates a TransportPropertyData object from the given data given pressure and temperature.
+
+# Arguments
+- `prop::AP`: AbstractTransportProperty object.
+- `T_data::AbstractVector{T}`: Vector of temperatures.
+- `p_data::AbstractVector{P}`: Vector of pressures.
+- `Y_data::AbstractVector{ELD}`: Vector of transport property data.
+- `phase::Union{Symbol,Vector{Symbol}}`: Phase of the data.
+
+# Returns
+- `TransportPropertyData`: TransportPropertyData struct.
+"""
 function ES.TransportPropertyData(
     prop::AP,
     T_data::Vector{T},
     p_data::Vector{P},
     Y_data::Vector{ELD},
     phase::Union{Symbol,Vector{Symbol}} = :unknown,
-    ) where {AP<:ES.AbstractTransportProperty,T<:Unitful.Temperature,P<:Unitful.Pressure,ELD<:Union{Visc,ThermalCond,DiffusionCoefficient}}
+) where {
+    AP<:ES.AbstractTransportProperty,
+    T<:Unitful.Temperature,
+    P<:Unitful.Pressure,
+    ELD<:Union{Visc,ThermalCond,DiffusionCoefficient},
+}
 
     return ES.TransportPropertyData(
         prop,
@@ -542,17 +657,48 @@ function ES.TransportPropertyData(
         p_data .|> Pa .|> ustrip,
         [],
         Y_data .|> ustrip,
-        phase
+        phase,
     )
 end
 
+"""
+    ES.TransportPropertyData(
+        prop::AP,
+        T_data::AbstractVector{T},
+        ϱ_data::AbstractVector{VR},
+        Y_data::AbstractVector{ELD},
+        phase::Union{Symbol,Vector{Symbol}}=:unknown
+    ) where {
+        AP<:ES.AbstractTransportProperty,
+        T<:Unitful.Temperature,
+        VR<:MolarDensity,
+        ELD<:Union{Visc,ThermalCond,DiffusionCoefficient}
+    }
+
+Creates a TransportPropertyData object from the given data given molar density and temperature.
+
+# Arguments
+- `prop::AP`: AbstractTransportProperty object.
+- `T_data::AbstractVector{T}`: Vector of temperatures.
+- `ϱ_data::AbstractVector{VR}`: Vector of molar densities.
+- `Y_data::AbstractVector{ELD}`: Vector of transport property data.
+- `phase::Union{Symbol,Vector{Symbol}}`: Phase of the data.
+
+# Returns
+- `TransportPropertyData`: TransportPropertyData struct.
+"""
 function ES.TransportPropertyData(
     prop::AP,
     T_data::Vector{T},
     ϱ_data::Vector{VR},
     Y_data::Vector{ELD},
     phase::Union{Symbol,Vector{Symbol}} = :unknown,
-    ) where {AP<:ES.AbstractTransportProperty,T<:Unitful.Temperature,VR<:MolarDensity,ELD<:Union{Visc,ThermalCond,DiffusionCoefficient}}
+) where {
+    AP<:ES.AbstractTransportProperty,
+    T<:Unitful.Temperature,
+    VR<:MolarDensity,
+    ELD<:Union{Visc,ThermalCond,DiffusionCoefficient},
+}
 
     return ES.TransportPropertyData(
         prop,
@@ -560,14 +706,11 @@ function ES.TransportPropertyData(
         [],
         ϱ_data .|> mol / m^3 .|> ustrip,
         Y_data .|> ustrip,
-        phase
+        phase,
     )
 end
 
-
-
 ## Implementation for transport property calculation functions
-
 
 """
 
@@ -682,13 +825,14 @@ function ES.self_diffusion_coefficient(
     T_unit<:Unitful.Temperature,
 }
 
-    D = ES.self_diffusion_coefficient(
-        model,
-        p |> Pa |> ustrip,
-        T |> K |> ustrip,
-        z,
-        phase = phase,
-    ) * m^2 / s
+    D =
+        ES.self_diffusion_coefficient(
+            model,
+            p |> Pa |> ustrip,
+            T |> K |> ustrip,
+            z,
+            phase = phase,
+        ) * m^2 / s
 
     return uconvert(output_unit, D)
 
@@ -708,13 +852,14 @@ function ES.MS_diffusion_coefficient(
     T_unit<:Unitful.Temperature,
 }
 
-    D = ES.self_diffusion_coefficient(
-        model,
-        p |> Pa |> ustrip,
-        T |> K |> ustrip,
-        z,
-        phase = phase,
-    ) * m^2 / s
+    D =
+        ES.self_diffusion_coefficient(
+            model,
+            p |> Pa |> ustrip,
+            T |> K |> ustrip,
+            z,
+            phase = phase,
+        ) * m^2 / s
 
     return uconvert(output_unit, D)
 

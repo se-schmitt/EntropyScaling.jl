@@ -116,27 +116,11 @@
 
     @testset "Transport Property Constructor" begin
 
-        data_transp_p_eta = EntropyScaling.TransportPropertyData(
-            T_data,
-            P_data,
-            η
-        )
-        data_transp_p_lamb = EntropyScaling.TransportPropertyData(
-            T_data,
-            P_data,
-            λ
-        )
+        data_transp_p_eta = EntropyScaling.TransportPropertyData(T_data, P_data, η)
+        data_transp_p_lamb = EntropyScaling.TransportPropertyData(T_data, P_data, λ)
 
-        data_transp_ϱ_eta = EntropyScaling.TransportPropertyData(
-            T_data,
-            ϱ,
-            η
-        )
-        data_transp_ϱ_lamb = EntropyScaling.TransportPropertyData(
-            T_data,
-            ϱ,
-            λ
-        )
+        data_transp_ϱ_eta = EntropyScaling.TransportPropertyData(T_data, ϱ, η)
+        data_transp_ϱ_lamb = EntropyScaling.TransportPropertyData(T_data, ϱ, λ)
 
         @test data_transp_p_eta.prop isa EntropyScaling.Viscosity
         @test data_transp_p_lamb.prop isa EntropyScaling.ThermalConductivity
