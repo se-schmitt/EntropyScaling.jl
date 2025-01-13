@@ -29,10 +29,11 @@
 
     data_eta_unit_density = ViscosityData(T_data, ϱ, η)
     data_lamb_unit_density = ThermalConductivityData(T_data, ϱ, λ)
+    data_eta_unit_pressure = ViscosityData(T_data, P_data, η)
+    data_lamb_unit_pressure = ThermalConductivityData(T_data, P_data, λ)
 
     @testset "Viscosity data generation" begin
 
-        data_eta_unit_pressure = ViscosityData(T_data, P_data, η)
 
         data_eta_ustrip_pressure = ViscosityData(
             ustrip.(T_data .|> K),
@@ -50,7 +51,6 @@
         @test all(data_eta_unit_density.T .== data_eta_ustrip_density.T)
         @test all(data_eta_unit_density.Y .== data_eta_ustrip_density.Y)
 
-        data_lamb_unit_pressure = ThermalConductivityData(T_data, P_data, λ)
 
         data_lamb_ustrip_pressure = ThermalConductivityData(
             ustrip.(T_data .|> K),
@@ -111,6 +111,50 @@
 
         @test η_calc2 ≈ η_calc rtol = 1E-13
         @test λ_calc2 ≈ λ_calc rtol = 1E-13
+    end
+
+
+    @testset "Transport Property Constructor" begin
+
+        data_transp_p_eta = EntropyScaling.TransportPropertyData(
+            T_data,
+            P_data,
+            η
+        )
+        data_transp_p_lamb = EntropyScaling.TransportPropertyData(
+            T_data,
+            P_data,
+            λ
+        )
+
+        data_transp_ϱ_eta = EntropyScaling.TransportPropertyData(
+            T_data,
+            ϱ,
+            η
+        )
+        data_transp_ϱ_lamb = EntropyScaling.TransportPropertyData(
+            T_data,
+            ϱ,
+            λ
+        )
+
+        @test data_transp_p_eta.prop isa EntropyScaling.Viscosity
+        @test data_transp_p_lamb.prop isa EntropyScaling.ThermalConductivity
+        @test data_transp_ϱ_eta.prop isa EntropyScaling.Viscosity
+        @test data_transp_ϱ_lamb.prop isa EntropyScaling.ThermalConductivity
+
+        @test all(data_transp_p_eta.T .== data_eta_unit_pressure.T)
+        @test all(data_transp_p_eta.p .== data_eta_unit_pressure.p)
+        @test all(data_transp_p_eta.Y .== data_eta_unit_pressure.Y)
+        @test all(data_transp_p_lamb.T .== data_lamb_unit_pressure.T)
+        @test all(data_transp_p_lamb.p .== data_lamb_unit_pressure.p)
+        @test all(data_transp_p_lamb.Y .== data_lamb_unit_pressure.Y)
+
+        @test all(data_transp_ϱ_eta.T .== data_eta_unit_density.T)
+        @test all(data_transp_ϱ_eta.Y .== data_eta_unit_density.Y)
+        @test all(data_transp_ϱ_lamb.T .== data_lamb_unit_density.T)
+        @test all(data_transp_ϱ_lamb.Y .== data_lamb_unit_density.Y)
+
     end
 
 end
