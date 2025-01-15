@@ -76,42 +76,17 @@ julia> η = viscosity(model, 1e5, 300.; phase=:liquid)   # viscostiy at p=1 bar 
 0.0001605897169488518
 ```
 
+**Integration with Unitful.jl**
 
-## Integration with Unitful.jl
-
-It is possible to use `Unitful.jl` types with the functionalities of this package. 
-
-Is is possible to both to use variables with associated units to create data for fitting models and obtain properties directly from the models with units.
-
-The following example uses the example from above with units added.
+It is possible to work woth units using [`Unitful.jl`](https://github.com/PainterQubits/Unitful.jl).
+The following example uses the model from above, but calculates the viscosity with units.
 
 ```julia
-julia> using EntropyScaling, Clapeyron, Unitful
+julia> using Unitful
 
-julia> (T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data();    # Load sample data
-
-julia> T_exp = T_exp .* u"K";
-
-julia> ϱ_exp = ϱ_exp .* u"mol/m^3";
-
-julia> η_exp = η_exp .* u"Pa*s";
-
-julia> data = TransportPropertyData(T_exp, ϱ_exp, η_exp) # property selected from the type of the Y variable
-TransportPropertyData{Viscosity}
- 15 data points.
-
-julia> eos_model = PCSAFT("butane");                     # Clapeyron.jl EOS model
-
-julia> model = FrameworkModel(eos_model, [data])         # Fit model parameters
-FrameworkModel with 1 component:
- "butane"
- Available properties: viscosity
- Equation of state: Clapeyron.EoSVectorParam{PCSAFT{BasicIdeal, Float64}}("butane")
-
-julia> η = viscosity(model, 1u"bar", 26.85u"°C", phase=:liquid, output_unit = u"cP")   # viscostiy at the same point of previous example but at different unit system
+julia> η = viscosity(model, 1u"bar", 26.85u"°C", phase=:liquid, output = u"cP")
 0.16058971694885213 cP
 ```
-
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://se-schmitt.github.io/EntropyScaling.jl/stable
