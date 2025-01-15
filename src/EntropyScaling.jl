@@ -2,6 +2,7 @@ module EntropyScaling
 
 # Load public modules
 using SimpleNonlinearSolve, Optimization, StatsBase, ForwardDiff, DelimitedFiles
+using RecipesBase
 import LogExpFunctions #loaded by StatsBase.jl
 import FillArrays #loaded by Optimization.jl
 const Z1 = FillArrays.Fill(1.0,1)
@@ -30,6 +31,7 @@ include("utils/data.jl")
 include("utils/thermo.jl")
 include("utils/misc.jl")
 include("utils/database.jl")
+include("utils/plots.jl")
 
 # Models 
 include("models/base.jl")
@@ -38,7 +40,6 @@ include("models/refprop_res.jl")
 
 # Extensions
 if !isdefined(Base,:get_extension)
-    include("../ext/MicthermExt.jl")
     include("../ext/ClapeyronExt.jl")
 end
 
