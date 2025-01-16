@@ -6,9 +6,9 @@
 
         # Transport properties pure butane
         data_pure = [
-            ViscosityData(raw_η[:,1], [], raw_η[:,2], raw_η[:,3], :unknown)
-            ThermalConductivityData(raw_λ[:,1], [], raw_λ[:,2], raw_λ[:,3], :unknown)
-            SelfDiffusionCoefficientData(raw_D[:,1], [], raw_D[:,2], raw_D[:,3], :unknown)
+            ViscosityData(raw_η[:,1], nothing, raw_η[:,2], raw_η[:,3], :unknown)
+            ThermalConductivityData(raw_λ[:,1], nothing, raw_λ[:,2], raw_λ[:,3], :unknown)
+            SelfDiffusionCoefficientData(raw_D[:,1], nothing, raw_D[:,2], raw_D[:,3], :unknown)
         ]
         fit_opts = FitOptions(;
             what_fit=Dict(
@@ -33,7 +33,7 @@
         raw = readdlm("data/exp_D_inf.csv",',';skipstart=1) 
 
         data_inf = [
-            InfDiffusionCoefficientData(raw[:,1], [], raw[:,2], raw[:,3], :unknown)
+            InfDiffusionCoefficientData(raw[:,1], nothing, raw[:,2], raw[:,3], :unknown)
         ]
         fit_opts = FitOptions(;what_fit=Dict(InfDiffusionCoefficient()=>Bool[0,0,0,1,1]))
         model = FrameworkModel(solvent, data_inf; opts=fit_opts, solute=solute)

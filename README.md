@@ -76,6 +76,18 @@ julia> η = viscosity(model, 1e5, 300.; phase=:liquid)   # viscostiy at p=1 bar 
 0.0001605897169488518
 ```
 
+**Integration with Unitful.jl**
+
+It is possible to work woth units using [`Unitful.jl`](https://github.com/PainterQubits/Unitful.jl).
+The following example uses the model from above, but calculates the viscosity with units.
+
+```julia
+julia> using Unitful
+
+julia> η = viscosity(model, 1u"bar", 26.85u"°C", phase=:liquid, output = u"cP")
+0.16058971694885213 cP
+```
+
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://se-schmitt.github.io/EntropyScaling.jl/stable
 
