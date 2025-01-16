@@ -34,3 +34,35 @@ model = FrameworkModel(eos_model,Dict(Viscosity() => [[0.;-14.165;13.97;-2.382;0
 
 Using `EntropyScaling.jl` in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl)
 is the recommended way.
+
+## Plots
+
+Plotting functionality is available through [`Plots.jl`](https://github.com/JuliaPlots/Plots.jl) (which must be loaded).
+For example, this can be used for checking fitted models against scaled (experimental) reference data (see example below).
+
+```@docs
+EntropyScaling.plot
+```
+
+#### Example
+
+In the following example, entropy scaling models are fitted to quasi-experimental data (from CoolProp) and compared.
+
+```julia
+using EntropyScaling, Clapeyron, CoolProp, Plots
+
+sub = "propane"
+Ndat = 200
+T, p = rand(200.:500.,Ndat), 10.0.^(rand(Ndat).*4 .+ 4)     # define T-p state points
+η = [PropsSI("V","T",T[i],"P",p[i],sub) for i in 1:Ndat]    # calculate reference viscosity data
+
+# Create data and model
+ηdat = ViscosityData(T,p,[],η)
+model_A = FrameworkModel(PCSAFT(sub), [ηdat])
+model_B = FrameworkModel(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
+
+# Test plot 
+plot(model, ηdat; slims=(0,3), cprop=:T, label="Model A (4 parameters fitted)")
+plot!(model_B, ηdat; slims=(0,3), cprop=:T, lc=:blue, label="Model B (2 parameters fitted)")
+```
+![Plot example](./assets/plot_example.svg)
