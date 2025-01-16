@@ -6,7 +6,7 @@ makedocs(
     sitename="EntropyScaling.jl",
     format = Documenter.HTML(
         canonical = "https://se-schmitt.github.io/EntropyScaling.jl/",
-        assets = ["assets/citations.css"],
+        assets = ["assets/citations.css","assets/logo.ico"],
     ),
     pages = [
         "Home" => "index.md",
