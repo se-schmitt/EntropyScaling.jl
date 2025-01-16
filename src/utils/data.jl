@@ -2,13 +2,13 @@ export TransportPropertyData, ViscosityData, ThermalConductivityData
 export SelfDiffusionCoefficientData, InfDiffusionCoefficientData
 export FitOptions
 
-struct TransportPropertyData{P} <: AbstractTransportPropertyData
+struct TransportPropertyData{P,X} <: AbstractTransportPropertyData
     prop::P
     N_dat::Int
-    T::Vector{Float64}
-    p::Vector{Float64}
-    ϱ::Vector{Float64}
-    Y::Array{Float64}
+    T::Vector{X}
+    p::Vector{X}
+    ϱ::Vector{X}
+    Y::Array{X}
     phase::Vector{Symbol}
 end
 function Base.show(io::IO, data::TransportPropertyData)
@@ -36,14 +36,15 @@ Either pressure `p` or density `ϱ` have to be specified.
 - `[λ] = W (m K)⁻¹`
 - `[D] = m² s⁻¹`
 """
-function TransportPropertyData(prop, T::Vector, p, ϱ, Y::Vector,
-                               phase::Union{Symbol,Vector{Symbol}}=:unknown)
+function TransportPropertyData(prop, T::Vector{X}, _p::Union{Vector{X},Nothing}, 
+                               _ϱ::Union{Vector{X},Nothing}, Y::Vector{X},
+                               phase::Union{Symbol,Vector{Symbol}}=:unknown) where X
     
     N_dat = length(T)
-    if isempty(p) && !isempty(ϱ)
-        p = ones(N_dat)*NaN
-    elseif !isempty(p) && isempty(ϱ)
-        ϱ = ones(N_dat)*NaN
+    if isnothing(_p) && !isnothing(_ϱ)
+        p, ϱ = ones(N_dat)*NaN, _ϱ
+    elseif !isnothing(_p) && isnothing(_ϱ)
+        p, ϱ = _p, ones(N_dat)*NaN
     else
         error("Either pressure or density must be provided.")
     end
@@ -61,13 +62,25 @@ function TransportPropertyData(prop, T::Vector, p, ϱ, Y::Vector,
 
     return TransportPropertyData(prop, length(T), T, p, ϱ, Y, phases)
 end
-ViscosityData(args...) = TransportPropertyData(Viscosity(), args...)
-ThermalConductivityData(args...) = TransportPropertyData(ThermalConductivity(), args...)
-SelfDiffusionCoefficientData(args...) = TransportPropertyData(SelfDiffusionCoefficient(), args...)
-InfDiffusionCoefficientData(args...) = TransportPropertyData(InfDiffusionCoefficient(), args...)
+function ViscosityData(T::Vector{X}, p::Union{Vector{X},Nothing}, ϱ::Union{Vector{X},Nothing}, 
+                       Y::Vector{X}, args...) where X
+    return TransportPropertyData(Viscosity(), T, p, ϱ, Y, args...)
+end
+function ThermalConductivityData(T::Vector{X}, p::Union{Vector{X},Nothing}, 
+                                 ϱ::Union{Vector{X},Nothing}, Y::Vector{X}, args...) where X
+    return TransportPropertyData(ThermalConductivity(), T, p, ϱ, Y, args...)
+end
+function SelfDiffusionCoefficientData(T::Vector{X}, p::Union{Vector{X},Nothing}, 
+                                      ϱ::Union{Vector{X},Nothing}, Y::Vector{X}, args...) where X
+    return TransportPropertyData(SelfDiffusionCoefficient(), T, p, ϱ, Y, args...)
+end
+function InfDiffusionCoefficientData(T::Vector{X}, p::Union{Vector{X},Nothing}, 
+                                     ϱ::Union{Vector{X},Nothing}, Y::Vector{X}, args...) where X 
+    return TransportPropertyData(InfDiffusionCoefficient(), T, p, ϱ, Y, args...)
+end
 
-function collect_data(  datasets::Vector{TPD}, prop::AbstractTransportProperty) where
-                        TPD <: TransportPropertyData
+function collect_data(datasets::Vector{TPD}, prop::AbstractTransportProperty) where
+                      TPD <: TransportPropertyData
     (T, p, ϱ, Y, phase) = (Float64[], Float64[], Float64[], Float64[], Symbol[])
     N_dat = 0
     for data in filter_datasets(datasets, prop)
