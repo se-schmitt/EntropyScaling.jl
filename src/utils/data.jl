@@ -101,6 +101,7 @@ FitOptions(;
         ThermalConductivity()=>ones(Bool,5), 
         SelfDiffusionCoefficient()=>Bool[0,0,0,1,1])
 )
+```
 """
 struct FitOptions
     what_fit::Dict{T,Vector{Bool}} where T<:AbstractTransportProperty
