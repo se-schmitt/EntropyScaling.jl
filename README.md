@@ -1,4 +1,4 @@
-[![Dev][docs-stable-img]][docs-stable-url] [![Dev][docs-dev-img]][docs-dev-url] [![Build Status][build-img]][build-url]
+[![Dev][docs-stable-img]][docs-stable-url] [![Dev][docs-dev-img]][docs-dev-url] [![Build Status][build-img]][build-url] [![DOI][zenodo-img]][zenodo-url]
 
 <p align="center">
   <img width="150px" src="docs/src/assets/logo.svg">
@@ -96,3 +96,6 @@ julia> η = viscosity(model, 1u"bar", 26.85u"°C", phase=:liquid, output = u"cP"
 
 [build-img]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml/badge.svg?branch=main
 [build-url]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml?query=branch%3Amain
+
+[zenodo-img]: https://zenodo.org/badge/723050048.svg
+[zenodo-url]: https://zenodo.org/badge/latestdoi/723050048
