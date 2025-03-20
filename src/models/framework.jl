@@ -82,7 +82,7 @@ end
 """
     FrameworkModel{T} <: AbstractEntropyScalingModel
 
-Entropy scaling framework [schmitt_entropy_2024](@cite).
+Entropy scaling framework [schmitt_entropy_2025](@cite).
 
 The entropy scaling framework provides a physical way to model transport properties 
 (viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.

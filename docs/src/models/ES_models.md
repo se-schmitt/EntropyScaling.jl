@@ -10,7 +10,7 @@ Entropy scaling enables the prediction of transport porperties in all fluid phas
 
 The following entropy scaling models are currently implemented:
 
-- Entropy Scaling Framework [schmitt_entropy_2024](@cite) ([`FrameworkModel`](@ref))
+- Entropy Scaling Framework [schmitt_entropy_2025](@cite) ([`FrameworkModel`](@ref))
 - Refprop Residual Entropy Scaling (RES) Model [yang_linking_2022](@cite) ([`RefpropRESModel`](@ref))
 
 All models are similarly structured with the following fields:
