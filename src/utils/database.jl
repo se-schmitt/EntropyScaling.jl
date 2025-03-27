@@ -34,7 +34,8 @@ function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, compon
 end
 
 function get_db_path(MODEL::Type{<:AbstractTransportPropertyModel}, prop)
-    fn = replace(string(MODEL),"Model"=>"")*"_"*replace(name(prop)," "=>"_")*".csv"
+    MODEL_str = replace(string(MODEL),"Model"=>"", "EntropyScaling."=>"")
+    fn = MODEL_str*"_"*replace(name(prop)," "=>"_")*".csv"
     return normpath(DB_PATH, fn)
 end
 get_db_path(::Type{ChapmanEnskogModel}, prop) = normpath(DB_PATH, "ChapmanEnskog.csv")
