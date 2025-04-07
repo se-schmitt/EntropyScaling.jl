@@ -1,9 +1,9 @@
 @testset "Chapman-Enskog" begin
     @testset "Model" begin
         # Methane 
-        σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3         # Poling et al.
-        model = ChapmanEnskogModel("methane",σ,ε,Mw)
-        @test viscosity(model, 200.)/1e-6 ≈ 7.6848 rtol=1e-2            # NIST value
+        σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3            # Poling et al.
+        model = ChapmanEnskogModel("methane", σ, ε, Mw)
+        @test viscosity(model, 200.)/1e-6 ≈ 7.6848 rtol=1e-2                # NIST value
         model_db = ChapmanEnskogModel("methane"; ref="Poling et al. (2001)")
         @test viscosity(model, NaN, 300.) ≈ viscosity(model_db, NaN, 300.)
 
