@@ -37,7 +37,7 @@ using EntropyScaling
 ```julia
 julia> using EntropyScaling
 
-julia> model = ChapmanEnskog("methane")
+julia> model = ChapmanEnskogModel("methane")
 ChapmanEnskogModel{methane}
  σ: [3.758] Å
  ε: [148.6] K
