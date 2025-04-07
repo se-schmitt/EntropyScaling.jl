@@ -7,6 +7,7 @@ import Unitful: Pa, K, W, m, J, mol, s
 const ES = EntropyScaling
 Z1 = ES.Z1
 
+const ACEM = ES.AbstractChapmanEnskogModel
 const AESM = ES.AbstractEntropyScalingModel
 const _tph = Union{Symbol,Vector{Symbol}}
 
@@ -64,6 +65,7 @@ for (fn,unit) in [
     ]
     ϱT_fn = Symbol(:ϱT_,fn)
     @eval begin
+        # Entropy Scaling models
         function ES.$fn(model::AESM, p::Unitful.Pressure, T::Unitful.Temperature, z=Z1; phase=:unknown, output=$unit)
             _p, _T = ustrip(Pa, p), ustrip(K, T)
             _Y = ES.$fn(model, _p, _T, z; phase)*$unit
@@ -73,6 +75,13 @@ for (fn,unit) in [
             x = z./sum(z)
             _ϱ, _T = ustrip_ϱ(ϱ, x, ES.get_Mw(model.eos)), ustrip(K, T)
             _Y = ES.$ϱT_fn(model, _ϱ, _T, x)*$unit
+            return uconvert(output, _Y)
+        end
+
+        # Chapman-Enskog models
+        function ES.$fn(model::ACEM, p, T::Unitful.Temperature, z=Z1; output=$unit)
+            _T = ustrip(K, T)
+            _Y = ES.$fn(model, NaN, _T, z)*$unit
             return uconvert(output, _Y)
         end
     end
