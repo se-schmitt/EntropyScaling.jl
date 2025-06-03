@@ -126,7 +126,7 @@ so no function inside can be overloaded during a julia session.
 end
 
 function getindex_prop_error(P)
-    throw(error("cannot found specified property $P"))
+    throw(error("cannot find specified property $P"))
 end
 
 #get_m

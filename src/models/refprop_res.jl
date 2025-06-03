@@ -134,7 +134,7 @@ function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η=n
     end
 end
 
-function ϱT_thermal_conductivity(model::RefpropRESModel, ϱ, T, z=Z1)
+function ϱT_thermal_conductivity(model::RefpropRESModel, ϱ, T, z::AbstractVector=Z1)
     param = model[ThermalConductivity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)

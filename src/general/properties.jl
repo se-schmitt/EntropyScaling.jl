@@ -10,7 +10,7 @@ function viscosity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknow
     return ϱT_viscosity(model, ϱ, T, z)
 end
 
-function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z=Z1)
+function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
     param = model[Viscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
@@ -31,7 +31,7 @@ function thermal_conductivity(model::AbstractEntropyScalingModel, p, T, z=Z1; ph
     return ϱT_thermal_conductivity(model, ϱ, T, z)
 end
 
-function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z=Z1)
+function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
     param = model[ThermalConductivity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
