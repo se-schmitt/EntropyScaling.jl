@@ -38,9 +38,4 @@ include("models/base.jl")
 include("models/framework.jl")
 include("models/refprop_res.jl")
 
-# Extensions
-if !isdefined(Base,:get_extension)
-    include("../ext/ClapeyronExt.jl")
-end
-
 end

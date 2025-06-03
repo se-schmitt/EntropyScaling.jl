@@ -247,7 +247,7 @@ function scaling_variable(param::FrameworkParams, s, z = Z1)
 end
 
 #TODO generalize
-function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z)
+function ϱT_self_diffusion_coefficient(model::FrameworkModel, ϱ, T, z::AbstractVector=Z1)
     param_self = model[SelfDiffusionCoefficient()]
     param_inf = model[InfDiffusionCoefficient()]
     s = entropy_conf(model.eos, ϱ, T, z)
