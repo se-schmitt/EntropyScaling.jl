@@ -1,7 +1,7 @@
 name = "EntropyScaling"
 uuid = "36a13073-9e6e-4b19-b12b-cb530e79ee8e"
 authors = ["Sebastian Schmitt"]
-version = "0.3.2"
+version = "0.3.3"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
