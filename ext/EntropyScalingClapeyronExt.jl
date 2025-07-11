@@ -3,7 +3,10 @@ module EntropyScalingClapeyronExt
 using EntropyScaling, Clapeyron
 const ES = EntropyScaling
 const CL = Clapeyron
+const Downloads = CL.Downloads
 const SA1 = CL.SA[1.0]
+const url_refprop = "https://raw.githubusercontent.com/usnistgov/fastchebpure/50af5c154a113ac27a2c0a1c3538bc4f43a73a66/teqp_REFPROP10/dev/fluids/"
+
 # Bulk properties
 ES.pressure(eos::EoSModel, ϱ, T, z = SA1) = pressure(eos, 1.0./ϱ, T, z)
 
@@ -57,7 +60,29 @@ ES._eos_cache(eos::CL.EoSVectorParam) = eos
 ES._eos_cache(eos::MultiFluid) = eos
 
 # Model specific wrapper 
-ES.RefpropRESModel(comps::AbstractString) = RefpropRESModel([comps])
-ES.RefpropRESModel(comps::Vector{<:AbstractString}) = RefpropRESModel(MultiFluid(comps; estimate_mixing=:lb), comps)
+ES.RefpropRESModel(comps::AbstractString; kwargs...) = RefpropRESModel([comps]; kwargs...)
+ES.RefpropRESModel(comps::Vector{<:AbstractString}; kwargs...) = begin
+    nt_kw = NamedTuple(kwargs)
+    _comps = copy(comps)
+    if !(:pure_userlocations in keys(nt_kw))
+        try 
+            names = uppercase.(ES.load_refprop_names(comps))
+            _comps .= Downloads.download.(url_refprop .* names .* ".json") .|> read .|> String
+        catch e
+            if e isa Downloads.RequestError
+                i_err = findfirst(comps .== _comps)
+                throw(ErrorException("Refprop parameters for '$(comps[i_err])' could not be loaded."))
+            else 
+                rethrow(e)
+            end
+        end
+    end
+    if :estimate_mixing ∉ keys(nt_kw)
+        nt_kw = merge(nt_kw,(;estimate_mixing=:lb))
+    end
+    eos = MultiFluid(_comps; nt_kw...)
+    eos.components .= comps
+    return RefpropRESModel(eos, comps)
+end
 
 end #module
