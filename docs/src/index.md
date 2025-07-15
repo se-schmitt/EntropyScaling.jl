@@ -16,5 +16,5 @@ scaled transport property $Y^{\rm s}$ is a univariate function of the configurat
 residual) entropy $s_{\rm conf}$, i.e. 
 $$Y^{\rm s} = Y^{\rm s}\left(s_{\rm conf}\right).$$
 
-Entropy scaling enables the prediction of transport porperties in all fluid phases based on 
+Entropy scaling enables the prediction of transport properties in all fluid phases based on 
 few experimental data.
