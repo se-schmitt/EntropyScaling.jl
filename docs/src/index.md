@@ -11,7 +11,7 @@ in a physically sound way. For the EOS calculations, additional packages need to
 Alternatively, custom EOS functions can be defined. Implementations of EOS models are *not*
 included in this package.
 
-Entropy scaling makes use of the fact that transport properies can be scaled such that the
+Entropy scaling makes use of the fact that transport properties can be scaled such that the
 scaled transport property $Y^{\rm s}$ is a univariate function of the configurational (or 
 residual) entropy $s_{\rm conf}$, i.e. 
 $$Y^{\rm s} = Y^{\rm s}\left(s_{\rm conf}\right).$$

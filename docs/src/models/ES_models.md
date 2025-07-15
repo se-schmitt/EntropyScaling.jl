@@ -1,6 +1,6 @@
 # Entropy Scaling Models
 
-Entropy scaling makes use of the fact that transport properies can be scaled such that the
+Entropy scaling makes use of the fact that transport properties can be scaled such that the
 scaled transport property $Y^{\rm s}$ is a univariate function of the configurational (or 
 residual) entropy $s_{\rm conf}$, i.e. 
 
