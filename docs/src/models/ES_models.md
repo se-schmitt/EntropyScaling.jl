@@ -1,12 +1,12 @@
 # Entropy Scaling Models
 
-Entropy scaling makes use of the fact that transport properies can be scaled such that the
+Entropy scaling makes use of the fact that transport properties can be scaled such that the
 scaled transport property $Y^{\rm s}$ is a univariate function of the configurational (or 
 residual) entropy $s_{\rm conf}$, i.e. 
 
 $$Y^{\rm s} = Y^{\rm s}\left(s_{\rm conf}\right).$$
 
-Entropy scaling enables the prediction of transport porperties in all fluid phases.
+Entropy scaling enables the prediction of transport properties in all fluid phases.
 
 The following entropy scaling models are currently implemented:
 
@@ -21,12 +21,12 @@ All models are similarly structured with the following fields:
 
 The `ModelParams` are model-specific types containing all required parameters of the model.
 They always contain the Chapman-Enskog model (`CE_model`) as well as base parameters (`base`)
-which itself contains general parameters like the transport  property or the molar mass.
+which itself contains general parameters like the transport property or the molar mass.
 
 All models share the contructor method `Model(eos, params::Dict{P})`, where params is a dict 
 containing the parameters with the respective transport property as key, e.g., 
 `Dict(Viscosity() => [a_η, b_η, c_η], ThermalConductivity() => [a_λ, b_λ, c_λ])`.
-Here, `a`, `b`, and `c` are the parameters (note that `a_η`, `b_η`, ... are vectors or matrices themselfs).
+Here, `a`, `b`, and `c` are the parameters (note that `a_η`, `b_η`, ... are vectors or matrices themselves).
 Lists of the parameters are given below in the repective 'Parameters' sections.
 Additional model-specific constructors are also given below.
 

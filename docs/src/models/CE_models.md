@@ -1,6 +1,6 @@
 # Chapman-Enskog Model
 
-Chapman-Enskog model the for transport properties at the zero-density limit based on the kinetic gas theory.
+Chapman-Enskog model for transport properties at the zero-density limit based on the kinetic gas theory.
 
 ```math
 \begin{aligned}
