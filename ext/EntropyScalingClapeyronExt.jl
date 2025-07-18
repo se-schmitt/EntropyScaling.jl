@@ -61,28 +61,42 @@ ES._eos_cache(eos::MultiFluid) = eos
 
 # Model specific wrapper 
 ES.RefpropRESModel(comps::AbstractString; kwargs...) = RefpropRESModel([comps]; kwargs...)
-ES.RefpropRESModel(comps::Vector{<:AbstractString}; kwargs...) = begin
-    nt_kw = NamedTuple(kwargs)
-    _comps = copy(comps)
-    if !(:pure_userlocations in keys(nt_kw))
-        try 
-            names = uppercase.(ES.load_refprop_names(comps))
-            _comps .= Downloads.download.(url_refprop .* names .* ".json") .|> read .|> String
-        catch e
-            if e isa Downloads.RequestError
-                i_err = findfirst(comps .== _comps)
-                throw(ErrorException("Refprop parameters for '$(comps[i_err])' could not be loaded."))
-            else 
-                rethrow(e)
+function ES.RefpropRESModel(comps::Vector{<:AbstractString}; kwargs...)
+
+    kw = NamedTuple(kwargs)
+    eos = nothing
+    if !(:estimate_mixing in keys(kw))
+        kw = merge(kw, (;estimate_mixing=:lb))
+    end
+
+    try 
+        eos = MultiFluid(comps; kw...)
+    catch e1 
+        if (e1 isa ErrorException && startswith(e1.msg,"Coolprop: key")) || e1 isa MissingException
+            _comps = copy(comps)
+            try 
+                names = uppercase.(ES.load_refprop_names(comps))
+                _comps .= Downloads.download.(url_refprop .* names .* ".json") .|> read .|> String
+            catch e2
+                if e2 isa Downloads.RequestError
+                    i_err = findfirst(comps .== _comps)
+                    throw(ErrorException("Refprop parameters for '$(comps[i_err])' could not be loaded."))
+                else 
+                    rethrow(e2)
+                end
             end
+            mixing_userlocations = :mixing_userlocations in keys(kw) ? kw.mixing_userlocations : String[]
+            mixing = CL.init_model(AsymmetricMixing,comps,mixing_userlocations,false)
+            eos = MultiFluid(_comps; mixing, coolprop_userlocations=false, kw...)
+            eos.components .= comps
+        else
+            rethrow(e1)
         end
-    end
-    if :estimate_mixing ∉ keys(nt_kw)
-        nt_kw = merge(nt_kw,(;estimate_mixing=:lb))
-    end
-    eos = MultiFluid(_comps; nt_kw...)
-    eos.components .= comps
+    end 
+
     return RefpropRESModel(eos, comps)
 end
+
+# RefpropRESModel(eos::CL.MultiFluid) = RefpropRESModel(eos, eos.components)
 
 end #module

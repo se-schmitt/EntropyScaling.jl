@@ -30,6 +30,9 @@
 
         model_cyc_db = RefpropRESModel("cyclopentane")
         @test viscosity(model_cyc,1e5,300.) ≈ viscosity(model_cyc_db,1e5,300.)
+
+        model_13but = RefpropRESModel("1,3-butadiene")
+        @test viscosity(model_13but,9.259e3,220.)/1e-6 ≈ 424.7 rtol=1e-4
     end
 
     @testset "Mixtures Viscosity" begin
