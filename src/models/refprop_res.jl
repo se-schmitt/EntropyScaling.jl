@@ -36,13 +36,17 @@ The model can favourably be used in combination with [`Clapeyron.jl`](https://gi
 
 # Constructors
 
-- `RefpropRESModel(eos, params::Dict{P})`: Default constructor (see above).
-- `RefpropRESModel(eos, components)`: Creates a ES model using the parameters provided in the database (recommended). 
-    `RefpropRESModel(components)` creates the EOS model on-the-fly (only works if `Clapeyron.jl` and `Coolprop.jl` are loaded).
+- `RefpropRESModel(eos, params::Dict{P}; kw...)`: Default constructor (see above).
+- `RefpropRESModel(eos, components; kw...)`: Creates a ES model using the parameters provided in the database (recommended). 
+    `RefpropRESModel(components; kw...)` creates the EOS model on-the-fly (only works if `Clapeyron.jl` and `Coolprop.jl` are loaded).
 
 !!! info
     The default CoolProp EOS is used here which does not necessarily match the choice of the original papers. 
     This might lead to slight deviations to the values in the original papers (especially for the thermal conductivity).
+
+**Keywords**
+
+- `ηref = "Yang et al. (2022)"`: viscosity model (`"Yang et al. (2022)"` [yang_linking_2022](@cite) or `"Martinek et al. (2025)"` [martinek_entropy_2025](@cite)).
 
 # Example
 
@@ -64,10 +68,13 @@ end
 
 @modelmethods RefpropRESModel RefpropRESParams
 
-function RefpropRESModel(eos, components::Vector{String})
+function RefpropRESModel(eos, components::Vector{String}; ηref=nothing)
+    _ηref = isnothing(ηref) ? "Yang et al. (2022)" : ηref
+
     params = RefpropRESParams[]
     for prop in [Viscosity(),ThermalConductivity()]
-        out = load_params(RefpropRESModel, prop, components)
+        propref = prop == Viscosity() ? _ηref : ""
+        out = load_params(RefpropRESModel, prop, components; ref=propref)
         if !ismissing(out)
             if prop == ThermalConductivity()
                 ξ, n1, n2, n3, n4, φ0, Γ, qD, Tref, refs = out

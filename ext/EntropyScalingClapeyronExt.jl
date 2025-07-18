@@ -61,16 +61,16 @@ ES._eos_cache(eos::MultiFluid) = eos
 
 # Model specific wrapper 
 ES.RefpropRESModel(comps::AbstractString; kwargs...) = RefpropRESModel([comps]; kwargs...)
-function ES.RefpropRESModel(comps::Vector{<:AbstractString}; kwargs...)
+function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwargs_CL...)
 
-    kw = NamedTuple(kwargs)
+    kw_CL = NamedTuple(kwargs_CL)
     eos = nothing
-    if !(:estimate_mixing in keys(kw))
-        kw = merge(kw, (;estimate_mixing=:lb))
+    if !(:estimate_mixing in keys(kw_CL))
+        kw_CL = merge(kw_CL, (;estimate_mixing=:lb))
     end
 
     try 
-        eos = MultiFluid(comps; kw...)
+        eos = MultiFluid(comps; kw_CL...)
     catch e1 
         if (e1 isa ErrorException && startswith(e1.msg,"Coolprop: key")) || e1 isa MissingException
             _comps = copy(comps)
@@ -85,16 +85,16 @@ function ES.RefpropRESModel(comps::Vector{<:AbstractString}; kwargs...)
                     rethrow(e2)
                 end
             end
-            mixing_userlocations = :mixing_userlocations in keys(kw) ? kw.mixing_userlocations : String[]
+            mixing_userlocations = :mixing_userlocations in keys(kw_CL) ? kw_CL.mixing_userlocations : String[]
             mixing = CL.init_model(AsymmetricMixing,comps,mixing_userlocations,false)
-            eos = MultiFluid(_comps; mixing, coolprop_userlocations=false, kw...)
+            eos = MultiFluid(_comps; mixing, coolprop_userlocations=false, kw_CL...)
             eos.components .= comps
         else
             rethrow(e1)
         end
     end 
 
-    return RefpropRESModel(eos, comps)
+    return RefpropRESModel(eos, comps; ηref=nothing)
 end
 
 # RefpropRESModel(eos::CL.MultiFluid) = RefpropRESModel(eos, eos.components)
