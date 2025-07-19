@@ -15,9 +15,9 @@ The following entropy scaling models are currently implemented:
 
 All models are similarly structured with the following fields:
 
-- `components::Vector{String}`: names of the chemical components of the system
-- `params::Vector{ModelParams}`: vector of model-specific paramater objects
-- `eos`: EOS model
+- `components::Vector{String}`: names of the chemical components of the system,
+- `params::Vector{ModelParams}`: vector of model-specific paramater objects,
+- `eos`: EoS model.
 
 The `ModelParams` are model-specific types containing all required parameters of the model.
 They always contain the Chapman-Enskog model (`CE_model`) as well as base parameters (`base`)

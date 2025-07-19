@@ -12,17 +12,17 @@ Then, the module can be loaded by
 using EntropyScaling
 ```
 
-## EOS Calculations
+## EoS Calculations
 
 The calculation of transport properties through entropy scaling is mostly based on 
-fundamental EOS (defined in the Helmholtz energy $a$) as they allow the consistent calculation
+fundamental EoS (defined in the Helmholtz energy $a$) as they allow the consistent calculation
 of all required thermodynamic properties, in particular the configurational entropy $s_{\rm conf}$. 
-The EOS calculations are not part of this package.
+The EoS calculations are *not* part of this package.
 However, there is an extension to the [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) package,
 which provides a large number of different thermodynamic models.
 The extension is automatically loaded when loading both packages `EntropyScaling.jl` and `Clapeyron.jl`.
 Alternatively, custom thermodynamic models can be used by 'dispatching' the functions defined 
-in the [`thermo.jl`](https://github.com/se-schmitt/EntropyScaling.jl/blob/main/src/utils/thermo.jl) file to a custom EOS type.
+in the [`thermo.jl`](https://github.com/se-schmitt/EntropyScaling.jl/blob/main/src/utils/thermo.jl) file to a custom EoS type.
 
 ```julia
 using EntropyScaling, Clapeyron

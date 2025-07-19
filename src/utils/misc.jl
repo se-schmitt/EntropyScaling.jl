@@ -7,13 +7,13 @@ const SAMPLE_PATH = normpath(Base.pkgdir(EntropyScaling),"test","data")
 function load_sample_data(;prop="eta")
     if prop == "eta"
         @info "Experimental data for the viscosity of n-butane.\n" *
-              "\tUnits: [T] = K, [ϱ] = mol/m³, [η] = Pa·s"
+              "\tUnits: [T] = K, [ϱ] = mol m⁻³, [η] = Pa·s"
     elseif prop == "lambda"
         @info "Experimental data for the thermal conductivity of n-butane.\n" *
-              "\tUnits: [T] = K, [ϱ] = mol/m³, [λ] = W/m·K"
+              "\tUnits: [T] = K, [ϱ] = mol m⁻³, [λ] = W (m·K)⁻¹"
     elseif prop == "D"
         @info "Experimental data for the self-diffusion coefficient of n-butane.\n" *
-              "\tUnits: [T] = K, [ϱ] = mol/m³, [D] = m²/s"
+              "\tUnits: [T] = K, [ϱ] = mol m⁻³, [D] = m² s⁻¹"
     else
         error("Invalid keyword value: prop = $prop")
     end

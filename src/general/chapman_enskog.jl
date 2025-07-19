@@ -206,7 +206,7 @@ struct Neufeld <: AbstractCollisionIntegralMethod end
 Ω(prop::DiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
 
 """
-    Ω(poperty::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
+    Ω(property::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
 
 Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for viscosity/thermal conductivity) at the specified temperature `T`.
 

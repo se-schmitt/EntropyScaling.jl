@@ -21,7 +21,7 @@ end
 function FrameworkParams(prop::AbstractTransportProperty, eos, α::Array{T,2};
                          solute=nothing) where {T}
     size(α,1) == 5 || throw(DimensionMismatch("Parameter array 'α' must have 5 rows."))
-    size(α,2) == length(eos) || throw(DimensionMismatch("Parameter array 'α' doesn't fit EOS model."))
+    size(α,2) == length(eos) || throw(DimensionMismatch("Parameter array 'α' doesn't fit EoS model."))
 
     Mw = get_Mw(eos)
     CE_model, Y₀⁺min = init_framework_params(eos, prop; Mw=Mw, solute=solute)    
@@ -85,16 +85,15 @@ end
 Entropy scaling framework [schmitt_entropy_2024,schmitt_entropy_2025](@cite).
 
 The entropy scaling framework provides a physical way to model transport properties 
-(viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.
+(dynamic viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EoS.
 It enables fitting new models using only few experimental data.
 
 # Parameters
 
-- `α::Matrix{T}`: component-specific parameters (size: `5 x N_components`)
-
-`m` (segment parameter of molecular-based EOS) and `Y₀⁺min` (minimum of the scaled 
-zero-density transport property) are additional internal parameters (not to be set at 
-construction).
+- `α::Matrix{T}`: component-specific parameters (size: `5 x N_components`),
+- `m` (segment parameter of molecular-based EoS)  
+- `Y₀⁺min` (minimum of the scaled zero-density transport property) are additional internal parameters 
+(not to be set at construction).
 
 # Constructors
 
@@ -103,7 +102,7 @@ construction).
     Constructor for fitting new parameters `α` to experimental data (only applicable to pure components).
     `datasets` contains the experimental data, see [`TransportPropertyData`](@ref).
     `opts` enables controling the fitting procedure through [`FitOptions`](@ref).
-    `solute` is an EOS model of the solute (optional, for fitting diff. coeff. at infinite dilution).
+    `solute` is an EoS model of the solute (optional, for fitting diff. coeff. at infinite dilution).
     
 # Example 
 
@@ -114,13 +113,13 @@ using EntropyScaling, Clapeyron
 (T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data()
 data = ViscosityData(T_exp, [], ϱ_exp, η_exp, :unknown)
 
-# Create EOS model
+# Create EoS model
 eos_model = PCSAFT("butane")
 
 # Create entropy scaling model (fit of parameters)
 model = FrameworkModel(eos_model, [data])
 
-# Calculation of the viscostiy at state
+# Calculation of the dynamic viscosity at state (p = 1E5 Pa, T = 300 K)
 η = viscosity(model, 0.1e6, 300.)
 ```
 """
@@ -153,7 +152,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
         data = collect_data(datasets, prop)
         if data.N_dat > 0
             if typeof(prop) == InfDiffusionCoefficient
-                isnothing(solute) && error("Solute EOS model must be provided for diffusion coefficient at infinite dilution.")
+                isnothing(solute) && error("Solute EoS model must be provided for diffusion coefficient at infinite dilution.")
                 solute_ = solute
             else
                 solute_ = nothing
