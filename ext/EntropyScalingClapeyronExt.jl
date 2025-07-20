@@ -94,7 +94,7 @@ function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwar
         end
     end 
 
-    return RefpropRESModel(eos, comps; ηref=nothing)
+    return RefpropRESModel(eos, comps; ηref)
 end
 
 # RefpropRESModel(eos::CL.MultiFluid) = RefpropRESModel(eos, eos.components)

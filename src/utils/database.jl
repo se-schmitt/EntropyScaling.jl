@@ -55,4 +55,4 @@ function get_db_path(MODEL::Type{<:AbstractTransportPropertyModel}, prop)
     fn = MODEL_str*"_"*replace(name(prop)," "=>"_")*".csv"
     return normpath(DB_PATH, fn)
 end
-get_db_path(::Type{ChapmanEnskogModel}, prop) = normpath(DB_PATH, "ChapmanEnskog.csv")
+get_db_path(::Type{<:AbstractChapmanEnskogModel}, prop) = normpath(DB_PATH, "ChapmanEnskog.csv")

@@ -6,6 +6,9 @@ abstract type AbstractTransportPropertyModel end
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
+abstract type AbstractDiluteGasModel <: AbstractTransportPropertyModel end
+abstract type AbstractChapmanEnskogModel <: AbstractDiluteGasModel end
+
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParams <: AbstractParam end
 Base.broadcastable(param::AbstractParam) = Ref(param)
