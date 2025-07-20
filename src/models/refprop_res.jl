@@ -3,19 +3,20 @@ export RefpropRESModel, RefpropRESParams
 struct RefpropRESParams{P,T} <: AbstractEntropyScalingParams
     n::Matrix{T}
     ξ::Vector{T}
+    g::Vector{T}
     crit::Dict{Symbol,Vector{T}}
     CE_model::ChapmanEnskogModel
     base::BaseParam{P}
 end
 
-function RefpropRESParams(prop::AbstractTransportProperty, eos, n::Matrix{T}, ξ::Vector{T}, 
-                          σ::Vector{T}, ε::Vector{T}, 
-                          crit::Dict{Symbol,Vector{T}}=Dict{Symbol,Vector{T}}()) where T
+function RefpropRESParams(prop::AbstractTransportProperty, eos, n::Matrix{T}, ξ::Vector{T},
+    g::Vector{T}, σ::Vector{T}, ε::Vector{T}, 
+    crit::Dict{Symbol,Vector{T}}=Dict{Symbol,Vector{T}}()) where T
     
     Mw = convert(typeof(ξ),get_Mw(eos))
     CE_model = ChapmanEnskogModel(repeat([""],length(Mw)),σ,ε,Mw,collision_integral=KimMonroe())
     base = BaseParam(prop, Mw)
-    return RefpropRESParams(n,ξ,crit,CE_model,base)
+    return RefpropRESParams(n,ξ,g,crit,CE_model,base)
 end
 
 """
@@ -74,6 +75,8 @@ function RefpropRESModel(eos, components::Vector{String}; ηref=nothing)
     params = RefpropRESParams[]
     for prop in [Viscosity(),ThermalConductivity()]
         propref = prop == Viscosity() ? _ηref : ""
+        g = (prop == Viscosity() && ηref == "Martinek et al. (2025)") ? [1.8, 2.4, 2.8] : 
+            [1.0,1.5,2.0,2.5]
         out = load_params(RefpropRESModel, prop, components; ref=propref)
         if !ismissing(out)
             if prop == ThermalConductivity()
@@ -85,7 +88,7 @@ function RefpropRESModel(eos, components::Vector{String}; ηref=nothing)
             end
             CE_model = ChapmanEnskogModel(components; Mw=get_Mw(eos), ref_id="10.1007/s10765-022-03096-9")
             base = BaseParam(prop, get_Mw(eos), refs)
-            push!(params, RefpropRESParams(permutedims(hcat(n1,n2,n3,n4)),ξ,crit,CE_model,base))
+            push!(params, RefpropRESParams(permutedims(hcat(n1,n2,n3,n4)),ξ,g,crit,CE_model,base))
         end
     end
     isempty(params) ? throw(MissingException("No parameters found for system [$(join(components,", "))]")) : nothing
@@ -93,13 +96,11 @@ function RefpropRESModel(eos, components::Vector{String}; ηref=nothing)
 end
 
 function scaling_model(param::RefpropRESParams, s, x=z1)
-    g = (1.0,1.5,2.0,2.5)
-    return exp(powerseries_scaling_model(param, s, x, g)) - 1.
+    return exp(powerseries_scaling_model(param, s, x, param.g)) - 1.
 end
 
 function scaling_model(param::RefpropRESParams{P}, s, x=z1) where P <: ThermalConductivity
-    g = (1.0,1.5,2.0,2.5)
-    return powerseries_scaling_model(param, s, x, g)
+    return powerseries_scaling_model(param, s, x, param.g)
 end
 
 function powerseries_scaling_model(param, s, x, g)

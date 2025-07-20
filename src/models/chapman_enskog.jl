@@ -1,7 +1,5 @@
 export ChapmanEnskogModel
 
-abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
-
 """
     ChapmanEnskogModel <: AbstractTransportPropertyModel
 
@@ -39,7 +37,7 @@ D_mix = self_diffusion_coefficient(model_methane, NaN, 300.)
 model_mix = ChapmanEnskogModel(["butane","methanol"]; ref="Poling et al. (2001)")
 
 η_mix = viscosity(model_mix, NaN, 300., [.5,.5])
-D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])  
+D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])
 ```
 """
 struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
@@ -284,7 +282,7 @@ end
 struct Wilke <: AbstractTransportPropertyMixing end
 struct MasonSaxena <: AbstractTransportPropertyMixing end
 
-function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractChapmanEnskogModel, Y, x; YΦ=Y)
+function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractDiluteGasModel, Y, x; YΦ=Y)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
     enum_M = enumerate(model.Mw)
     for (i,Mi) in enum_M
@@ -300,19 +298,19 @@ end
 # Self-diffusion: Miller and Carman
 struct MillerCarman <: AbstractTransportPropertyMixing end
 
-function mix_CE(::MillerCarman,model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(::MillerCarman,model::AbstractDiluteGasModel, Y, x)
     return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end
 
-function mix_CE(prop::DiffusionCoefficient, model::AbstractChapmanEnskogModel,Y,x)
+function mix_CE(prop::DiffusionCoefficient, model::AbstractDiluteGasModel,Y,x)
     return mix_CE(MillerCarman(),model,Y,x)
 end
 
-function mix_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::Viscosity, model::AbstractDiluteGasModel, Y, x)
     return mix_CE(Wilke(),model,Y,x)
 end
 
-function mix_CE(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::ThermalConductivity, model::AbstractDiluteGasModel, Y, x)
     return mix_CE(MasonSaxena(),model,Y,x)
 end
 
