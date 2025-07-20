@@ -1,0 +1,152 @@
+substance,Mw/(kg/mol),m0/(Pa*s),m1/(Pa*s*K⁻¹),m2/(Pa*s*K⁻²),m3/(Pa*s*K⁻³),m4/(Pa*s*K⁻⁴),ref,ref_id
+"1,3-butadiene|13butadiene",0.054090,8.222461e-07,1.629621e-08,5.240699e-11,-8.984070e-14,4.894235e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1-butene|but-1-ene|1butene",0.056110,6.394479e-07,1.624396e-08,4.574641e-11,-8.144814e-14,4.496279e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1-butyne|1butyne",0.054090,8.114925e-07,1.689439e-08,4.978880e-11,-8.282277e-14,4.304455e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1-pentene|pent-1-ene|1pentene",0.070133,6.648962e-07,1.585871e-08,3.330717e-11,-4.724397e-14,1.841958e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2,2-dimethylbutane|22dimethylbutane",0.086175,5.583564e-07,1.664763e-08,2.759903e-11,-3.926556e-14,1.649894e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2,3-dimethylbutane|23dimethylbutane",0.086175,6.821629e-07,1.536200e-08,3.089816e-11,-4.326872e-14,1.839946e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"3-methylpentane|3methylpentane",0.086175,6.921448e-07,1.513217e-08,3.064879e-11,-4.251449e-14,1.795083e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2-propanone|acetone",0.058080,1.081105e-06,1.558861e-08,2.926342e-11,-3.232202e-14,1.120063e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethyne|acetylene",0.026040,7.719530e-07,1.940119e-08,9.390401e-11,-2.249943e-13,1.739781e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"azane|ammonia",0.017031,4.437514e-06,-8.501736e-09,1.357689e-10,-1.666322e-13,7.101944e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"argon",0.039900,1.962214e-08,8.871325e-08,-5.118659e-11,2.190916e-14,-3.777852e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"benzol|benzene",0.078110,-7.362380e-08,2.675209e-08,-4.822048e-12,4.323599e-15,-1.208165e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-butane|r600|butane",0.058120,-1.686378e-07,2.654261e-08,-3.906016e-12,2.284883e-16,5.817852e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"undecane|n-undecane|c11",0.156310,3.138821e-07,1.226556e-08,1.396447e-11,-1.768796e-14,6.454408e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dodecane|n-dodecane|c12",0.170330,-3.171926e-07,1.524248e-08,2.319222e-12,-2.116412e-15,6.454627e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hexadecane|n-hexadecane|c16",0.226441,8.227932e-07,5.668678e-09,2.438801e-11,-2.963409e-14,1.183181e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methylcyclohexane|hexahydrotoluene|c1cc6",0.098186,8.139676e-07,1.455851e-08,2.796335e-11,-3.398644e-14,1.237505e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"docosane|n-docosane|c22",0.310601,3.575888e-07,7.913882e-09,1.070600e-11,-1.177506e-14,3.893011e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"cis-2-butene|c2butene",0.056110,4.282663e-07,1.738017e-08,4.830090e-11,-1.046389e-13,6.818021e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"propylcyclohexane|c3cc6",0.126239,8.259977e-07,1.285104e-08,2.350263e-11,-2.620611e-14,8.886673e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"perflubutane|decafluorobutane|perfluorobutane|c4f10",0.238027,-8.667132e-07,4.783817e-08,-9.761018e-12,-4.451072e-14,4.817807e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dodecafluoropentane|perfluoropentane|perflenapent |c5f12",0.288034,-2.755959e-07,3.740121e-08,2.448907e-11,-9.798087e-14,7.876032e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"perfluorohexane|perflexane |c6f14",0.338042,-1.098926e-06,5.014867e-08,-3.822118e-11,1.183862e-14,9.293684e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"trifluoromethyl iodide|trifluoroiodomethane|r13t1|cf3i",0.195910,1.483781e-06,2.905876e-08,1.088742e-10,-2.024809e-13,1.213474e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chlorine",0.070900,8.402550e-07,2.904306e-08,9.689694e-11,-2.161056e-13,1.491274e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chlorobenzene",0.112557,1.072299e-06,1.443049e-08,3.099730e-11,-3.579119e-14,1.315245e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"formaldehyde|formalin|methanal|paraformaldehyde|co",0.030026,-9.905934e-07,8.611658e-08,-1.021519e-10,9.023819e-14,-2.970204e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"carbon dioxide|carbonic anhydride|dry ice|co2",0.044009,-1.484764e-06,6.274267e-08,-2.850920e-11,9.864163e-15,-1.425519e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"carbonyl sulfide|carbon oxysulfide|carbonyl sulphide|carbon oxide sulfide|cos",0.060080,1.056771e-06,2.629911e-08,6.781253e-11,-1.138189e-13,5.870696e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"cyclobutene",0.054090,8.813365e-07,1.787781e-08,5.018066e-11,-8.025035e-14,3.996107e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"cyclohexane|cyclohex",0.084160,3.304944e-06,-1.752339e-10,6.321575e-11,-8.033875e-14,3.537918e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"cyclopentane|cyclopen",0.070130,8.916635e-07,1.506452e-08,3.930595e-11,-5.590900e-14,2.522132e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"cyclopropane|trimethylene|cyclopro",0.042081,6.588206e-07,1.900336e-08,5.212465e-11,-9.573195e-14,5.476493e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"deuterium|dideuterium|d2",0.004028,6.383302e-07,5.790533e-08,-8.357608e-11,9.479853e-14,-4.130641e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"deuterium oxide|d2o",0.020028,1.044004e-05,-4.597303e-08,2.087619e-10,-2.163405e-13,8.275701e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"octamethylcyclotetrasiloxane|d4",0.296610,8.975606e-07,1.172474e-08,3.010339e-11,-3.791887e-14,1.542630e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"decamethylcyclopentasiloxane|d5",0.370770,8.204178e-07,1.142921e-08,2.470554e-11,-2.902464e-14,1.079311e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dodecamethylcyclohexasiloxane|d6",0.444920,7.976737e-07,9.969938e-09,2.209134e-11,-2.512579e-14,9.163069e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"diethanolamine|diolamine|dea",0.105136,9.219983e-07,1.019534e-08,1.961370e-11,-1.952252e-14,6.217492e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"decane",0.142280,9.465069e-08,1.783146e-08,-1.857716e-12,1.095452e-15,-3.044326e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"diethyl ether|ether|ethyl ether|ethoxyethane|dee",0.074120,7.972655e-07,1.362342e-08,4.233877e-11,-6.678342e-14,3.385435e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dimethyl carbonate|dmc",0.090080,1.166914e-06,1.636800e-08,4.336846e-11,-5.735384e-14,2.441692e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dimethyl ether|methoxymethane|methyl ether|dme",0.046070,8.012193e-06,-3.025205e-08,1.709708e-10,-2.384361e-13,1.611183e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethylbenzene|ebenzene",0.106160,1.033577e-05,-6.410024e-08,2.613487e-10,-3.473520e-13,1.689000e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethylene glycol|ethane-1,2-diol|eglycol",0.062068,1.347397e-06,1.608965e-08,3.005159e-11,-3.041689e-14,9.764323e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethane",0.030070,-8.210732e-22,3.165009e-08,7.040207e-26,-8.075719e-15,5.315773e-32,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethyl alcohol|ethanol",0.046070,-1.031160e-06,3.483790e-08,-6.502640e-12,3.430961e-28,-8.893657e-32,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethene|acetene|elayl|olefiant gas|ethylene",0.028050,-1.744669e-05,3.025179e-07,-1.456058e-09,3.360156e-12,-2.809930e-15,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"oxirane|ethylene oxide|ethyleneoxide",0.044050,1.031162e-06,1.926921e-08,5.406353e-11,-8.369083e-14,4.096235e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"fluorine",0.037997,2.230667e-07,6.997172e-08,2.035386e-10,-1.028663e-12,1.370159e-15,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hydrogen sulfide|sulfane|hydrosulfuric acid|dihydrogen monosulfide|stink damp|hydrogen sulphide|dihydrogen sulfide|sulfureted hydrogen|h2s",0.034080,6.117670e-07,3.150717e-08,4.129875e-11,-5.672102e-14,2.537227e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hydrochloric acid|hydrogen chloride|hcl",0.036460,-3.521145e-08,4.526383e-08,4.053319e-11,-9.849176e-14,5.831745e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"helium",0.004003,2.779480e-06,6.725396e-08,-4.073596e-11,2.091555e-14,-4.153814e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-heptane|heptane",0.100200,1.208183e-06,1.000727e-08,2.803745e-11,-3.520778e-14,1.533348e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-hexane|hexane",0.086180,-2.744465e-07,2.269504e-08,-1.797771e-12,-2.234172e-15,1.640255e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hydrogen",0.002016,4.687357e-07,3.996860e-08,-5.275629e-11,5.429131e-14,-2.134334e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"isobutylene|isobutene|2-methylprop-1-ene|2-methylpropene|ibutene",0.056110,8.605774e-07,1.696199e-08,3.340335e-11,-4.268136e-14,1.593332e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2-methylpentane|isohexane|ihexane",0.086180,6.687101e-07,1.508132e-08,3.049451e-11,-4.286629e-14,1.828287e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2,2,4-trimethylpentane|isooctane|ioctane",0.114229,9.637802e-07,1.323349e-08,1.683085e-11,-1.446543e-14,3.674661e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"isopentane|2-methylbutane|ipentane",0.072150,6.694866e-07,1.496306e-08,3.569751e-11,-5.420363e-14,2.484180e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"isobutane|2-methylpropane|isobutan",0.058120,-2.581768e-07,2.808468e-08,-6.999111e-12,6.551607e-16,1.082216e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"krypton",0.083800,-1.914019e-06,1.079144e-07,-6.006266e-11,1.046666e-14,9.624444e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"decamethyltetrasiloxane|md2m",0.310680,7.475400e-07,1.119410e-08,2.382250e-11,-2.857078e-14,1.071243e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dodecamethylpentasiloxane|md3m",0.384840,7.186099e-07,1.077883e-08,2.064158e-11,-2.327126e-14,8.062772e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"tetradecamethylhexasiloxane|md4m",0.458990,7.081478e-07,9.953434e-09,1.894918e-11,-2.073743e-14,7.045575e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"octamethyltrisiloxane|mdm",0.236530,7.516350e-07,1.210899e-08,2.689911e-11,-3.410763e-14,1.347200e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"ethanolamine|2-aminoethanol|monoethanolamine|mea",0.061083,1.112063e-06,1.337987e-08,2.847351e-11,-3.112770e-14,1.090405e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl hydride|methane",0.016043,-5.186945e-08,4.009096e-08,-2.253988e-13,-4.119887e-14,3.368023e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl alcohol|methanol",0.032042,1.005615e-06,2.464405e-08,1.759647e-11,-8.943954e-15,-2.966040e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"*|milprf23699",NaN,5.489571e-07,5.820395e-09,7.221304e-12,-5.489951e-15,1.278347e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl linoleate|mlinolea",0.294500,7.937025e-07,9.065360e-09,1.437282e-11,-1.302983e-14,3.722342e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl linolenate|mlinolen",0.292500,8.059239e-07,9.462064e-09,1.560220e-11,-1.462899e-14,4.321699e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hexamethyldisiloxane|mm",0.162380,6.489577e-07,1.303627e-08,3.713322e-11,-5.987369e-14,3.045015e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl oleate|moleate",0.296500,8.003866e-07,9.164020e-09,1.510337e-11,-1.400104e-14,4.096822e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl palmitate|methyl hexadecanoate|mpalmita",0.270500,7.981074e-07,9.549344e-09,1.611903e-11,-1.543569e-14,4.654074e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl stearate|mstearat",0.298500,7.956280e-07,9.040872e-09,1.525198e-11,-1.427199e-14,4.220736e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"m-xylene|mxylene",0.106160,7.014761e-06,-3.265414e-08,1.547145e-10,-1.930311e-13,8.805871e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"nitrous oxide|laughing gas|dinitrogen oxide|dinitrogen monoxide|factitious air|nitrogen protoxide|nitrogen oxide (n2o)|n2o",0.044013,-8.425690e-08,4.481856e-08,4.959763e-11,-1.367593e-13,9.477411e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"neon",0.020180,-1.073809e-07,1.683298e-07,-3.053021e-10,3.922908e-13,-1.971639e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"neopentane|2,2-dimethylpropane|neopentn",0.072150,-3.046709e-07,2.352418e-08,1.170511e-11,-3.819993e-14,2.494823e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"nitrogen trifluoride|trifluoroamine|nitrogen fluoride|trifluoroammonia|nf3",0.071019,-1.706667e-05,2.426827e-07,-6.236505e-10,6.860606e-13,-1.616162e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"nitrogen",0.028014,6.311805e-07,6.860736e-08,-4.483579e-11,2.090245e-14,-3.783382e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-nonane|nonane",0.128250,7.434123e-08,1.845098e-08,-1.827300e-12,1.195641e-15,-3.694364e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"3-pentanone, 1,1,1,2,2,4,5,5,5-nonafluoro-4-(trifluoromethyl)-|novec649",0.316044,9.962758e-07,1.892930e-08,5.898730e-11,-9.763801e-14,5.154009e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-octane|octane",0.114230,7.892226e-08,1.939146e-08,-1.723176e-12,1.046177e-15,-2.981141e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"orthohydrogen|orthohyd",0.002016,4.667537e-07,3.999143e-08,-5.283435e-11,5.439372e-14,-2.138886e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"oxygen",0.031999,2.460216e-07,8.064382e-08,-5.066000e-11,2.295820e-14,-4.100096e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"o-xylene|1,2-dimethylbenzene|1,2-xylene|oxylene",0.106160,6.094705e-06,-2.432058e-08,1.281111e-10,-1.560107e-13,6.928275e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"parahydrogen|parahyd",0.002016,4.667537e-07,3.999143e-08,-5.283435e-11,5.439372e-14,-2.138886e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-pentane|pentane",0.072150,6.217814e-07,1.408799e-08,3.674600e-11,-5.951075e-14,2.985512e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"*|poe5",NaN,6.101500e-07,6.497855e-09,8.855101e-12,-7.139657e-15,1.794975e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"*|poe7",NaN,5.201878e-07,5.515402e-09,6.674882e-12,-4.996085e-15,1.138150e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"*|poe9",NaN,4.854941e-07,5.157736e-09,5.777240e-12,-4.116278e-15,8.705574e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"allene|1,2-propadiene|propadiene",0.040064,7.882301e-07,1.771443e-08,5.704238e-11,-1.031829e-13,5.844189e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"n-propane|dimethylmethane|r290|propane",0.044100,8.356460e-21,2.684617e-08,5.310593e-12,-1.475908e-14,5.425586e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"propylene|propene|prop-1-ene|1-propene|methylethylene|methylethene|propylen",0.042080,3.506650e-07,2.288568e-08,2.867238e-11,-5.135163e-14,2.473506e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"propylene oxide|2-methyloxirane|1,2-epoxypropane|propyleneoxide",0.058079,9.100511e-07,1.705334e-08,4.363117e-11,-6.395750e-14,2.913912e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methylacetylene|prop-1-yne|propyne",0.040060,-2.982784e-07,2.887523e-08,2.037657e-11,-6.230464e-14,4.285025e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"p-xylene|1,4-dimethylbenzene|para-xylene|pxylene",0.106160,4.869340e-06,-1.415993e-08,9.604224e-11,-1.130356e-13,4.817950e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"trichlorofluoromethane|fluorotrichloromethane|rmf|r11",0.137360,1.037589e-06,2.089706e-08,5.686112e-11,-8.946433e-14,4.415465e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"trifluoroethylene|r1123",0.082025,6.272271e-07,3.363717e-08,8.126582e-11,-1.782141e-13,1.165917e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,2-trichlorotrifluoroethane|rtf|r113",0.187370,-1.937595e-07,3.709998e-08,-6.290321e-12,2.506143e-15,-5.671101e-19,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dichlorotetrafluoroethane|1,2-dichlorotetrafluoroethane|r114",0.170920,-1.781774e-06,5.862169e-08,-6.108399e-11,5.399282e-14,-2.136494e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chloropentafluoroethane|r115",0.154460,-7.348013e-07,4.750863e-08,2.334252e-12,-5.492277e-14,4.539165e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hexafluoroethane|perfluoroethane|r116",0.138010,-1.590227e-07,5.016833e-08,-1.432110e-11,9.906696e-15,-4.107178e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dichlorodifluoromethane|r12",0.120910,9.544266e-07,2.418057e-08,7.820030e-11,-1.499669e-13,8.982629e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"hexafluoropropene|hexafluoropropylene|r1216",0.150023,1.157576e-06,2.633081e-08,1.037903e-10,-2.121007e-13,1.387421e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"cis-1-chloro-2,3,3,3-tetrafluoropropene|r1224yd(z)|r1224ydz",0.148487,1.058977e-06,2.109964e-08,6.730970e-11,-1.152309e-13,6.298125e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2,2-dichloro-1,1,1-trifluoroethane|r123",0.152930,-2.273638e-06,5.099859e-08,-2.402786e-11,1.462266e-28,-2.419957e-32,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1-chloro-3,3,3-trifluoro-1-propene|1-chloro-3,3,3-trifluoroprop-1-ene|r1233zd(e)|r1233zde",0.130490,1.034675e-06,2.036127e-08,6.173873e-11,-1.021594e-13,5.359969e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2,3,3,3-tetrafluoropropene|r1234yf",0.114040,-2.116422e-05,2.488831e-07,-7.995648e-10,1.399102e-12,-9.556010e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,3,3,3-tetrafluoroprop-1-ene|trans-1,3,3,3-tetrafluoropropene|r1234ze(e)|r1234zee",0.114040,-9.306718e-06,8.362977e-08,1.083412e-11,-2.741049e-13,2.989021e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1-propene, 1,3,3,3-tetrafluoro-, (1z)-|r1234zez",0.114042,9.810939e-07,1.789431e-08,6.317320e-11,-1.101446e-13,6.194880e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"2-chloro-1,1,1,2-tetrafluoroethane|r124",0.136470,8.868563e-07,2.338429e-08,8.451023e-11,-1.754850e-13,1.144382e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"3,3,3-trifluoropropene|r1243zf",0.096050,1.019534e-06,2.226845e-08,8.299135e-11,-1.614206e-13,1.004061e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"pentafluoroethane|r125",0.120020,2.490051e-07,3.501880e-08,6.191980e-11,-1.539360e-13,1.066756e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chlorotrifluoromethane|trifluoromethyl chloride|r13",0.104460,7.167216e-07,3.134369e-08,1.252460e-10,-3.444630e-13,2.891310e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"(2z)-1,1,1,4,4,4-hexafluorobut-2-ene|r1336mzzz",0.164056,1.076017e-06,1.974467e-08,6.288160e-11,-1.037470e-13,5.478910e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,2-tetrafluoroethane|r134a",0.102030,-1.766998e-07,4.267365e-08,-9.057271e-12,4.498500e-15,-1.269154e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"carbon tetrafluoride|tetrafluoromethane|r14",0.088004,-1.267878e-06,7.423255e-08,-4.313163e-11,1.153668e-15,1.573620e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1-dichloro-1-fluoroethane|r141b",0.116950,9.964938e-07,1.819019e-08,5.287627e-11,-8.268453e-14,4.111597e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1-chloro-1,1-difluoroethane|r142b",0.100490,8.022061e-07,2.104950e-08,7.530063e-11,-1.551479e-13,1.004221e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1-trifluoroethane|r143a",0.084040,6.066659e-07,2.702110e-08,5.372734e-11,-9.979090e-14,5.436539e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,2-dichloroethane|ethylene dichloride|r150",0.098959,1.224022e-06,1.751905e-08,4.482226e-11,-5.865100e-14,2.462412e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1-difluoroethane|difluoroethane|r152a",0.066050,1.030615e-06,1.993069e-08,5.965160e-11,-9.728077e-14,5.037542e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"fluoroethane|ethane, fluoro-|ethyl fluoride|r161",0.048060,1.133650e-07,3.438750e-08,-9.380420e-12,1.174026e-14,-6.965281e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"dichlorofluoromethane|dichloromonofluoromethane|rf 21|r21",0.102920,1.313573e-06,2.302766e-08,7.436838e-11,-1.212232e-13,6.353354e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"perfluoropropane|perflutren|octafluoropropane|r218",0.188020,9.354121e-07,2.485850e-08,9.566975e-11,-2.064725e-13,1.405451e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chlorodifluoromethane|difluorochloromethane|r22",0.086470,9.177993e-07,2.677417e-08,8.158184e-11,-1.612226e-13,9.798157e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,2,3,3,3-heptafluoropropane|r227ea",0.170030,9.460059e-07,2.308323e-08,8.203532e-11,-1.630847e-13,1.023186e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"trifluoromethane|fluoroform|r23",0.070014,-2.067695e-06,6.662084e-08,-3.209106e-11,-7.216957e-15,2.140144e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,2,3,3-hexafluoropropane|r236ea",0.152040,1.056338e-06,2.085544e-08,7.605690e-11,-1.398312e-13,8.272794e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,3,3,3-hexafluoropropane|r236fa",0.152040,1.032122e-06,2.081948e-08,7.957160e-11,-1.516172e-13,9.306741e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,2,2,3-pentafluoropropane|r245ca",0.134050,1.246662e-06,2.217210e-08,7.184163e-11,-1.180563e-13,6.231566e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,3,3-pentafluoropropane|r245fa",0.134050,-1.942044e-06,4.118558e-08,2.913957e-11,-1.225412e-13,9.411890e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"difluoromethane|r32",0.052023,1.059600e-06,2.459583e-08,9.194887e-11,-1.840140e-13,1.172179e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,3,3-pentafluorobutane|r365mfc",0.148070,1.168700e-06,1.998266e-08,6.369849e-11,-1.019322e-13,5.246222e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chloromethane|methyl chloride|r40",0.050490,6.200866e-07,2.575502e-08,4.935691e-11,-8.559392e-14,4.415735e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methyl fluoride|fluoromethane|r41",0.034033,7.190676e-07,2.245698e-08,8.742476e-11,-2.039371e-13,1.486202e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"octafluorocyclobutane|perfluorocyclobutane|rc-318|rc318",0.200030,3.474758e-07,3.108061e-08,4.607984e-11,-8.781487e-14,4.741563e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methane, trifluoromethoxy-|re143a",0.100040,1.033105e-06,2.431405e-08,8.517064e-11,-1.652564e-13,1.020263e-16,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"1,1,1,2,2-pentafluoro-2-methoxyethane|re245cb2",0.150047,9.407127e-07,2.428616e-08,6.891656e-11,-1.234183e-13,6.915526e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"difluoromethyl 2,2,2-trifluoroethyl ether|re245fa2",0.150047,3.945999e-07,2.996537e-08,3.809374e-11,-6.291555e-14,2.929859e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"heptafluoro-1-methoxypropane|re347mcc",0.200055,1.101692e-06,2.175696e-08,6.647062e-11,-1.106843e-13,5.853466e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"sulfur hexafluoride|sulphur hexafluoride|sf6",0.146060,2.238914e-06,3.668787e-08,4.462772e-11,-8.709676e-14,4.681685e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"sulfur dioxide|sulphur dioxide|sulfurous anhydride|so2",0.064070,1.397158e-06,2.485827e-08,7.711710e-11,-1.236666e-13,6.346576e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"trans-2-butene|2-butene|t2butene",0.056110,3.175326e-07,1.876725e-08,4.206974e-11,-9.267914e-14,5.986372e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"methylbenzene|toluene",0.092140,1.448337e-06,1.332257e-08,2.526105e-11,-2.924836e-14,1.155007e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"chloroethylene|vinylchloride",0.062498,1.122846e-06,2.088131e-08,7.177214e-11,-1.243306e-13,6.926039e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"water",0.018015,-2.315194e-07,2.768208e-08,2.163703e-11,-1.428308e-14,2.779438e-18,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
+"xenon",0.131290,-5.902554e-07,7.625029e-08,3.461043e-11,-1.009581e-13,5.760244e-17,"Martinek et al. (2025)",10.1021/acs.jced.4c00451
