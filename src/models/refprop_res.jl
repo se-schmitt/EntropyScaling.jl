@@ -21,7 +21,7 @@ end
 """
     RefpropRESModel{T} <: AbstractEntropyScalingModel
 
-Entropy scaling model based on Refprop EoS [yang_linking_2022,yang_entropy_2021](@cite). 
+Entropy scaling model based on Refprop EOS [yang_linking_2022,yang_entropy_2021](@cite). 
 
 A database provides ready-to-use models for the viscosity of several fluids.
 The model can favourably be used in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) and [`Coolprop.jl`](https://github.com/CoolProp/CoolProp.jl) (see examples).
@@ -38,10 +38,10 @@ The model can favourably be used in combination with [`Clapeyron.jl`](https://gi
 
 - `RefpropRESModel(eos, params::Dict{P})`: Default constructor (see above).
 - `RefpropRESModel(eos, components)`: Creates a ES model using the parameters provided in the database (recommended). 
-    `RefpropRESModel(components)` creates the EoS model on-the-fly (only works if `Clapeyron.jl` and `Coolprop.jl` are loaded).
+    `RefpropRESModel(components)` creates the EOS model on-the-fly (only works if `Clapeyron.jl` and `Coolprop.jl` are loaded).
 
 !!! info
-    The default CoolProp EoS is used here which does not necessarily match the choice of the original papers. 
+    The default CoolProp EOS is used here which does not necessarily match the choice of the original papers. 
     This might lead to slight deviations to the values in the original papers (especially for the thermal conductivity).
 
 # Example
@@ -50,10 +50,10 @@ The model can favourably be used in combination with [`Clapeyron.jl`](https://gi
 using EntropyScaling, Clapeyron, CoolProp
 
 model_pure = RefpropRESModel("R134a")
-η_pure = viscosity(model_pure, 1e5, 300.; phase=:liquid)
+η_pure = dynamic_viscosity(model_pure, 1e5, 300.; phase=:liquid)
 
 model_mix = RefpropRESModel(["decane","butane"])
-η_mix = viscosity(model_mix, 1e5, 300., [.5,.5])
+η_mix = dynamic_viscosity(model_mix, 1e5, 300., [.5,.5])
 ```
 """
 struct RefpropRESModel{E,P} <: AbstractEntropyScalingModel
@@ -66,7 +66,7 @@ end
 
 function RefpropRESModel(eos, components::Vector{String})
     params = RefpropRESParams[]
-    for prop in [Viscosity(),ThermalConductivity()]
+    for prop in [DynamicViscosity(),ThermalConductivity()]
         out = load_params(RefpropRESModel, prop, components)
         if !ismissing(out)
             if prop == ThermalConductivity()
@@ -117,7 +117,7 @@ function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η=n
     if tp == ThermalConductivity()
         each_ind = eachindex(z)
         λ₀ = [thermal_conductivity(param.CE_model, T; i) for i in each_ind]
-        η₀ = [viscosity(param.CE_model, T; i) for i in each_ind]
+        η₀ = [dynamic_viscosity(param.CE_model, T; i) for i in each_ind]
         pure_eos = split_model(eos)
         cₚ₀ = isobaric_heat_capacity.(pure_eos, 1e-10, T)
         λ_int = thermal_conductivity_internal.(η₀, cₚ₀, get_Mw(eos))
@@ -139,7 +139,7 @@ function ϱT_thermal_conductivity(model::RefpropRESModel, ϱ, T, z::AbstractVect
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    η = ϱT_viscosity(model, ϱ, T, z)
+    η = ϱT_dynamic_viscosity(model, ϱ, T, z)
     return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η)
 end
 
@@ -156,7 +156,7 @@ function thermal_conductivity_critical(crit_param, eos, ϱ, T, η, z)
     # Parameters 
     φ0, Γ, qD, Tref = [_dot(crit_param[k],z) for k in (:φ0, :Γ, :qD, :Tref)]
     
-    # EoS
+    # EOS
     ∂ϱ∂p = ForwardDiff.derivative(xp -> molar_density(eos, xp, T, z; ϱ0=ϱ), pressure(eos, ϱ, T, z))
     ∂ϱ∂p_Tref = ForwardDiff.derivative(xp -> molar_density(eos, xp, Tref, z; ϱ0=ϱ), pressure(eos, ϱ, Tref, z))
     Δ∂ϱ∂p = ∂ϱ∂p - Tref/T*∂ϱ∂p_Tref

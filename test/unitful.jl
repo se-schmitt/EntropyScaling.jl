@@ -23,23 +23,23 @@
     @testset "Property functions" begin
         # Framework model
         model = FrameworkModel(PCSAFT("n-butane"),Dict(
-            Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
+            DynamicViscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
             ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
             SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
         ))
 
-        @test viscosity(model, 37.21u"MPa", 323u"K"; output=u"cP").val ≈ 1.921922e-1 rtol=1e-5
+        @test dynamic_viscosity(model, 37.21u"MPa", 323u"K"; output=u"cP").val ≈ 1.921922e-1 rtol=1e-5
         @test thermal_conductivity(model, 372.1u"bar", 49.85u"°C").val ≈ 1.199070e-1 rtol=1e-5
         @test self_diffusion_coefficient(model, 37.21u"MPa", 323u"K"; output=u"cm^2/s").val ≈ 6.645588e-5 rtol=1e-5
 
         ϱmass = 602.436942723435u"kg/m^3"       #mass_density(model.eos, 37.21u"MPa", 323u"K")
         ϱmol = 10365.398188634463u"mol/m^3"     #molar_density(model.eos, 37.21u"MPa", 323u"K")
-        @test viscosity(model, ϱmass, 323u"K").val ≈ 1.921922e-4 rtol=1e-5
+        @test dynamic_viscosity(model, ϱmass, 323u"K").val ≈ 1.921922e-4 rtol=1e-5
         @test thermal_conductivity(model, ϱmol, 49.85u"°C").val ≈ 1.199070e-1 rtol=1e-5
 
         # Chapman-Enskog 
         σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3         # Poling et al.
         model = ChapmanEnskogModel("methane", σ, ε, Mw)
-        @test viscosity(model, NaN, 200.0u"K"; output=u"μPa*s").val ≈ 7.6848  rtol=1e-2
+        @test dynamic_viscosity(model, NaN, 200.0u"K"; output=u"μPa*s").val ≈ 7.6848  rtol=1e-2
     end
 end

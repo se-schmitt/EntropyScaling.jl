@@ -17,7 +17,7 @@ All models are similarly structured with the following fields:
 
 - `components::Vector{String}`: names of the chemical components of the system,
 - `params::Vector{ModelParams}`: vector of model-specific paramater objects,
-- `eos`: EoS model.
+- `eos`: EOS model.
 
 The `ModelParams` are model-specific types containing all required parameters of the model.
 They always contain the Chapman-Enskog model (`CE_model`) as well as base parameters (`base`)
@@ -25,7 +25,7 @@ which itself contains general parameters like the transport property or the mola
 
 All models share the contructor method `Model(eos, params::Dict{P})`, where params is a dict 
 containing the parameters with the respective transport property as key, e.g., 
-`Dict(Viscosity() => [a_η, b_η, c_η], ThermalConductivity() => [a_λ, b_λ, c_λ])`.
+`Dict(DynamicViscosity() => [a_η, b_η, c_η], ThermalConductivity() => [a_λ, b_λ, c_λ])`.
 Here, `a`, `b`, and `c` are the parameters (note that `a_η`, `b_η`, ... are vectors or matrices themselves).
 Lists of the parameters are given below in the repective 'Parameters' sections.
 Additional model-specific constructors are also given below.

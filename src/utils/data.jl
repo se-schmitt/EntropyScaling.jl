@@ -64,7 +64,7 @@ function TransportPropertyData(prop, T::Vector{X}, _p::Union{Vector{X},Nothing},
 end
 function ViscosityData(T::Vector{X}, p::Union{Vector{X},Nothing}, ϱ::Union{Vector{X},Nothing}, 
                        Y::Vector{X}, args...) where X
-    return TransportPropertyData(Viscosity(), T, p, ϱ, Y, args...)
+    return TransportPropertyData(DynamicViscosity(), T, p, ϱ, Y, args...)
 end
 function ThermalConductivityData(T::Vector{X}, p::Union{Vector{X},Nothing}, 
                                  ϱ::Union{Vector{X},Nothing}, Y::Vector{X}, args...) where X

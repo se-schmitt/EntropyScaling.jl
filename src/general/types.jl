@@ -1,6 +1,6 @@
-export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
+export DynamicViscosity, ThermalConductivity, SelfDiffusionCoefficient
 export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
-export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
+export dynamic_viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
 
 abstract type AbstractTransportPropertyModel end
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
@@ -62,8 +62,8 @@ end
 
 Base.length(base::BaseParam) = length(base.Mw)
 
-struct Viscosity <: AbstractViscosity end
-name(::AbstractViscosity) = "viscosity"
+struct DynamicViscosity <: AbstractViscosity end
+name(::AbstractViscosity) = "dynamic viscosity"
 symbol(::AbstractViscosity) = :η
 symbol_name(::AbstractViscosity) = "eta"
 

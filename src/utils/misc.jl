@@ -6,7 +6,7 @@ const SAMPLE_PATH = normpath(Base.pkgdir(EntropyScaling),"test","data")
 
 function load_sample_data(;prop="eta")
     if prop == "eta"
-        @info "Experimental data for the viscosity of n-butane.\n" *
+        @info "Experimental data for the dynamic viscosity of n-butane.\n" *
               "\tUnits: [T] = K, [ϱ] = mol m⁻³, [η] = Pa·s"
     elseif prop == "lambda"
         @info "Experimental data for the thermal conductivity of n-butane.\n" *

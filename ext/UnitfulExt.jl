@@ -58,7 +58,7 @@ end
 
 # Implementation for transport property calculation functions
 for (fn,unit) in [
-        (:viscosity, Pa*s),
+        (:dynamic_viscosity, Pa*s),
         (:thermal_conductivity, W/K/m),
         (:self_diffusion_coefficient, m^2/s),
         (:MS_diffusion_coefficient, m^2/s)

@@ -1,17 +1,17 @@
 """
-    viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
+    dynamic_viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
 
 Dynamic viscosity `η(p,T,x)` (`[η] = Pa s`).
 """
-viscosity
+dynamic_viscosity
 
-function viscosity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
+function dynamic_viscosity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
     ϱ = molar_density(model.eos, p, T, z; phase=phase)
-    return ϱT_viscosity(model, ϱ, T, z)
+    return ϱT_dynamic_viscosity(model, ϱ, T, z)
 end
 
-function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
-    param = model[Viscosity()]
+function ϱT_dynamic_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
+    param = model[DynamicViscosity()]
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
     ηˢ = scaling_model(param, sˢ, z)

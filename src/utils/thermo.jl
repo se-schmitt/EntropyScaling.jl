@@ -84,7 +84,7 @@ get_Mw(eos::Any) = fun_na_error("get_Mw",typeof(eos))
 """
     get_m(eos)
 
-Segment parameter of SAFT-type EoS.
+Segment parameter of SAFT-type EOS.
 """
 get_m(eos::Any) = fun_na_error("get_m",typeof(eos))
 

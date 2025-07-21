@@ -1,6 +1,6 @@
 
 """
-    rosenfeld_scaling(param::BaseParam{Viscosity},η,T,ϱN;inv=false)
+    rosenfeld_scaling(param::BaseParam{DynamicViscosity},η,T,ϱN;inv=false)
     rosenfeld_scaling(param::BaseParam{ThermalConductivity},λ,T,ϱN;inv=false)
     rosenfeld_scaling(param::BaseParam{DiffusionCoefficient},D,T,ϱN;inv=false)
 
