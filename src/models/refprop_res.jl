@@ -62,14 +62,14 @@ model_mix = RefpropRESModel(["decane","butane"])
 ```
 """
 struct RefpropRESModel{E,P} <: AbstractEntropyScalingModel
-    components::Vector{String}
+    components::Vector{<:AbstractString}
     params::P
     eos::E
 end
 
 @modelmethods RefpropRESModel RefpropRESParams
 
-function RefpropRESModel(eos, components::Vector{String}; ηref=nothing)
+function RefpropRESModel(eos, components::Vector{<:AbstractString}; ηref=nothing)
     _ηref = isnothing(ηref) ? "Yang et al. (2022)" : ηref
 
     params = RefpropRESParams[]

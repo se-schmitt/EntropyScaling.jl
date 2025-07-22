@@ -72,7 +72,7 @@ function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwar
     try 
         eos = MultiFluid(comps; kw_CL...)
     catch e1 
-        if (e1 isa ErrorException && startswith(e1.msg,"Coolprop: key")) || e1 isa MissingException
+        if (e1 isa ErrorException && any(startswith.(Ref(e1.msg),["Coolprop: key","cannot "]))) || e1 isa MissingException
             _comps = copy(comps)
             try 
                 names = uppercase.(ES.load_refprop_names(comps))
