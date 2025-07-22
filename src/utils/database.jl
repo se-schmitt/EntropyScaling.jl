@@ -1,5 +1,5 @@
 # Load Parameters
-function load_params(file::String, components::Vector{String}; ref="", ref_id="")
+function load_params(file::String, components::Vector{<:AbstractString}; ref="", ref_id="")
     data, header = readdlm(file, ','; header=true)
     j_subs = findfirst(header[:] .== "substance")
     j_ref = findfirst(header[:] .== "ref")

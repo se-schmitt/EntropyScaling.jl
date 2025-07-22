@@ -35,6 +35,10 @@
 
         model_13but = RefpropRESModel("1,3-butadiene")
         @test viscosity(model_13but,9.259e3,220.)/1e-6 ≈ 424.7 rtol=1e-4
+
+        # Martinek et al. (2025)
+        model_r11_martinek = RefpropRESModel("R11"; ηref="Martinek et al. (2025)")
+        @test viscosity(model_r11_martinek, 9.32e2, 209.08)*1e6 ≈ 1388.935 rtol=1e-4
     end
 
     @testset "Mixtures Viscosity" begin
