@@ -21,7 +21,7 @@ Chapman-Enskog transport properties for the zero-density limit.
 Input arguments can either be single values (pure) or vectors.
 The keywords `ref` (short reference) and `ref_id` (DOI or ISBN) enable the specification of the reference.
 Currently, parameters from [poling_properties_2001](@citet) and [yang_linking_2022](@citet) are in the database.
-Mixture properties are calculated according to the models from [wilke_viscosity_1950](@citet) (viscosity), [mason_approximate_1958](@citet) (thermal conductivity), and [miller_self-diffusion_1961](@citet) (self-diffusion).
+Mixture properties are calculated according to the models from [wilke_viscosity_1950](@citet) (dynamic_viscosity), [mason_approximate_1958](@citet) (thermal conductivity), and [miller_self-diffusion_1961](@citet) (self-diffusion).
 
 # Example
 
@@ -32,13 +32,13 @@ using EntropyScaling
 σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3            # from Poling et al.
 model_methane = ChapmanEnskogModel("methane",σ,ε,Mw)
 
-η_mix = viscosity(model_methane, NaN, 300.)
+η_mix = dynamic_viscosity(model_methane, NaN, 300.)
 D_mix = self_diffusion_coefficient(model_methane, NaN, 300.)
 
 # Construction from database
 model_mix = ChapmanEnskogModel(["butane","methanol"]; ref="Poling et al. (2001)")
 
-η_mix = viscosity(model_mix, NaN, 300., [.5,.5])
+η_mix = dynamic_viscosity(model_mix, NaN, 300., [.5,.5])
 D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])  
 ```
 """
@@ -72,15 +72,15 @@ end
 
 Base.length(model::AbstractChapmanEnskogModel) = length(model.Mw)
 
-# Viscosity
-function viscosity(model::AbstractChapmanEnskogModel, p, T, z=Z1)
-    return property_CE(Viscosity(), model, T, z)
+# DynamicViscosity
+function dynamic_viscosity(model::AbstractChapmanEnskogModel, p, T, z=Z1)
+    return property_CE(DynamicViscosity(), model, T, z)
 end
-function viscosity(model::AbstractChapmanEnskogModel, T; i=1)
-    return 5/16 * √(model.Mw[i]*kB*T/NA/π) / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i))
+function dynamic_viscosity(model::AbstractChapmanEnskogModel, T; i=1)
+    return 5/16 * √(model.Mw[i]*kB*T/NA/π) / (model.σ[i]^2*Ω(DynamicViscosity(),model,T;i=i))
 end
 
-function viscosity_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
+function dynamic_viscosity_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
         B = second_virial_coefficient(eos,T)/NA
@@ -89,7 +89,7 @@ function viscosity_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
         B = second_virial_coefficient(eos,T,x)/NA
     end
-    return 5/16/√π / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
+    return 5/16/√π / (model.σ[i]^2*Ω(DynamicViscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
 # Thermal conductivity
@@ -170,7 +170,7 @@ function property_CE(prop::P, model::AbstractChapmanEnskogModel, T, z=Z1) where
 end
 
 # Chapman-Enskog pure functions 
-property_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, T; i) = viscosity(model, T; i=i)
+property_CE(prop::DynamicViscosity, model::AbstractChapmanEnskogModel, T; i) = dynamic_viscosity(model, T; i=i)
 property_CE(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, T; i) = thermal_conductivity(model, T; i=i)
 property_CE(prop::SelfDiffusionCoefficient, model::AbstractChapmanEnskogModel, T; i) = self_diffusion_coefficient(model, T; i=i)
 
@@ -191,7 +191,7 @@ function property_CE_plus(prop::P, model::AbstractChapmanEnskogModel, eos, T, z 
 end
 
 # Scaled CE pure functions
-property_CE_plus(prop::Viscosity, model::AbstractChapmanEnskogModel, eos, T; i) = viscosity_CE_plus(model, eos, T; i=i)
+property_CE_plus(prop::DynamicViscosity, model::AbstractChapmanEnskogModel, eos, T; i) = dynamic_viscosity_CE_plus(model, eos, T; i=i)
 property_CE_plus(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, eos, T; i) = thermal_conductivity_CE_plus(model, eos, T; i=i)
 property_CE_plus(prop::SelfDiffusionCoefficient, model::AbstractChapmanEnskogModel, eos, T; i) = self_diffusion_coefficient_CE_plus(model, eos, T; i=i)
 
@@ -200,15 +200,15 @@ abstract type AbstractCollisionIntegralMethod end
 struct KimMonroe <: AbstractCollisionIntegralMethod end
 struct Neufeld <: AbstractCollisionIntegralMethod end
 
-Ω(prop::Union{Viscosity,ThermalConductivity},method::KimMonroe,T_red) = Ω_22(T_red)
+Ω(prop::Union{DynamicViscosity,ThermalConductivity},method::KimMonroe,T_red) = Ω_22(T_red)
 Ω(prop::DiffusionCoefficient,method::KimMonroe,T_red) = Ω_11(T_red)
-Ω(prop::Union{Viscosity,ThermalConductivity},method::Neufeld,T_red) = Ω_22_neufeld(T_red)
+Ω(prop::Union{DynamicViscosity,ThermalConductivity},method::Neufeld,T_red) = Ω_22_neufeld(T_red)
 Ω(prop::DiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
 
 """
-    Ω(poperty::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
+    Ω(property::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
 
-Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for viscosity/thermal conductivity) at the specified temperature `T`.
+Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for dynamic viscosity/thermal conductivity) at the specified temperature `T`.
 
 Two methods are implemented:
 - `KimMonroe()` [kim_high-accuracy_2014](@cite)
@@ -280,7 +280,7 @@ function correspondence_principle(eos)
     return correspondence_principle(Tc, pc)
 end
 
-# Viscosity, thermal conductivity: Wilke and Mason and Saxena
+# Dynamic viscosity, thermal conductivity: Wilke and Mason and Saxena
 struct Wilke <: AbstractTransportPropertyMixing end
 struct MasonSaxena <: AbstractTransportPropertyMixing end
 
@@ -308,7 +308,7 @@ function mix_CE(prop::DiffusionCoefficient, model::AbstractChapmanEnskogModel,Y,
     return mix_CE(MillerCarman(),model,Y,x)
 end
 
-function mix_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::DynamicViscosity, model::AbstractChapmanEnskogModel, Y, x)
     return mix_CE(Wilke(),model,Y,x)
 end
 

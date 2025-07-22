@@ -15,7 +15,7 @@ where
 Internally, the density is always calculated first and then the function `EntropyScaling.ϱT_transport_property(model, ϱ, T, x)` is called (with `[ϱ] = mol m⁻³`).
 
 ```@docs
-EntropyScaling.viscosity
+EntropyScaling.dynamic_viscosity
 EntropyScaling.thermal_conductivity
 EntropyScaling.self_diffusion_coefficient
 EntropyScaling.MS_diffusion_coefficient

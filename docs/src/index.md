@@ -3,7 +3,7 @@
 Transport property modeling based on entropy scaling and equations of state (EOS).
 
 This package provides methods to model 
-- the viscosity,
+- the dynamic viscosity,
 - the thermal conductivity, and
 - diffusion coefficients
 

@@ -46,7 +46,7 @@ function FrameworkParams(self::FrameworkParams{<:SelfDiffusionCoefficient},
     return new_self
 end
 
-get_α0_framework(prop::Union{Viscosity,DiffusionCoefficient}) = zeros(Real,5,1)
+get_α0_framework(prop::Union{DynamicViscosity,DiffusionCoefficient}) = zeros(Real,5,1)
 get_α0_framework(prop) = [ones(Real,1);zeros(Real,4,1);]
 
 function init_framework_params(eos, prop; Mw, solute = nothing)
@@ -85,16 +85,15 @@ end
 Entropy scaling framework [schmitt_entropy_2024,schmitt_entropy_2025](@cite).
 
 The entropy scaling framework provides a physical way to model transport properties 
-(viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.
+(dynamic viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.
 It enables fitting new models using only few experimental data.
 
 # Parameters
 
-- `α::Matrix{T}`: component-specific parameters (size: `5 x N_components`)
-
-`m` (segment parameter of molecular-based EOS) and `Y₀⁺min` (minimum of the scaled 
-zero-density transport property) are additional internal parameters (not to be set at 
-construction).
+- `α::Matrix{T}`: component-specific parameters (size: `5 x N_components`),
+- `m` (segment parameter of molecular-based EOS)  
+- `Y₀⁺min` (minimum of the scaled zero-density transport property) are additional internal parameters 
+(not to be set at construction).
 
 # Constructors
 
@@ -120,8 +119,8 @@ eos_model = PCSAFT("butane")
 # Create entropy scaling model (fit of parameters)
 model = FrameworkModel(eos_model, [data])
 
-# Calculation of the viscostiy at state
-η = viscosity(model, 0.1e6, 300.)
+# Calculation of the dynamic viscosity at state (p = 1E5 Pa, T = 300 K)
+η = dynamic_viscosity(model, 0.1e6, 300.)
 ```
 """
 struct FrameworkModel{E,P} <: AbstractEntropyScalingModel
@@ -149,7 +148,7 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
     length(eos) == 1 || error("Only one component allowed for fitting.")
 
     params = FrameworkParams[]
-    for prop in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient(), InfDiffusionCoefficient()]
+    for prop in [DynamicViscosity(), ThermalConductivity(), SelfDiffusionCoefficient(), InfDiffusionCoefficient()]
         data = collect_data(datasets, prop)
         if data.N_dat > 0
             if typeof(prop) == InfDiffusionCoefficient

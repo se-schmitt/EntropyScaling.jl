@@ -50,10 +50,10 @@ The model can favourably be used in combination with [`Clapeyron.jl`](https://gi
 using EntropyScaling, Clapeyron, CoolProp
 
 model_pure = RefpropRESModel("R134a")
-η_pure = viscosity(model_pure, 1e5, 300.; phase=:liquid)
+η_pure = dynamic_viscosity(model_pure, 1e5, 300.; phase=:liquid)
 
 model_mix = RefpropRESModel(["decane","butane"])
-η_mix = viscosity(model_mix, 1e5, 300., [.5,.5])
+η_mix = dynamic_viscosity(model_mix, 1e5, 300., [.5,.5])
 ```
 """
 struct RefpropRESModel{E,P} <: AbstractEntropyScalingModel
@@ -66,7 +66,7 @@ end
 
 function RefpropRESModel(eos, components::Vector{String})
     params = RefpropRESParams[]
-    for prop in [Viscosity(),ThermalConductivity()]
+    for prop in [DynamicViscosity(),ThermalConductivity()]
         out = load_params(RefpropRESModel, prop, components)
         if !ismissing(out)
             if prop == ThermalConductivity()
@@ -117,7 +117,7 @@ function scaling(param::RefpropRESParams, eos, Y, T, ϱ, s, z=Z1; inv=true, η=n
     if tp == ThermalConductivity()
         each_ind = eachindex(z)
         λ₀ = [thermal_conductivity(param.CE_model, T; i) for i in each_ind]
-        η₀ = [viscosity(param.CE_model, T; i) for i in each_ind]
+        η₀ = [dynamic_viscosity(param.CE_model, T; i) for i in each_ind]
         pure_eos = split_model(eos)
         cₚ₀ = isobaric_heat_capacity.(pure_eos, 1e-10, T)
         λ_int = thermal_conductivity_internal.(η₀, cₚ₀, get_Mw(eos))
@@ -139,7 +139,7 @@ function ϱT_thermal_conductivity(model::RefpropRESModel, ϱ, T, z::AbstractVect
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    η = ϱT_viscosity(model, ϱ, T, z)
+    η = ϱT_dynamic_viscosity(model, ϱ, T, z)
     return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η)
 end
 
