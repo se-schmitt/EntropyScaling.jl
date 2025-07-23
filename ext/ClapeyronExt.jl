@@ -60,6 +60,7 @@ ES._eos_cache(eos::CL.EoSVectorParam) = eos
 ES._eos_cache(eos::MultiFluid) = eos
 
 # Model specific wrapper 
+ES.RefpropRESModel(eos::CL.MultiFluid; ηref=nothing) = RefpropRESModel(eos, eos.components; ηref)
 ES.RefpropRESModel(comps::AbstractString; kwargs...) = RefpropRESModel([comps]; kwargs...)
 function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwargs_CL...)
 
@@ -96,7 +97,5 @@ function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwar
 
     return RefpropRESModel(eos, comps; ηref)
 end
-
-# RefpropRESModel(eos::CL.MultiFluid) = RefpropRESModel(eos, eos.components)
 
 end #module
