@@ -1,5 +1,7 @@
 
 @testset "RefpropRES" begin
+    g_Yang2022 = [1.0,1.5,2.0,2.5]
+
     @testset "Pure Viscosity" begin
         # Comparison to table S5 of https://doi.org/10.1007/s10765-022-03096-9
         # acetone
@@ -9,7 +11,7 @@
         ε_ace = [519*EntropyScaling.kB]
 
         model_ace = RefpropRESModel(SingleFluid("acetone"),Dict(
-            Viscosity() => [ni_ace, ξ_ace, σ_ace, ε_ace]
+            Viscosity() => [ni_ace, ξ_ace, g_Yang2022, σ_ace, ε_ace]
         ))
         @test viscosity(model_ace,1.3922e4,281.005)/1e-6 ≈ 371.6 rtol=1e-4
 
@@ -20,7 +22,7 @@
         ε_cyc = [406.33*EntropyScaling.kB]
 
         model_cyc = RefpropRESModel(SingleFluid("cyclopentane"),Dict(
-            Viscosity() => [ni_cyc, ξ_cyc, σ_cyc, ε_cyc]
+            Viscosity() => [ni_cyc, ξ_cyc, g_Yang2022, σ_cyc, ε_cyc]
         ))
         @test viscosity(model_cyc,1.4244e4,273.15)/1e-6 ≈ 567.0 rtol=1e-4
 
@@ -30,6 +32,13 @@
 
         model_cyc_db = RefpropRESModel("cyclopentane")
         @test viscosity(model_cyc,1e5,300.) ≈ viscosity(model_cyc_db,1e5,300.)
+
+        model_13but = RefpropRESModel("1,3-butadiene")
+        @test viscosity(model_13but,9.259e3,220.)/1e-6 ≈ 424.7 rtol=1e-4
+
+        # Martinek et al. (2025)
+        model_r11_martinek = RefpropRESModel("R11"; ηref="Martinek et al. (2025)")
+        @test viscosity(model_r11_martinek, 9.32e2, 209.08)*1e6 ≈ 1388.935 rtol=1e-4
     end
 
     @testset "Mixtures Viscosity" begin
@@ -43,7 +52,7 @@
         ε_mix = [490.51, 174].*EntropyScaling.kB
 
         model_mix = RefpropRESModel(MultiFluid(["decane","methane"]),Dict(
-            Viscosity() => [ni_mix, ξ_mix, σ_mix, ε_mix]
+            Viscosity() => [ni_mix, ξ_mix, g_Yang2022, σ_mix, ε_mix]
         ))
         @test viscosity(model_mix,3.565407e6,289.996,[0.8680,1-0.8680])/1e-6 ≈ 925.02 rtol = 1e-5
 

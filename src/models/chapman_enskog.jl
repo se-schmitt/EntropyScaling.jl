@@ -1,7 +1,5 @@
 export ChapmanEnskogModel
 
-abstract type AbstractChapmanEnskogModel <: AbstractTransportPropertyModel end
-
 """
     ChapmanEnskogModel <: AbstractTransportPropertyModel
 
@@ -39,11 +37,11 @@ D_mix = self_diffusion_coefficient(model_methane, NaN, 300.)
 model_mix = ChapmanEnskogModel(["butane","methanol"]; ref="Poling et al. (2001)")
 
 η_mix = viscosity(model_mix, NaN, 300., [.5,.5])
-D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])  
+D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])
 ```
 """
 struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
-    components::Vector{String}
+    components::Vector{<:AbstractString}
     σ::Vector{T} 
     ε::Vector{T}
     Mw::Vector{T}
@@ -51,7 +49,7 @@ struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
     collision::C 
 end
 
-function ChapmanEnskogModel(comps::Vector{String}, σ::Vector{T}, ε::Vector{T}, Mw::Vector{T}; collision_integral=KimMonroe()) where {T} 
+function ChapmanEnskogModel(comps::Vector{<:AbstractString}, σ::Vector{T}, ε::Vector{T}, Mw::Vector{T}; collision_integral=KimMonroe()) where {T} 
     return ChapmanEnskogModel(comps, σ, ε, Mw, Reference[], collision_integral)
 end
 
@@ -60,7 +58,7 @@ function ChapmanEnskogModel(comps::String, σ::Float64, ε::Float64, Mw::Float64
 end
 
 ChapmanEnskogModel(comps::String; kwargs...) = ChapmanEnskogModel([comps]; kwargs...)
-function ChapmanEnskogModel(comps::Vector{String}; Mw=[], ref="", ref_id="", collision_integral=KimMonroe())
+function ChapmanEnskogModel(comps::Vector{<:AbstractString}; Mw=[], ref="", ref_id="", collision_integral=KimMonroe())
     out = load_params(ChapmanEnskogModel, "", comps; ref, ref_id)
     ismissing(out) ? throw(MissingException("No CE parameters found for system [$(join(comps,", "))]")) : nothing
     Mw_db, ε, σ, refs = out 
@@ -284,7 +282,7 @@ end
 struct Wilke <: AbstractTransportPropertyMixing end
 struct MasonSaxena <: AbstractTransportPropertyMixing end
 
-function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractChapmanEnskogModel, Y, x; YΦ=Y)
+function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractDiluteGasModel, Y, x; YΦ=Y)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
     enum_M = enumerate(model.Mw)
     for (i,Mi) in enum_M
@@ -300,19 +298,19 @@ end
 # Self-diffusion: Miller and Carman
 struct MillerCarman <: AbstractTransportPropertyMixing end
 
-function mix_CE(::MillerCarman,model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(::MillerCarman,model::AbstractDiluteGasModel, Y, x)
     return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end
 
-function mix_CE(prop::DiffusionCoefficient, model::AbstractChapmanEnskogModel,Y,x)
+function mix_CE(prop::DiffusionCoefficient, model::AbstractDiluteGasModel,Y,x)
     return mix_CE(MillerCarman(),model,Y,x)
 end
 
-function mix_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::Viscosity, model::AbstractDiluteGasModel, Y, x)
     return mix_CE(Wilke(),model,Y,x)
 end
 
-function mix_CE(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, Y, x)
+function mix_CE(prop::ThermalConductivity, model::AbstractDiluteGasModel, Y, x)
     return mix_CE(MasonSaxena(),model,Y,x)
 end
 

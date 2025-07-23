@@ -17,14 +17,14 @@ function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParam
 end
 
 #show methods for CE model
-function Base.show(io::IO, model::ChapmanEnskogModel)
+function Base.show(io::IO, model::AbstractChapmanEnskogModel)
     print(io,typeof(params).name.name)
     print(io,"{")
     print(io,join(model.components,','))
     print(io,"}")
 end
 
-function Base.show(io::IO,::MIME"text/plain", model::ChapmanEnskogModel)
+function Base.show(io::IO,::MIME"text/plain", model::AbstractChapmanEnskogModel)
     print(io,"ChapmanEnskogModel{$(join(model.components,','))}")
     print(io,"\n σ: [$(join(round.(model.σ/1e-10,digits=5),", "))] Å")
     print(io,"\n ε: [$(join(round.(model.ε/kB,digits=3),", "))] K")

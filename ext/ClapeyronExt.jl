@@ -3,7 +3,10 @@ module ClapeyronExt
 using EntropyScaling, Clapeyron
 const ES = EntropyScaling
 const CL = Clapeyron
+const Downloads = CL.Downloads
 const SA1 = CL.SA[1.0]
+const url_refprop = "https://raw.githubusercontent.com/usnistgov/fastchebpure/50af5c154a113ac27a2c0a1c3538bc4f43a73a66/teqp_REFPROP10/dev/fluids/"
+
 # Bulk properties
 ES.pressure(eos::EoSModel, ϱ, T, z = SA1) = pressure(eos, 1.0./ϱ, T, z)
 
@@ -57,7 +60,42 @@ ES._eos_cache(eos::CL.EoSVectorParam) = eos
 ES._eos_cache(eos::MultiFluid) = eos
 
 # Model specific wrapper 
-ES.RefpropRESModel(comps::AbstractString) = RefpropRESModel([comps])
-ES.RefpropRESModel(comps::Vector{<:AbstractString}) = RefpropRESModel(MultiFluid(comps; estimate_mixing=:lb), comps)
+ES.RefpropRESModel(eos::CL.MultiFluid; ηref=nothing) = RefpropRESModel(eos, eos.components; ηref)
+ES.RefpropRESModel(comps::AbstractString; kwargs...) = RefpropRESModel([comps]; kwargs...)
+function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwargs_CL...)
+
+    kw_CL = NamedTuple(kwargs_CL)
+    eos = nothing
+    if !(:estimate_mixing in keys(kw_CL))
+        kw_CL = merge(kw_CL, (;estimate_mixing=:lb))
+    end
+
+    try 
+        eos = MultiFluid(comps; kw_CL...)
+    catch e1 
+        if (e1 isa ErrorException && any(startswith.(Ref(e1.msg),["Coolprop: key","cannot "]))) || e1 isa MissingException
+            _comps = copy(comps)
+            try 
+                names = uppercase.(ES.load_refprop_names(comps))
+                _comps .= Downloads.download.(url_refprop .* names .* ".json") .|> read .|> String
+            catch e2
+                if e2 isa Downloads.RequestError
+                    i_err = findfirst(comps .== _comps)
+                    throw(ErrorException("Refprop parameters for '$(comps[i_err])' could not be loaded."))
+                else 
+                    rethrow(e2)
+                end
+            end
+            mixing_userlocations = :mixing_userlocations in keys(kw_CL) ? kw_CL.mixing_userlocations : String[]
+            mixing = CL.init_model(AsymmetricMixing,comps,mixing_userlocations,false)
+            eos = MultiFluid(_comps; mixing, coolprop_userlocations=false, kw_CL...)
+            eos.components .= comps
+        else
+            rethrow(e1)
+        end
+    end 
+
+    return RefpropRESModel(eos, comps; ηref)
+end
 
 end #module
