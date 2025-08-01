@@ -15,11 +15,14 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
+Jutul = "2b460a1a-8a2b-45b2-b125-b5c536396eb9"
+JutulDarcy = "82210473-ab04-4dce-b31b-11573c4f8e0a"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [extensions]
 ClapeyronExt = "Clapeyron"
+JutulDarcyExt = ["JutulDarcy", "Jutul"]
 SymbolicsExt = "Symbolics"
 UnitfulExt = "Unitful"
 
