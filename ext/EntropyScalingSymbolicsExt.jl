@@ -1,4 +1,4 @@
-module SymbolicsExt
+module EntropyScalingSymbolicsExt
 
 using EntropyScaling, Symbolics
 
