@@ -1,4 +1,4 @@
-module UnitfulExt
+module EntropyScalingUnitfulExt
 
 using EntropyScaling
 using Unitful

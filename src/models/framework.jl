@@ -84,9 +84,9 @@ end
 
 Entropy scaling framework [schmitt_entropy_2024,schmitt_entropy_2025](@cite).
 
-The entropy scaling framework provides a physical way to model transport properties 
-(viscosity, thermal conductivity, diffusion coeffficients) based on molecular-based EOS.
-It enables fitting new models using only few experimental data.
+The entropy scaling framework provides a physical way to model transport properties
+(viscosity, thermal conductivity, diffusion coefficients) based on molecular-based EOS.
+It enables fitting new models using only a few experimental data.
 
 # Parameters
 
@@ -102,7 +102,7 @@ construction).
 - `FrameworkModel(eos, datasets::Vector{TransportPropertyData}; opts::FitOptions=FitOptions(), solute=nothing)`:
     Constructor for fitting new parameters `α` to experimental data (only applicable to pure components).
     `datasets` contains the experimental data, see [`TransportPropertyData`](@ref).
-    `opts` enables controling the fitting procedure through [`FitOptions`](@ref).
+    `opts` enables controlling the fitting procedure through [`FitOptions`](@ref).
     `solute` is an EOS model of the solute (optional, for fitting diff. coeff. at infinite dilution).
     
 # Example 
