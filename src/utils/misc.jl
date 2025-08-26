@@ -22,3 +22,5 @@ function load_sample_data(;prop="eta")
     return [dat[:,i] for i in 1:3]
 end
 
+function EStoJD end
+export EStoJD
