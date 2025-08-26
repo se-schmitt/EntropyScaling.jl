@@ -1,4 +1,4 @@
-module ClapeyronExt
+module EntropyScalingClapeyronExt
 
 using EntropyScaling, Clapeyron
 const ES = EntropyScaling

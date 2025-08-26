@@ -1,4 +1,4 @@
-module JutulDarcyExt
+module EntropyScalingJutulDarcyExt
 
 using JutulDarcy, Jutul, EntropyScaling
 
