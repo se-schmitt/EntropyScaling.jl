@@ -3,7 +3,7 @@ export PolynomialDiluteGasModel
 """
     PolynomialDiluteGasModel <: AbstractDiluteGasModel
 
-Polynomial model for dilute gas tranasport properties (only temperature dependent).
+Polynomial model for dilute gas transport properties (only temperature-dependent).
 
 Currently, only parameters for the viscosity from [martinek_entropy_2025](@citet) are available in the database.
 

@@ -22,10 +22,10 @@ end
 """
     RefpropRESModel{T} <: AbstractEntropyScalingModel
 
-Entropy scaling model based on Refprop EOS [yang_linking_2022,yang_entropy_2021](@cite). 
+Entropy scaling model based on Refprop EOS [yang_linking_2022,yang_entropy_2021](@cite).
 
 A database provides ready-to-use models for the viscosity of several fluids.
-The model can favourably be used in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) and [`Coolprop.jl`](https://github.com/CoolProp/CoolProp.jl) (see examples).
+The model can be used in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) and [`Coolprop.jl`](https://github.com/CoolProp/CoolProp.jl) (see examples).
 
 # Parameters 
 
