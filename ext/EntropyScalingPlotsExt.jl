@@ -7,6 +7,42 @@ const ES = EntropyScaling
 
 function Plots.plot(model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; 
                     slims=nothing, cprop=nothing, kwargs...)
+    # Set default attributes for the initial plot
+    plot_kwargs = Dict{Symbol, Any}()
+    
+    # Use log10 scale by default unless overridden
+    if !haskey(kwargs, :yscale)
+        plot_kwargs[:yscale] = :log10
+    end
+    
+    # Set other default values if not specified
+    if !haskey(kwargs, :framestyle)
+        plot_kwargs[:framestyle] = :box
+    end
+    
+    if !haskey(kwargs, :xlabel)
+        plot_kwargs[:xlabel] = "sˢ"
+    end
+    
+    if !haskey(kwargs, :ylabel)
+        plot_kwargs[:ylabel] = "$(ES.symbol(dat.prop))ˢ"
+    end
+    
+    if !haskey(kwargs, :xlims) && !isnothing(slims)
+        plot_kwargs[:xlims] = slims
+    end
+    
+    # Create a new plot with merged kwargs (user kwargs override defaults)
+    p = Plots.plot(; merge(plot_kwargs, Dict(kwargs))...)
+    
+    # Add the model to the plot
+    Plots.plot!(p, model, dat; slims=slims, cprop=cprop, kwargs...)
+    
+    return p
+end
+
+function Plots.plot!(p::Plots.Plot, model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; 
+                    slims=nothing, cprop=nothing, kwargs...)
     # Preprocessing 
     param = model[dat.prop]
 
@@ -26,20 +62,10 @@ function Plots.plot(model::ES.AbstractEntropyScalingModel, dat::ES.TransportProp
     cb_title = cprop == :T ? "T / K" : 
                cprop == :p ? "p / Pa" : 
                cprop == :ϱ ? "ϱ / mol/m³" : "$cprop"
-
-    # Create the plot with general settings
-    p = Plots.plot(;
-        yscale=:log10,
-        framestyle=:box,
-        xlabel="sˢ",
-        ylabel="$(ES.symbol(dat.prop))ˢ",
-        xlims=slims,
-        kwargs...
-    )
     
-    if !isnothing(cprop)
-        p.attr[:colorbar_framestyle] = :box
-        p.attr[:colorbar_title] = cb_title
+    # Add colorbar settings
+    if !isnothing(cprop) && !haskey(kwargs, :colorbar_title)
+        Plots.plot!(p; colorbar_title=cb_title, colorbar_framestyle=:box)
     end
 
     # Plot data points
@@ -47,26 +73,39 @@ function Plots.plot(model::ES.AbstractEntropyScalingModel, dat::ES.TransportProp
         Plots.scatter!(p, sˢdat, Yˢdat;
             msw=0,
             markersize=5,
-            label=nothing,
-            markercolor=:dodgerblue,
+            label=get(kwargs, :label, nothing),
+            markercolor=get(kwargs, :markercolor, :dodgerblue),
             z_order=1
         )
     else
         Plots.scatter!(p, sˢdat, Yˢdat;
             msw=0,
             markersize=5,
-            label=nothing,
+            label=get(kwargs, :label, nothing),
             zcolor=getfield(dat, cprop),
             z_order=1
         )
     end
 
-    # Plot model
+    # Plot model line with either default black or the color specified in kwargs
+    linecolor = get(kwargs, :lc, get(kwargs, :linecolor, :black))
     Plots.plot!(p, sˢx, Yˢx;
-        linecolor=:black,
-        linewidth=1.5,
-        label=nothing
+        linecolor=linecolor,
+        linewidth=get(kwargs, :linewidth, 1.5),
+        label=get(kwargs, :label, nothing)
     )
+    
+    return p
+end
+
+# Standalone plot! method that adds to the current plot
+function Plots.plot!(model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; 
+                     slims=nothing, cprop=nothing, kwargs...)
+    # Get the current plot
+    p = Plots.current()
+    
+    # Add to the current plot
+    Plots.plot!(p, model, dat; slims=slims, cprop=cprop, kwargs...)
     
     return p
 end
