@@ -2,7 +2,6 @@ module EntropyScaling
 
 # Load public modules
 using SimpleNonlinearSolve, Optimization, StatsBase, ForwardDiff, DelimitedFiles
-using RecipesBase
 import LogExpFunctions #loaded by StatsBase.jl
 import FillArrays #loaded by Optimization.jl
 const Z1 = FillArrays.Fill(1,1)
