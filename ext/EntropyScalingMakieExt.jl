@@ -1,100 +1,84 @@
 module EntropyScalingMakieExt
 
 using EntropyScaling
-import Makie
+using Makie
 
 const ES = EntropyScaling
+const MK = Makie
 
 # Helper function for plotting with the Makie interface
-function _makie_plot(
-    model::ES.AbstractEntropyScalingModel, 
-    dat::ES.TransportPropertyData;                
-    slims=nothing, cprop=nothing, axis=nothing, figure=nothing, kwargs...
-)                
-    # Preprocessing 
-    param = model[dat.prop]
-
-    ϱdat = deepcopy(dat.ϱ)
-    what_ϱ_nan = isnan.(ϱdat)
-    ϱdat[what_ϱ_nan] = [ES.molar_density(model.eos, dat.p[i], dat.T[i]; phase=dat.phase[i]) 
-                        for i in findall(what_ϱ_nan)]
-    sdat = ES.entropy_conf.(model.eos, ϱdat, dat.T)
-    sˢdat = ES.scaling_variable.(param, sdat)
-    Yˢdat = ES.scaling.(param, model.eos, dat.Y, dat.T, ϱdat, sdat)
-
-    slims = isnothing(slims) ? extrema(sˢdat) : slims
-    sˢx = [range(slims..., length=100);]
-    Yˢx = ES.scaling_model.(param, sˢx)
+function _makie_plot(fig::MK.Figure, ax::MK.Axis, model::ES.AESM, data::ES.ATPD; kwargs...)
+    slims = get(kwargs, :slims, nothing)  
+    exp_data, mod_data = ES.calc_plot_data(model, data; slims)    
 
     # Settings for colormap
-    cb_title = cprop == :T ? "T / K" : 
+    cprop = get(kwargs, :cprop, nothing)
+    cb_label = cprop == :T ? "T / K" : 
                cprop == :p ? "p / Pa" : 
                cprop == :ϱ ? "ϱ / mol/m³" : "$cprop"
 
-    # Create figure and axis if not provided
-    fig = isnothing(figure) ? Makie.Figure() : figure
-    
-    if isnothing(axis)
-        ax = Makie.Axis(fig[1, 1]; 
-            xlabel = "sˢ",
-            ylabel = "$(ES.symbol(dat.prop))ˢ",
-            yscale = Makie.log10,
-            limits = (slims, nothing)
-        )
-    else
-        ax = axis
-    end
-
     # Plot data points
+    marker = get(kwargs, :marker, :circle)
+    markersize = get(kwargs, :markersize, 15)
+    markercolor = get(kwargs, :markercolor, :dodgerblue)
+    colormap = get(kwargs, :colormap, :viridis)
     if isnothing(cprop)
-        Makie.scatter!(ax, sˢdat, Yˢdat;
-            markersize = 5,
-            color = :dodgerblue,
-            kwargs...)
+        scatter!(ax, exp_data...; markersize, color=markercolor, marker)
     else
-        cdata = getfield(dat, cprop)
-        p = Makie.scatter!(ax, sˢdat, Yˢdat;
-            markersize = 5,
-            color = cdata,
-            colormap = :viridis,
-            kwargs...)
-            
-        # Add colorbar
-        Makie.Colorbar(fig[1, 2], p, label=cb_title)
+        cdata = getfield(data, cprop)
+        colorrange = get(kwargs, :colorrange, extrema(cdata))
+        p = scatter!(ax, exp_data...; markersize, color=cdata, colormap, colorrange)
+        Colorbar(fig[1, 2], p, label=cb_label)
     end
 
     # Plot model line
     linecolor = get(kwargs, :linecolor, :black)
-    Makie.lines!(ax, sˢx, Yˢx;
-        linewidth = 2,
-        color = linecolor)
+    linewidth = get(kwargs, :linewidth, 2)
+    linestyle = get(kwargs, :linestyle, :solid)
+    label = get(kwargs, :label, nothing)
+    lines!(ax, mod_data...; linewidth, color = linecolor, linestyle, label)
+
+    # Axis styling
+    if isempty(ax.xlabel.val)
+        ax.xlabel = "sˢ"
+    end
+    if isempty(ax.ylabel.val)
+        ax.ylabel = "$(ES.symbol(data.prop))ˢ"
+    end
+    !isnothing(slims) ? xlims!(ax, slims) : nothing
     
     return fig, ax
 end
 
 # Define plot methods for Makie
-function Makie.plot(model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; kwargs...)
-    fig, ax = _makie_plot(model, dat; kwargs...)
+function MK.plot(model::ES.AESM, data::ES.ATPD; kwargs...)
+    fig = Figure()
+    yscale = get(kwargs, :yscale, (data.prop == ThermalConductivity()) ? identity : log10)
+    ax = Axis(fig[1, 1]; yscale)
+    fig, ax = _makie_plot(fig, ax, model, data; kwargs...)
     return fig
 end
 
-function Makie.plot!(axis, model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; kwargs...)
-    _makie_plot(model, dat; axis=axis, figure=axis.parent, kwargs...)
-    return axis.parent
+function MK.plot!(ax, model::ES.AESM, data::ES.ATPD; kwargs...)
+    fig = ax.parent
+    _makie_plot(fig, ax, model, data; kwargs...)
+    return fig
 end
 
 # Define a standalone plot! method that works with the current axis
-function Makie.plot!(model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; kwargs...)
-    ax = Makie.current_axis()
+function MK.plot!(model::ES.AESM, data::ES.ATPD; kwargs...)
+    ax = current_axis()
     if isnothing(ax)
-        fig = Makie.current_figure()
+        fig = current_figure()
         if isnothing(fig)
-            fig = Makie.Figure()
+            fig = Figure()
         end
-        ax = Makie.Axis(fig[1, 1])
+        ax = Axis(fig[1, 1])
+    else
+        fig = ax.parent
     end
-    _makie_plot(model, dat; axis=ax, figure=ax.parent, kwargs...)
-    return ax.parent
+    _makie_plot(fig, ax, model, data; kwargs...)
+    return fig
 end
 
 end # module

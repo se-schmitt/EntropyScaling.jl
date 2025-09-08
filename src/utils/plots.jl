@@ -46,3 +46,21 @@ plot!(model2, data; lc=:blue, label="Model 2")
 """
 plot
 plot() = nothing
+
+function calc_plot_data(model::AESM, data::TransportPropertyData; slims)
+    param = model[data.prop]
+
+    ϱdat = deepcopy(data.ϱ)
+    what_ϱ_nan = isnan.(ϱdat)
+    ϱdat[what_ϱ_nan] = [molar_density(model.eos, data.p[i], data.T[i]; phase=data.phase[i]) 
+                        for i in findall(what_ϱ_nan)]
+    sdat = entropy_conf.(model.eos, ϱdat, data.T)
+    sˢdata = scaling_variable.(param, sdat)
+    Yˢdata = scaling.(param, model.eos, data.Y, data.T, ϱdat, sdat)
+
+    slims = isnothing(slims) ? extrema(sˢdata) : slims
+    sˢx = [range(slims..., length=100);]
+    Yˢx = scaling_model.(param, sˢx)
+    
+    return (sˢdata, Yˢdata), (sˢx, Yˢx)
+end 
