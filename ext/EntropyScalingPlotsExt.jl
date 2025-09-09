@@ -1,112 +1,88 @@
 module EntropyScalingPlotsExt
 
 using EntropyScaling
-import Plots
+using Plots
 
 const ES = EntropyScaling
 
-function Plots.plot(model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; 
-                    slims=nothing, cprop=nothing, kwargs...)
-    # Set default attributes for the initial plot
-    plot_kwargs = Dict{Symbol, Any}()
-    
-    # Use log10 scale by default unless overridden
-    if !haskey(kwargs, :yscale)
-        plot_kwargs[:yscale] = :log10
-    end
-    
-    # Set other default values if not specified
-    if !haskey(kwargs, :framestyle)
-        plot_kwargs[:framestyle] = :box
-    end
-    
-    if !haskey(kwargs, :xlabel)
-        plot_kwargs[:xlabel] = "sˢ"
-    end
-    
-    if !haskey(kwargs, :ylabel)
-        plot_kwargs[:ylabel] = "$(ES.symbol(dat.prop))ˢ"
-    end
-    
-    if !haskey(kwargs, :xlims) && !isnothing(slims)
-        plot_kwargs[:xlims] = slims
-    end
-    
-    # Create a new plot with merged kwargs (user kwargs override defaults)
-    p = Plots.plot(; merge(plot_kwargs, Dict(kwargs))...)
-    
-    # Add the model to the plot
-    Plots.plot!(p, model, dat; slims=slims, cprop=cprop, kwargs...)
-    
-    return p
-end
+# Helper function for plotting with the Plots.jl interface
+function _plots_plot(p::Plots.Plot, model::ES.AESM, data; kwargs...)
+    slims = get(kwargs, :slims, nothing)
+    prop = isnothing(data) ? kwargs[:prop] : data.prop 
+    exp_data, mod_data = ES.calc_plot_data(model, data; slims, prop)    
 
-function Plots.plot!(p::Plots.Plot, model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; 
-                    slims=nothing, cprop=nothing, kwargs...)
-    # Preprocessing 
-    param = model[dat.prop]
-
-    ϱdat = deepcopy(dat.ϱ)
-    what_ϱ_nan = isnan.(ϱdat)
-    ϱdat[what_ϱ_nan] = [ES.molar_density(model.eos, dat.p[i], dat.T[i]; phase=dat.phase[i]) 
-                        for i in findall(what_ϱ_nan)]
-    sdat = ES.entropy_conf.(model.eos, ϱdat, dat.T)
-    sˢdat = ES.scaling_variable.(param, sdat)
-    Yˢdat = ES.scaling.(param, model.eos, dat.Y, dat.T, ϱdat, sdat)
-
-    slims = isnothing(slims) ? extrema(sˢdat) : slims
-    sˢx = [range(slims..., length=100);]
-    Yˢx = ES.scaling_model.(param, sˢx)
-
-    # Settings
-    cb_title = cprop == :T ? "T / K" : 
+    # Settings for colormap
+    cprop = get(kwargs, :cprop, nothing)
+    cb_label = cprop == :T ? "T / K" : 
                cprop == :p ? "p / Pa" : 
                cprop == :ϱ ? "ϱ / mol/m³" : "$cprop"
-    
-    # Add colorbar settings
-    if !isnothing(cprop) && !haskey(kwargs, :colorbar_title)
-        Plots.plot!(p; colorbar_title=cb_title, colorbar_framestyle=:box)
-    end
 
     # Plot data points
-    if isnothing(cprop)
-        Plots.scatter!(p, sˢdat, Yˢdat;
-            msw=0,
-            markersize=5,
-            label=get(kwargs, :label, nothing),
-            markercolor=get(kwargs, :markercolor, :dodgerblue),
-            z_order=1
-        )
-    else
-        Plots.scatter!(p, sˢdat, Yˢdat;
-            msw=0,
-            markersize=5,
-            label=get(kwargs, :label, nothing),
-            zcolor=getfield(dat, cprop),
-            z_order=1
-        )
+    if !isnothing(exp_data[1])
+        marker = get(kwargs, :marker, :circle)
+        markersize = get(kwargs, :markersize, 5)
+        
+        if isnothing(cprop)
+            markercolor = get(kwargs, :markercolor, :blue)
+            scatter!(p, exp_data...; markersize, color=markercolor, marker, label="", msw=0)
+        else
+            cdata = getfield(data, cprop)
+            colormap = get(kwargs, :colormap, :viridis)
+            colorrange = get(kwargs, :colorrange, extrema(cdata))
+            scatter!(p, exp_data...; markersize, zcolor=cdata, seriescolor=colormap, clims=colorrange, marker, label="", msw=0)
+            plot!(p; colorbar_title=cb_label, colorbar_framestyle=:box)
+        end
     end
 
-    # Plot model line with either default black or the color specified in kwargs
-    linecolor = get(kwargs, :lc, get(kwargs, :linecolor, :black))
-    Plots.plot!(p, sˢx, Yˢx;
-        linecolor=linecolor,
-        linewidth=get(kwargs, :linewidth, 1.5),
-        label=get(kwargs, :label, nothing)
-    )
+    # Plot model line
+    linecolor = get(kwargs, :linecolor, :black)
+    linewidth = get(kwargs, :linewidth, 2)
+    linestyle = get(kwargs, :linestyle, :solid)
+    label = get(kwargs, :label, "")
+    plot!(p, mod_data...; linewidth, color=linecolor, linestyle, label)
+
+    # Axis styling
+    if !haskey(p.attr, :xlabel) || isempty(p.attr[:xlabel])
+        plot!(p, xlabel="sˢ")
+    end
+    if !haskey(p.attr, :ylabel) || isempty(p.attr[:ylabel])
+        plot!(p, ylabel="$(ES.symbol(prop))ˢ")
+    end
+    if !isnothing(slims)
+        plot!(p, xlims=slims)
+    end
     
     return p
 end
 
-# Standalone plot! method that adds to the current plot
-function Plots.plot!(model::ES.AbstractEntropyScalingModel, dat::ES.TransportPropertyData; 
-                     slims=nothing, cprop=nothing, kwargs...)
-    # Get the current plot
-    p = Plots.current()
-    
-    # Add to the current plot
-    Plots.plot!(p, model, dat; slims=slims, cprop=cprop, kwargs...)
-    
+# Define plot methods for Plots.jl
+function Plots.plot(model::ES.AESM, data; kwargs...)
+    p = plot()
+    if !isnothing(data)
+        yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
+        plot!(p, yscale=yscale)
+    end
+    _plots_plot(p, model, data; kwargs...)
+    return p
+end
+
+function Plots.plot!(p::Plots.Plot, model::ES.AESM, data; kwargs...)
+    if !isnothing(data)
+        yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
+        plot!(p, yscale=yscale)
+    end
+    _plots_plot(p, model, data; kwargs...)
+    return p
+end
+
+# Define a standalone plot! method that works with the current plot
+function Plots.plot!(model::ES.AESM, data; kwargs...)
+    p = current()
+    if !isnothing(data)
+        yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
+        plot!(p, yscale=yscale)
+    end
+    _plots_plot(p, model, data; kwargs...)
     return p
 end
 
