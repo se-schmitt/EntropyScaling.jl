@@ -3,20 +3,22 @@
     plot!(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
     plot!(axis, model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
 
-Plots the scaled transport property as function of the entropy scaling variable (e.g. the reduced entropy).
+Plots the scaled transport property as a function of the entropy-scaling variable (e.g. the reduced entropy).
 The entropy scaling model as well as the scaled transport property data are shown.
 
-## Arguments
+# Arguments
+
 - `model`: An entropy scaling model containing transport property parameters
-- `dat`: Transport property data to plot (or `nothing`)
+- `data`: Transport property data to plot (or `nothing`)
 - `axis`: An existing axis to add the plot
 
-## Keyword Arguments
+# Keyword Arguments
+
 - `slims`: Sets the range for the entropy scaling variable (used for the model calculation)
 - `prop`: Sets the transport property (only required if `dat == nothing`)
 - `cprop`: Controls the property used for coloring (e.g. `:T`, `:p`, or `ϱ`)
 - `marker`: Shape of markers for data points (default: `:circle`)
-- `markersize`: Size of markers for data points (default: `15`)
+- `markersize`: Size of markers for data points (default: depends on plot package)
 - `markercolor`: Color of markers when not using property-based coloring (default: `:blue`)
 - `colormap`: Colormap to use for coloring points (default: `:viridis`)
 - `colorrange`: Range of values for the colorbar (default: extrema of the property used for coloring)
@@ -25,14 +27,18 @@ The entropy scaling model as well as the scaled transport property data are show
 - `linestyle`: Style of the model line (default: `:solid`)
 - `label`: Label for legend entries (default: `nothing`)
 
-## Supported Plot Packages
-- [Makie.jl](https://docs.makie.org/stable/): Import a specific backend, e.g. `using GLMakie`.
+# Supported Plot Packages
+
+- [Makie.jl](https://docs.makie.org/stable/): Import a specific backend, e.g. `using CairoMakie` or `using GLMakie`.
 - [Plots.jl](https://docs.juliaplots.org/stable/): Import with `using Plots`.
 
-## Example
+# Example
+
+In the following example, entropy scaling models are fitted to quasi-experimental data (from CoolProp) and compared.
+
 ```julia
 using EntropyScaling, Clapeyron, CoolProp
-using GLMakie # or Plots
+using GLMakie
 
 # Create synthetic data
 sub = "propane"
@@ -45,7 +51,7 @@ model_A = FrameworkModel(PCSAFT(sub), [ηdat])
 model_B = FrameworkModel(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
 
 # Plot 
-fig = plot(model_A, ηdat; cprop=:T, linewidth=4, linecolor=:blue, label="model A (4 parameters)")
+fig = plot(model_A, ηdat; cprop=:T, linewidth=3, linecolor=:blue, label="model A (4 parameters)")
 plot!(model_B, nothing; slims=(0,3), prop=Viscosity(), linestyle=:dash, label="model B (2 parameters)")
 axislegend(position=:lt, framevisible=false)
 ax2 = Axis(fig[2,1])
@@ -54,6 +60,7 @@ axislegend(position=:lt, framevisible=false)
 ax2.yscale = identity
 fig
 ```
+![Plot example](./assets/plot_example.svg)
 """
 plot
 plot() = nothing
@@ -73,7 +80,7 @@ function calc_plot_data(model::AESM, data; slims, prop)
         (sˢdata, Yˢdata) = (nothing, nothing)
     end
     
-    @assert !(isnothing(slims) && isnothing(sˢdata)) "Please provide `slims` if `data` is `nothing`"
+    @assert !(isnothing(slims) && isnothing(sˢdata)) "Please provide `slims` if `data == nothing`"
     slims = isnothing(slims) ? extrema(sˢdata) : slims
     sˢx = [range(slims..., length=100);]
     Yˢx = scaling_model.(param, sˢx)

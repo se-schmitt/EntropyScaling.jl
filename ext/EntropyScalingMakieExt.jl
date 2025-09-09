@@ -21,7 +21,7 @@ function _makie_plot(fig::MK.Figure, ax::MK.Axis, model::ES.AESM, data; kwargs..
     # Plot data points
     if !isnothing(exp_data[1])
         marker = get(kwargs, :marker, :circle)
-        markersize = get(kwargs, :markersize, 15)
+        markersize = get(kwargs, :markersize, 12)
         colormap = get(kwargs, :colormap, :viridis)
         if isnothing(cprop)
             markercolor = get(kwargs, :markercolor, :blue)
@@ -46,7 +46,7 @@ function _makie_plot(fig::MK.Figure, ax::MK.Axis, model::ES.AESM, data; kwargs..
         ax.xlabel = "sˢ"
     end
     if isempty(ax.ylabel.val)
-        ax.ylabel = "$(ES.symbol(data.prop))ˢ"
+        ax.ylabel = "$(ES.symbol(prop))ˢ"
     end
     !isnothing(slims) ? xlims!(ax, slims) : nothing
     
@@ -56,9 +56,8 @@ end
 # Define plot methods for Makie
 function MK.plot(model::ES.AESM, data; kwargs...)
     fig = Figure()
-    if !isnothing(data)
-        yscale = (data.prop == ThermalConductivity()) ? identity : log10
-    end
+    prop = isnothing(data) ? kwargs[:prop] : data.prop 
+    yscale = (prop == ThermalConductivity()) ? identity : log10
     ax = Axis(fig[1, 1]; yscale)
     fig, ax = _makie_plot(fig, ax, model, data; kwargs...)
     return fig
@@ -67,9 +66,8 @@ end
 function MK.plot!(ax, model::ES.AESM, data; kwargs...)
     fig = ax.parent
     _makie_plot(fig, ax, model, data; kwargs...)
-    if !isnothing(data)
-        ax.yscale = (data.prop == ThermalConductivity()) ? identity : log10
-    end
+    prop = isnothing(data) ? kwargs[:prop] : data.prop 
+    ax.yscale = (prop == ThermalConductivity()) ? identity : log10
     return fig
 end
 
