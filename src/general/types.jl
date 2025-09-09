@@ -4,6 +4,7 @@ export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion
 
 abstract type AbstractTransportPropertyModel end
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
+const AESM = AbstractEntropyScalingModel
 Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractDiluteGasModel <: AbstractTransportPropertyModel end
@@ -20,6 +21,7 @@ Base.broadcastable(prop::AbstractTransportProperty) = Ref(prop)
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
 abstract type AbstractTransportPropertyData end
+const ATPD = AbstractTransportPropertyData
 
 abstract type AbstractTransportPropertyMixing end
 
