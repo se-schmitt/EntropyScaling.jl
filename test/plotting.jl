@@ -28,33 +28,33 @@ using Clapeyron
     )
 
     @testset "MakieExt" begin
-        using CairoMakie
+        import CairoMakie
 
         # With data, plain markers
-        fig = plot(model, ηdat; kw_base...)
-        @test fig isa Figure
+        fig = CairoMakie.plot(model, ηdat; kw_base...)
+        @test fig isa CairoMakie.Figure
 
         # With data and color by temperature property and colormap controls
-        fig2 = plot(model, ηdat; kw_base..., cprop=:T, colormap=:viridis, colorrange=(minimum(T), maximum(T)))
-        @test fig2 isa Figure
+        fig2 = CairoMakie.plot(model, ηdat; kw_base..., cprop=:T, colormap=:viridis, colorrange=(minimum(T), maximum(T)))
+        @test fig2 isa CairoMakie.Figure
 
         # Plot into given axis via plot!
-        ax = Axis(fig2[2,1])
-        fig3 = plot!(ax, model, ηdat; kw_base...)
-        @test fig3 isa Figure
+        ax = CairoMakie.Axis(fig2[2,1])
+        fig3 = CairoMakie.plot!(ax, model, ηdat; kw_base...)
+        @test fig3 isa CairoMakie.Figure
 
         # No data: provide slims and prop
-        fig4 = plot(model, nothing; slims=(0.0, 3.0), prop=Viscosity(), kw_base...)
-        @test fig4 isa Figure
+        fig4 = CairoMakie.plot(model, nothing; slims=(0.0, 3.0), prop=Viscosity(), kw_base...)
+        @test fig4 isa CairoMakie.Figure
 
         # Standalone plot!(model, data) using current axis
-        Makie.current_figure() === nothing && (Makie.Figure();)
-        fig5 = Makie.plot!(model, ηdat; kw_base...)
-        @test fig5 isa Figure
+        CairoMakie.current_figure() === nothing && (CairoMakie.Figure();)
+        fig5 = CairoMakie.plot!(model, ηdat; kw_base...)
+        @test fig5 isa CairoMakie.Figure
     end
 
     @testset "PlotsExt" begin
-        using Plots
+        import Plots
 
         # With data
         p1 = Plots.plot(model, ηdat; kw_base...)
