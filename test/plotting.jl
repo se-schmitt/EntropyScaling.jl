@@ -1,7 +1,3 @@
-using Test
-using EntropyScaling
-using Clapeyron
-
 @testset "Plotting" begin
     # Build a tiny model and small synthetic dataset (viscosity)
     eos = PCSAFT("n-butane")
