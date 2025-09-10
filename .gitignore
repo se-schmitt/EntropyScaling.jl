@@ -2,3 +2,8 @@ Manifest.toml
 .vscode
 docs/build/
 scripts/
+*.venv*
+*dist
+*.egg-info
+*build
+*__pycache__
