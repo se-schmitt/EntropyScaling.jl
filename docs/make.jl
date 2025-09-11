@@ -16,6 +16,7 @@ makedocs(
             "models/ES_models.md",
             "models/CE_models.md"
         ],
+        "`pyclapeyron`" => "python.md",
         "References" => "references.md"
     ],
     plugins=[bib]
