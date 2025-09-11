@@ -25,7 +25,7 @@ model = PolynomialDiluteGasModel(["butane","methanol"])
 ```
 """
 struct PolynomialDiluteGasModel{P,T} <: AbstractDiluteGasModel
-    components::Vector{<:AbstractString}
+    components
     m::Matrix{T}
     Mw::Vector{T}
     ref::Vector{Reference}
@@ -33,7 +33,7 @@ struct PolynomialDiluteGasModel{P,T} <: AbstractDiluteGasModel
 end
 
 # Constructor
-function PolynomialDiluteGasModel(comps::Vector{<:AbstractString}; ref="", ref_id="", prop=Viscosity())
+function PolynomialDiluteGasModel(comps::AbstractVector; ref="", ref_id="", prop=Viscosity())
     out = load_params(PolynomialDiluteGasModel, prop, comps; ref, ref_id)
     ismissing(out) ? throw(MissingException("No polynomial dilute gas parameters found for system [$(join(comps,", "))]")) : nothing
     Mw, _m..., refs = out 

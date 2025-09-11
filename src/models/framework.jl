@@ -125,7 +125,7 @@ model = FrameworkModel(eos_model, [data])
 ```
 """
 struct FrameworkModel{E,P} <: AbstractEntropyScalingModel
-    components::Vector{<:AbstractString}
+    components::AbstractVector
     params::P
     eos::E
 end

@@ -62,7 +62,7 @@ ES._eos_cache(eos::MultiFluid) = eos
 # Model specific wrapper 
 ES.RefpropRESModel(eos::CL.MultiFluid; ηref=nothing) = RefpropRESModel(eos, eos.components; ηref)
 ES.RefpropRESModel(comps::AbstractString; kwargs...) = RefpropRESModel([comps]; kwargs...)
-function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwargs_CL...)
+function ES.RefpropRESModel(comps::AbstractVector; ηref=nothing, kwargs_CL...)
 
     kw_CL = NamedTuple(kwargs_CL)
     eos = nothing

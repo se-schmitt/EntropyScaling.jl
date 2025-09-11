@@ -15,7 +15,7 @@ The following entropy scaling models are currently implemented:
 
 All models are similarly structured with the following fields:
 
-- `components::Vector{String}`: names of the chemical components of the system
+- `components`: names of the chemical components of the system
 - `params::Vector{ModelParams}`: vector of model-specific paramater objects
 - `eos`: EOS model
 
