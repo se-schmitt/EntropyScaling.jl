@@ -72,7 +72,7 @@ function init_framework_params(eos, prop; Mw, solute = nothing)
     for i in 1:length(eos)
         optf = OptimizationFunction((x,p) -> property_CE_plus(prop, CE_model, eos, x[1]; i=i), AutoForwardDiff())
         prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, Optimization.LBFGS(), reltol=1e-8)
+        sol = solve(prob, LBFGS(), reltol=1e-8)
         Ymin[i] = sol.objective[1]
     end
     
