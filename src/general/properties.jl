@@ -82,3 +82,28 @@ function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T,
     Dˢ = scaling_model(param, sˢ, z)
     return scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
 end
+
+"""
+    Fick_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown)
+
+Fickian diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
+"""
+function Fick_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
+    
+end
+
+function ϱT_Fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
+    N = length(model)
+    _rng = 1:N-1
+    x = z ./ sum(z)
+    ϱ = molar_density(model.eos, p, T, z; phase=phase)
+    Ð = ϱT_MS_diffusion_coefficient(model, ϱ, T, z)     #TODO multicomponent MS diffusion coefficient
+    _Ð = inv.(Ð)
+    Γ = thermodynamic_factor(model.eos, ϱ, T, z)
+    Bii = Diagonal(_Ð[_rng,:] * x .+ x.*_Ð[_rng,N])
+    Bij = (x[_rng].*_Ð[_rng,:] .- x[_rng,:].*_Ð[_rng,N]) .* Diag(zero(x[_rng]))
+    B = Bii .+ Bij
+    D = inv(B) * Γ
+
+    return D 
+end

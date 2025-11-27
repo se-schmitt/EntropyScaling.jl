@@ -51,6 +51,13 @@ Isochoric heat capacity `cₚ` (`[cₚ] = J/(mol K)`).
 """
 isochoric_heat_capacity(eos::Any, ϱ, T, z=Z1) = fun_na_error("isochoric_heat_capacity",typeof(eos))
 
+"""
+    thermodynamic_factor(eos, ϱ, T, z)
+
+Thermodynamic facot `Γᵢⱼ`.
+"""
+thermodynamic_factor(eos::Any, ϱ, T, z) = fun_na_error("thermdynamic_factor",typeof(eos))
+
 # Critical properties
 """
     crit_pure(eos)
