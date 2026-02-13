@@ -19,4 +19,5 @@ EntropyScaling.viscosity
 EntropyScaling.thermal_conductivity
 EntropyScaling.self_diffusion_coefficient
 EntropyScaling.MS_diffusion_coefficient
+EntropyScaling.fick_diffusion_coefficient
 ```
