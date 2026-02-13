@@ -79,7 +79,7 @@
             @test isapprox(self_diffusion_coefficient(model_2, 0.1e6, 298.15, [.25,.75]),[1.746913e-9,1.097029e-9]; rtol=1e-5)
             @test MS_diffusion_coefficient(model_2, 0.1e6, 298.15, [.6,.4])[1,2] ≈ 1.912959e-9 rtol=1e-5
             @test self_diffusion_coefficient(model_2, 0.1e6, 298.15, [0.,1.])[1] ≈ MS_diffusion_coefficient(model_2, 0.1e6, 298.15, [0.,1.])[1,2]
-            @test fick_diffusion_coefficient(model_2, 0.1e6, 298.15, [.6,.4])[1,2] ≈ 1.967921e-9 rtol=1e-5
+            @test fick_diffusion_coefficient(model_2, 0.1e6, 298.15, [.6,.4])[1,1] ≈ 1.967921e-9 rtol=1e-5
         end
     end
 end
