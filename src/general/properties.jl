@@ -119,3 +119,37 @@ function ϱT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, 
 
     return D 
 end
+
+"""
+    infinite_dilution_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown, solute=nothing, solvent=nothing)
+
+Returns all diffusion coefficients at infinite dilution of the system (if parameters are available):
+
+    [D₁  D₁₂ ⋯ D₁ₙ;
+     D₂₁ D₂  ⋯ D₂ₙ;
+     ⋮    ⋮   ⋱ ⋮  
+     Dₙ₁ Dₙ₂ ⋯ Dₙ]
+
+If `solute` or `solvent` is specified, returns only the infinite diffusion coefficients in this component (one row or column of the matrix).
+If both `solute` and `solvent` are specified, a scalar value is returned.
+"""
+infinite_dilution_diffusion_coefficient
+
+function infinite_dilution_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; 
+    phase=:unknown, solute=nothing, solvent=nothing
+)
+    
+    TYPE = promote_type(typeof(p), typeof(T), eltype(z))
+    N = length(model)
+    comps = model.components
+    Dij = 
+        all((!).(isnothing.((solute,solvent,)))) ? zero(T) :
+        all((!).(isnothing.((solute,solvent,)))) ? zeros(T,N) :
+        zeros(T,N,N)
+    
+    !isnothing(solute) && solute in 
+    i_solutes = isnothing(solute) ? ones(Bool,N) : solute .== comps
+    i_solvents = isnothing(solute) ? ones(Bool,N) : solvent .== comps
+    for i in 1:N, j in 1:N 
+    end
+end
