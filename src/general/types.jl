@@ -1,6 +1,6 @@
 export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
 export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
-export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient
+export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient, fick_diffusion_coefficient
 
 abstract type AbstractTransportPropertyModel end
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
@@ -100,3 +100,33 @@ transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractViscosity
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractThermalConductivity,T2 <: AbstractThermalConductivity} = true
 #fallback
 transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransportProperty,T2 <: AbstractTransportProperty} = false
+
+# Matrix type for Maxwell-Stefan diffusion coefficient
+struct MSDiffusionMatrix{T} <: AbstractMatrix{T}
+    val::Vector{T}
+end
+
+Base.size(a::MSDiffusionMatrix) = begin
+    N = Int((sqrt(8*length(a.val)+1)-1)/2) + 1
+    return (N,N)
+end
+Base.getindex(a::MSDiffusionMatrix{T}, i, j) where T = begin
+    i == j && return T(NaN)
+    i < j && return a.val[Int(i/2*(2*size(a,1)-1-i)) + (j-i-1)]
+    return a[j,i]
+end
+Base.setindex!(a::MSDiffusionMatrix{T}, x, i) where T = begin
+    setindex!(a.val, x, i)
+    return nothing
+end
+Base.setindex!(a::MSDiffusionMatrix{T}, x, i, j) where T = begin
+    if i < j 
+        _i = Int(i/2*(2*size(a,1)-1-i)) + (j-i-1)
+        setindex!(a.val, x, _i)
+    elseif i > j 
+        setindex!(a, x, j, i)
+    end 
+    return nothing
+end
+Base.zero(::Type{MSDiffusionMatrix}, N) = MSDiffusionMatrix(zeros(sum(1:N-1)))
+Base.zero(::Type{MSDiffusionMatrix{T}}, N) where T = MSDiffusionMatrix(zeros(T,sum(1:N-1)))

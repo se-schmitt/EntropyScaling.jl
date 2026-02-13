@@ -76,33 +76,45 @@ function MS_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; p
 end
 
 function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
+    N = length(model)
     param = model[InfDiffusionCoefficient()]
-    s = entropy_conf(model.eos, ϱ, T, z)
-    sˢ = scaling_variable(param, s, z)
-    Dˢ = scaling_model(param, sˢ, z)
-    return scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
+    
+    Ðᵢⱼ = zero(MSDiffusionMatrix, N)
+    for i in 1:N, j in i+1:N
+        #TODO extend to multicomponent mixtures
+        s = entropy_conf(model.eos, ϱ, T, z)
+        sˢ = scaling_variable(param, s, z)
+        Dˢ = scaling_model(param, sˢ, z)
+        Ðᵢⱼ[i,j] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
+    end
+    return Ðᵢⱼ
 end
 
 """
-    Fick_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown)
+    fick_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown)
 
 Fickian diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
 """
-function Fick_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
-    
+fick_diffusion_coefficient
+
+function fick_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
+    ϱ = molar_density(model.eos, p, T, z; phase=phase)
+    return ϱT_fick_diffusion_coefficient(model, ϱ, T, z)
 end
 
-function ϱT_Fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
+function ϱT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
     N = length(model)
     _rng = 1:N-1
     x = z ./ sum(z)
-    ϱ = molar_density(model.eos, p, T, z; phase=phase)
     Ð = ϱT_MS_diffusion_coefficient(model, ϱ, T, z)     #TODO multicomponent MS diffusion coefficient
     _Ð = inv.(Ð)
+    setindex!.(Ref(_Ð), 0, 1:N, 1:N)
     Γ = thermodynamic_factor(model.eos, ϱ, T, z)
-    Bii = Diagonal(_Ð[_rng,:] * x .+ x.*_Ð[_rng,N])
-    Bij = (x[_rng].*_Ð[_rng,:] .- x[_rng,:].*_Ð[_rng,N]) .* Diag(zero(x[_rng]))
-    B = Bii .+ Bij
+    B = [
+        i == j ? 
+        x[i]*_Ð[i,N] + sum(i == k ? 0 : x[k]*_Ð[i,k] for k in 1:N) :
+        -x[i] * (_Ð[i,j] - _Ð[i,N])
+    for i in _rng, j in _rng]
     D = inv(B) * Γ
 
     return D 

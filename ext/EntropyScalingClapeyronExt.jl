@@ -31,6 +31,9 @@ ES.isobaric_heat_capacity(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = ES.isobaric_
 ES.isochoric_heat_capacity(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_isochoric_heat_capacity(eos, 1.0/ϱ, T, z)
 ES.isochoric_heat_capacity(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = ES.isochoric_heat_capacity(eos.model, ϱ, T, z)
 
+ES.thermodynamic_factor(eos::EoSModel, ϱ, T, z = SA1) = CL.VT_thermodynamic_factor(eos, 1.0/ϱ, T, z)
+ES.thermodynamic_factor(eos::CL.EoSVectorParam, ϱ, T, z = SA1) = CL.VT_thermodynamic_factor(eos, 1.0/ϱ, T, z)
+
 # Critical properties
 ES.crit_pure(eos::EoSModel) = begin
     Tc,pc,vc = crit_pure(eos)
