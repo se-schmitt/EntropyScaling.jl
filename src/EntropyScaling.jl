@@ -34,6 +34,7 @@ include("utils/plots.jl")
 
 # Models 
 include("models/base.jl")
+include("models/utils.jl")
 include("models/chapman_enskog.jl")
 include("models/dilute_gas_correlations.jl")
 include("models/framework.jl")
