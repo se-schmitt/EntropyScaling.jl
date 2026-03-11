@@ -70,10 +70,9 @@ function init_framework_params(eos, prop; Mw, solute = nothing)
     # Calculation of Ymin
     Ymin = Vector{Float64}(undef,length(eos))
     for i in 1:length(eos)
-        optf = OptimizationFunction((x,p) -> property_CE_plus(prop, CE_model, eos, x[1]; i=i), AutoForwardDiff())
-        prob = OptimizationProblem(optf, [2*Tc[i]])
-        sol = solve(prob, LBFGS(), reltol=1e-8)
-        Ymin[i] = sol.objective[1]
+        optf(x) = property_CE_plus(prop, CE_model, eos, x[1]; i=i)
+        sol = optimize(optf, [2*Tc[i]], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff = AutoForwardDiff())
+        Ymin[i] = Optim.minimum(sol)[1]
     end
     
     return CE_model, Ymin
@@ -112,7 +111,7 @@ using EntropyScaling, Clapeyron
 
 # Load experimental sample data for n-butane
 (T_exp,ϱ_exp,η_exp) = EntropyScaling.load_sample_data()
-data = ViscosityData(T_exp, [], ϱ_exp, η_exp, :unknown)
+data = ViscosityData(T_exp, nothing, ϱ_exp, η_exp, :unknown)
 
 # Create EOS model
 eos_model = PCSAFT("butane")
@@ -176,19 +175,13 @@ function FrameworkModel(eos, datasets::Vector{TPD}; opts::FitOptions=FitOptions(
 
             # Fit
             f_log(x) = prop isa ThermalConductivity ? x : log(x)
-            function resid!(du, p, xy)
-                (xs,ys) = xy
+            fit_fun(xs, p) = begin
                 param.α[what_fit] .= p
-                du .= f_log.(scaling_model.(param,xs)) .- ys
-                return nothing
+                return f_log.(scaling_model.(param,xs))
             end
-            prob = NonlinearLeastSquaresProblem(
-                NonlinearFunction(resid!, resid_prototype=similar(Yˢ)),
-                randn(sum(what_fit)), (sˢ, f_log.(Yˢ)),
-            )
-            sol = solve(prob, SimpleGaussNewton(), reltol=1e-8)
+            sol = curve_fit(fit_fun, sˢ, f_log.(Yˢ), randn(sum(what_fit)); autodiff=:forwarddiff)
             α_fit = get_α0_framework(prop)
-            α_fit[what_fit] .= sol.u
+            α_fit[what_fit] = coef(sol)
 
             push!(params, FrameworkParams(float.(α_fit), param.m, param.Y₀⁺min, param.CE_model, param.base))
         end

@@ -1,3 +1,16 @@
+export viscosity, thermal_conductivity, self_diffusion_coefficient
+export MS_diffusion_coefficient, fick_diffusion_coefficient
+export inf_diffusion_coefficient
+
+const PROPERTY_FUNCTIONS = [
+    :viscosity => :AbstractViscosity, 
+    :thermal_conductivity => :AbstractThermalConductivity, 
+    :self_diffusion_coefficient => :SelfDiffusionCoefficient,
+    :MS_diffusion_coefficient => :MaxwellStefanDiffusionCoefficient, 
+    :fick_diffusion_coefficient => :FickDiffusionCoefficient,
+    :inf_diffusion_coefficient => :InfDiffusionCoefficient,
+]
+
 """
     viscosity(model::EntropyScalingModel, p, T, z=[1.]; phase=:unknown)
 
@@ -118,4 +131,49 @@ function ϱT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, 
     D = inv(B) * Γ
 
     return D 
+end
+
+"""
+    inf_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown, solute=nothing, solvent=nothing)
+
+Returns all diffusion coefficients at infinite dilution of the system (if parameters are available):
+
+    [D₁  D₁₂ ⋯ D₁ₙ;
+     D₂₁ D₂  ⋯ D₂ₙ;
+     ⋮    ⋮   ⋱ ⋮  
+     Dₙ₁ Dₙ₂ ⋯ Dₙ]
+
+Dᵢⱼ is the diffusion coefficient of solute i at infinite dilution in solvent j.
+If `solute` or `solvent` is specified, returns only the infinite diffusion coefficients in this component (one row or column of the matrix).
+If both `solute` and `solvent` are specified, a scalar value is returned.
+"""
+inf_diffusion_coefficient
+
+function inf_diffusion_coefficient(model::AbstractTransportPropertyModel, p, T; 
+    phase=:unknown, solute=nothing, solvent=nothing
+)
+    
+    TYPE = promote_type(typeof(p), typeof(T))
+    N = length(model)
+    idx_solute = isnothing(solute) ? (1:N) : match_comp(solute, model.components)
+    idx_solvent = isnothing(solvent) ? (1:N) : match_comp(solvent, model.components)
+   
+    if all(length.([idx_solute,idx_solvent]) .== 1)
+        idx_i, idx_j = only(idx_solute), only(idx_solvent)
+        Dij = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
+    else
+        Dij = zeros(TYPE, length(idx_solute), length(idx_solvent))
+        for (i,idx_i) in enumerate(idx_solute), (j,idx_j) in enumerate(idx_solvent)
+            if i != j
+                Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
+            end
+        end
+    end
+    return Dij
+end
+
+match_comp(comp::AbstractString, components) = findall(comp .== components)
+match_comp(comp::Int, components) = [comp]
+
+function _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
 end

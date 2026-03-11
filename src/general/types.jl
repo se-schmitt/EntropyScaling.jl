@@ -1,10 +1,11 @@
 export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
-export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient
-export viscosity, thermal_conductivity, self_diffusion_coefficient, MS_diffusion_coefficient, fick_diffusion_coefficient
+export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient, FickDiffusionCoefficient
 
 abstract type AbstractTransportPropertyModel end
+const ATPM = AbstractTransportPropertyModel
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 const AESM = AbstractEntropyScalingModel
+Base.length(model::T) where {T<:AbstractTransportPropertyModel} = length(model.components)
 Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractDiluteGasModel <: AbstractTransportPropertyModel end
@@ -91,6 +92,11 @@ struct MaxwellStefanDiffusionCoefficient <: DiffusionCoefficient end
 name(::MaxwellStefanDiffusionCoefficient) = "Maxwell-Stefan diffusion coefficient"
 symbol(::MaxwellStefanDiffusionCoefficient) = :Ð
 symbol_name(::MaxwellStefanDiffusionCoefficient) = "D_MS"
+
+struct FickDiffusionCoefficient <: DiffusionCoefficient end
+name(::FickDiffusionCoefficient) = "Fickian diffusion coefficient"
+symbol(::FickDiffusionCoefficient) = :Dᵢⱼ
+symbol_name(::FickDiffusionCoefficient) = "D_Fick"
 
 #used for general comparisons
 transport_compare_type(P1::AbstractTransportProperty,P2::AbstractTransportProperty) = transport_compare_type(typeof(P1),typeof(P2))

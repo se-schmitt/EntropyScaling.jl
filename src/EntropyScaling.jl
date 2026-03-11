@@ -1,9 +1,10 @@
 module EntropyScaling
 
 # Load public modules
-using SimpleNonlinearSolve, Optimization, OptimizationOptimJL, StatsBase, ForwardDiff, DelimitedFiles, LinearAlgebra
-import LogExpFunctions #loaded by StatsBase.jl
-import FillArrays #loaded by Optimization.jl
+using Optim, LsqFit, StatsBase, DelimitedFiles, LinearAlgebra
+using ADTypes: AutoForwardDiff
+using ForwardDiff: ForwardDiff
+using FillArrays: FillArrays
 const Z1 = FillArrays.Fill(1,1)
 # Definition of Constants
 get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))
@@ -33,6 +34,7 @@ include("utils/plots.jl")
 
 # Models 
 include("models/base.jl")
+include("models/utils.jl")
 include("models/chapman_enskog.jl")
 include("models/dilute_gas_correlations.jl")
 include("models/framework.jl")
