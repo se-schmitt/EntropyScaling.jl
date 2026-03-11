@@ -149,20 +149,27 @@ If both `solute` and `solvent` are specified, a scalar value is returned.
 """
 inf_diffusion_coefficient
 
-function inf_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T; 
+function inf_diffusion_coefficient(model::AbstractTransportPropertyModel, p, T; 
     phase=:unknown, solute=nothing, solvent=nothing
 )
     
-    TYPE = promote_type(typeof(p), typeof(T), eltype(z))
+    TYPE = promote_type(typeof(p), typeof(T))
     N = length(model)
-    idx_solutes = isnothing(solute) ? (1:N) : match_comp(solute, model.components)
-    idx_solvents = isnothing(solvent) ? (1:N) : match_comp(solvent, model.components)
-    Dij = zeros(TYPE, length(idx_solutes), length(idx_solvent))
-    
-    # !isnothing(solute) && solute in 
-    for (i,idx_j) in enumerate(idx_solutes), (j,idx_j) in enumerate(idx_solvents)
-        Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
+    idx_solute = isnothing(solute) ? (1:N) : match_comp(solute, model.components)
+    idx_solvent = isnothing(solvent) ? (1:N) : match_comp(solvent, model.components)
+   
+    if all(length.([idx_solute,idx_solvent]) .== 1)
+        idx_i, idx_j = only(idx_solute), only(idx_solvent)
+        Dij = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
+    else
+        Dij = zeros(TYPE, length(idx_solute), length(idx_solvent))
+        for (i,idx_i) in enumerate(idx_solute), (j,idx_j) in enumerate(idx_solvent)
+            if i != j
+                Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
+            end
+        end
     end
+    return Dij
 end
 
 match_comp(comp::AbstractString, components) = findall(comp .== components)
