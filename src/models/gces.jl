@@ -1,4 +1,3 @@
-using CSV, DataFrames
 
 export GCESModel, GCESParams
 
@@ -9,7 +8,7 @@ struct GCESParams{P,T} <: AbstractEntropyScalingParams
 end
 
 function GCESParams(prop::AbstractTransportProperty, eos, n::Matrix{T}, m::Vector{T},
-        σ::Vector{T}, ξ::Vector{T},ε::Vector{T}()) where T
+        σ::Vector{T}, ξ::Vector{T},ε::Vector{T}) where T
     
 
     # Einlesen der VCParams
@@ -66,7 +65,7 @@ function GCESModel(eos, components::Vector{<:AbstractString}, groups)
 end
 
 # Define scaling methods
-function scaling_model(param::GCESParams{<:AbstractViscosity}, s::TS, x=Z1)
+function scaling_model(param::GCESParams{<:AbstractViscosity}, s, x=Z1)
     
 end
 

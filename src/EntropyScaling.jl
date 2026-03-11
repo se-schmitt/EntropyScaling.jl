@@ -37,5 +37,6 @@ include("models/chapman_enskog.jl")
 include("models/dilute_gas_correlations.jl")
 include("models/framework.jl")
 include("models/refprop_res.jl")
+include("models/gces.jl")
 
 end

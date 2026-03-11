@@ -24,9 +24,13 @@ function load_params(file::String, components::Vector{<:AbstractString}; ref="",
     end
 end
 
-function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, components; ref="", ref_id="")
+function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, components; ref="", ref_id="", GC=false)
     db_path = get_db_path(MODEL, prop)
-    return load_params(db_path, lowercase.(components); ref=ref, ref_id=ref_id)
+    if !GC
+        return load_params(db_path, lowercase.(components); ref=ref, ref_id=ref_id)
+    else
+        return load_params(db_path, first.(first(last.(components))); ref=ref, ref_id=ref_id)
+    end
 end
 
 function load_refprop_names(_components)
