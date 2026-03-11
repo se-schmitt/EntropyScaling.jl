@@ -45,7 +45,7 @@ function load_refprop_names(_components)
         !any(isempty.(refprop_names)) && break
     end
 
-    @assert !any(isempty.(refprop_names)) "Model(s) for $(_components[isnothing.(i_components)]) not available!"
+    any(isempty.(refprop_names)) && error("Model(s) for $(_components[isnothing.(i_components)]) not available!")
     
     return refprop_names
 end

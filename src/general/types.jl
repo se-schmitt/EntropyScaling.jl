@@ -2,6 +2,7 @@ export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
 export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient, FickDiffusionCoefficient
 
 abstract type AbstractTransportPropertyModel end
+const ATPM = AbstractTransportPropertyModel
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 const AESM = AbstractEntropyScalingModel
 Base.length(model::T) where {T<:AbstractTransportPropertyModel} = length(model.components)

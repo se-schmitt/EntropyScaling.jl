@@ -101,4 +101,12 @@ function ES.RefpropRESModel(comps::Vector{<:AbstractString}; ηref=nothing, kwar
     return RefpropRESModel(eos, comps; ηref)
 end
 
+# Utilities
+function CL.init_model(model::ES.AESM, components, userlocations=String[], verbose=false, reference_state=nothing)
+    return model
+end
+function CL.init_model(::Type{𝕄}, components, userlocations=String[], verbose=false, reference_state=nothing) where {𝕄 <: ES.AESM}
+    return 𝕄(components)
+end
+
 end #module
