@@ -1,23 +1,17 @@
-substance,A_alpha,B_alpha,C_alpha,ref,ref_id
-"CH4 (methane)",-1.5097,-1.0346,-1.7662,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH3 (ethane)",-5.3556,-1.5252,-11.045,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH3",-8.6878,-1.7951,-12.2359,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH2-",-0.9194,-1.3316,-4.2657,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH<",12.8159,-0.3416,5.5752,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-">C<",152.5629,12.3998,13.8406,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"=CH2",-6.3736,42.4367,-10.8726,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"=CH-",-5.0637,-43.5678,-5.4247,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH- (aromatic)",-4.7664,-1.6842,-6.5606,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-C-R (aromatic)",14.4280,0.1104,-0.0699,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-R-CH=O",8.8675,-1.4782,-9.1325,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-COO-",-0.3295,-1.1893,6.9576,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-OCH3",-4.6001,-1.6433,-5.3118,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-OCH2-",-5.5435,-2.2345,-9.9967,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-">C=O",-2.2137,-1.4362,1.0417,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH2- (C5)",-3.8105,-1.6280,-6.7905,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-CH2- (C6)",-3.7896,-1.4796,-4.5017,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-NH2",-4.4048,-0.6089,-8.9017,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-">NH",17.3783,-0.2465,-11.5122,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"H3C-OH (methanol)",-11.8859,-0.1253,13.4714,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"-OH",-15.7583,-2.5654,-23.1537,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
-"H2O",-14.7515,-1.8512,-29.0646,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+substance,A_alpha,B_alpha,C_alpha,D_alpha,ref,ref_id
+"CH3",-0.0086878,-0.17951,-0.122359,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH2",-0.0009194,-0.13316,-0.042657,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+">CH",0.0128159,-0.03416,0.055752,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+">C<",0.1525629,1.23998,0.138406,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH2=",-0.0063736,4.24367,-0.108726,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH=",-0.0050637,-4.35678,-0.054247,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH2_hex",-0.0037896,-0.14796,-0.045017,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH2_pent",-0.0038105,-0.1628,-0.067905,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH_arom",-0.0047664,-0.16842,-0.065606,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"C_arom",0.014428,0.01104,-0.000699,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"CH=O",0.0088675,-0.1482,-0.091325,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"OCH3",-0.0046001,-0.16433,-0.053118,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"OCH2",-0.0055435,-0.22345,-0.099967,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"COO",-0.0003295,-0.11893,0.069576,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"OH",-0.0157583,-0.25654,-0.231537,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
+"NH2",-0.0044048,-0.06089,-0.089017,-0.01245,"Loetgering-Lin et al. (2015)",10.1021/acs.iecr.5b01698
