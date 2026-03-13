@@ -1,10 +1,8 @@
-using EntropyScaling, Clapeyron
-
 export GCESModel, GCESParams
 
 struct GCESParams{P,T} <: AbstractEntropyScalingParams
     mgcparams::Vector # mixing group-contribution parameters
-    mᵢ::Clapeyron.SingleParam{T}
+    mᵢ::Vector{T}
     CE_model::ChapmanEnskogModel{T,<:AbstractCollisionIntegralMethod}
     base::BaseParam{P}
 end
@@ -48,16 +46,18 @@ function GCESModel(components, component_groups, eos_model)
         throw(MissingException("No parameters found for system [$(join(components,", "))]"))
     end
 
-    # base = BaseParam(prop, get_Mw(eos), refs)
-
-    kB = EntropyScaling.kB
-
     mₐ = eos.params.segment
     σₐ = eos.params.sigma
-    σᵢ = [eos.pcpmodel.params.sigma.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.sigma.values)))]
+    σᵢ = [eos.pcpmodel.params.sigma.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.sigma.values)))] # in der Gleichung mit 1e10 multipliziert, da diese den Wert in Angstöm erwartet.
     ϵᵢ = kB .* [eos.pcpmodel.params.epsilon.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.epsilon.values)))]
-    mᵢ = eos.pcpmodel.params.segment
+    mᵢ = eos.pcpmodel.params.segment.values
     Mw = eos.pcpmodel.params.Mw.values * 1e-3
+    println("m_alpah: ",mₐ.values)
+    println("sigma_alpha: ",σₐ .* 1e10)
+    println("sigma_i: ",σᵢ)
+    println("epsilon_i: ",ϵᵢ)
+    println("m_i: ",mᵢ)
+    println("Mw: ",Mw)
     
     A = []  # In diesen Listen stehen später die Viskositätsparameter der Substanz i
     B = []  # hier sollen also die A_i, B_i, usw. drin stehen!
@@ -74,15 +74,17 @@ function GCESModel(components, component_groups, eos_model)
         V_i = 0
 
         γ = 0.45
+
+        
         
         for (group, count) in groups # group = α (z.B. "CH3") und count = n_α jeweils fur substance i
            
-            A_i += count * mₐ[group] * σₐ[group]^3 * Aₐ[group] 
-            B_i += count * mₐ[group] * σₐ[group]^3 * Bₐ[group]
+            A_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 * Aₐ[group]
+            B_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 * Bₐ[group]
             C_i += count * Cₐ[group]
             D_i += count * Dₐ[group]
 
-            V_i += count * mₐ[group] * σₐ[group]^3 
+            V_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 
         end
         B_i = B_i / (V_i^γ)
 
@@ -91,10 +93,9 @@ function GCESModel(components, component_groups, eos_model)
         push!(C,C_i)
         push!(D,D_i)
     end
-    #######################################################################################
     
     mgcparams = [A, B, C, D]
-
+    println("mgcparams: ", mgcparams)
     params = GCESParams(prop, eos, component_groups, mgcparams, σᵢ , ϵᵢ, mᵢ, Mw)
 
     return GCESModel(components, component_groups, params, eos)
@@ -118,7 +119,7 @@ function scaling_model(param::GCESParams{<:AbstractViscosity}, sˢ, x=Z1)
     D_i = D[1]
     ################
 
-    ηˢ = exp(A_i + B_i*sˢ + C_i*sˢ^2 + D_i*sˢ^3)
+    ηˢ = exp(A_i + B_i*sˢ + C_i*(sˢ^2) + D_i*(sˢ^3))
     return ηˢ
 end
 
