@@ -4,9 +4,12 @@ version = "0.3.5"
 authors = ["Sebastian Schmitt"]
 
 [deps]
+ChemicalIdentifiers = "fa4ea961-1416-484e-bda2-883ee1634ba5"
+Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+GCIdentifier = "b7ea765e-cbac-4e4a-9b0d-5427cc302506"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 Optimization = "7f7a1694-90dd-40f0-9382-eb1efda571ba"
@@ -15,7 +18,6 @@ SimpleNonlinearSolve = "727e6d20-b764-4bd8-a329-72de5adea6c7"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
-Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 Jutul = "2b460a1a-8a2b-45b2-b125-b5c536396eb9"
 JutulDarcy = "82210473-ab04-4dce-b31b-11573c4f8e0a"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
@@ -32,10 +34,12 @@ EntropyScalingSymbolicsExt = "Symbolics"
 EntropyScalingUnitfulExt = "Unitful"
 
 [compat]
+ChemicalIdentifiers = "0.1.10"
 Clapeyron = "0.6.20"
 DelimitedFiles = "1.9.1"
 FillArrays = "1"
 ForwardDiff = "0.10,1"
+GCIdentifier = "0.3.12"
 Jutul = "0.4"
 JutulDarcy = "0.2, 0.3"
 LinearAlgebra = "1.10"

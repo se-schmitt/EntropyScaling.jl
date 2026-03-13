@@ -1,6 +1,4 @@
-using PhysicalConstants.CODATA2018, EntropyScaling, Clapeyron
-
-k = BoltzmannConstant
+using EntropyScaling, Clapeyron
 
 export GCESModel, GCESParams
 
@@ -42,10 +40,10 @@ function GCESModel(components, component_groups, eos_model)
 
     prop = Viscosity()
     
-    out = load_params(GCESModel, prop, component_groups, GC = true)
+    out = load_params(GCESModel, prop, collect(component_groups), GC=true)
 
     if !ismissing(out)
-        A_a, B_a, C_a, D_a= out
+        Aₐ, Bₐ, Cₐ, Dₐ = out
     else
         throw(MissingException("No parameters found for system [$(join(components,", "))]"))
     end
@@ -54,8 +52,8 @@ function GCESModel(components, component_groups, eos_model)
 
     kB = EntropyScaling.kB
 
-    m = eos.params.segment
-    σ = eos.params.sigma
+    mₐ = eos.params.segment
+    σₐ = eos.params.sigma
     σᵢ = [eos.pcpmodel.params.sigma.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.sigma.values)))]
     ϵᵢ = kB .* [eos.pcpmodel.params.epsilon.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.epsilon.values)))]
     mᵢ = eos.pcpmodel.params.segment
@@ -67,7 +65,7 @@ function GCESModel(components, component_groups, eos_model)
     D = []
     
     for i in eachindex(component_groups) # somponents [i][1] wäre also substance i
-        groups = component_groups[i][2] # groups ist dann die Liste der Gruppen in substance i
+        groups = last.(component_groups)[i] # groups ist dann die Liste der Gruppen in substance i
         
         A_i = 0
         B_i = 0
@@ -77,14 +75,14 @@ function GCESModel(components, component_groups, eos_model)
 
         γ = 0.45
         
-        for group in eachindex(groups) # group = α (z.B. "-CH3") und count = n_α jeweils fur substance i
+        for (group, count) in groups # group = α (z.B. "CH3") und count = n_α jeweils fur substance i
            
-            A_i += groups[group][2] * m[group] * σ[group]^3 * A_a[group]
-            B_i += groups[group][2] * m[group] * σ[group]^3 * B_a[group]
-            C_i += groups[group][2] * C_a[group]
-            D_i += groups[group][2] * D_a[group]
+            A_i += count * mₐ[group] * σₐ[group]^3 * Aₐ[group] 
+            B_i += count * mₐ[group] * σₐ[group]^3 * Bₐ[group]
+            C_i += count * Cₐ[group]
+            D_i += count * Dₐ[group]
 
-            V_i += groups[group][2] * m[group] * σ[group]^3 
+            V_i += count * mₐ[group] * σₐ[group]^3 
         end
         B_i = B_i / (V_i^γ)
 
@@ -126,7 +124,7 @@ end
 
 
 function scaling(param::GCESParams, _eos, ηˢ, T, ϱ, s, z; inv=true)
-    ηₒ = viscosity(param.CE_model, T) * sqrt(param.mᵢ[1])###TODO: Warum Druck kein Unterschied?
+    ηₒ = viscosity(param.CE_model, T)
     return ηˢ*ηₒ
 end
 
