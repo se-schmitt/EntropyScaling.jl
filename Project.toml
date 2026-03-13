@@ -15,7 +15,6 @@ Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [weakdeps]
-Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
 Jutul = "2b460a1a-8a2b-45b2-b125-b5c536396eb9"
 JutulDarcy = "82210473-ab04-4dce-b31b-11573c4f8e0a"
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"

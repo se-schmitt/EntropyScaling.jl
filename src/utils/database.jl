@@ -1,7 +1,7 @@
 # Load Parameters
 function load_params(file::String, components::Vector{<:AbstractString}; ref="", ref_id="")
     data, header = readdlm(file, ','; header=true)
-    j_subs = findfirst(header[:] .== "substance")
+    j_subs = findfirst(header[:] .== "substance") 
     j_ref = findfirst(header[:] .== "ref")
     j_ref_id = findfirst(header[:] .== "ref_id")
     @assert !any(isnothing.([j_subs,j_ref,j_ref_id])) "Wrong format of header in file $file." 
@@ -24,9 +24,39 @@ function load_params(file::String, components::Vector{<:AbstractString}; ref="",
     end
 end
 
-function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, components; ref="", ref_id="")
+function load_params_GC(file::String, components::Vector; ref="", ref_id="")
+    data, header = readdlm(file, ','; header=true)
+    j_groups = findfirst(header[:] .== "groups") #Spaltenindex für groups
+    j_ref = findfirst(header[:] .== "ref")
+    j_ref_id = findfirst(header[:] .== "ref_id")
+    @assert !any(isnothing.([j_groups,j_ref,j_ref_id])) "Wrong format of header in file $file." 
+    N_cols = length(header)
+    j_params = findall((!).(in).(1:N_cols,Ref(vcat(j_groups,j_ref,j_ref_id)))) #Spaltenidizes für Parameter
+
+    groups = reduce(vcat, last.(components))
+    A_a = Dict()
+    B_a = Dict()
+    C_a = Dict()
+    D_a = Dict()
+    for group in groups
+        if !haskey(A_a, group[1])
+            i_component = findfirst(data[:, j_groups] .== group[1])
+            A_a[group[1]] = data[i_component, j_params[1]]
+            B_a[group[1]] = data[i_component, j_params[2]]
+            C_a[group[1]] = data[i_component, j_params[3]]
+            D_a[group[1]] = data[i_component, j_params[4]]
+        end
+    end
+    return [A_a, B_a, C_a, D_a]
+end
+
+function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, components; ref="", ref_id="", GC=false)
     db_path = get_db_path(MODEL, prop)
-    return load_params(db_path, lowercase.(components); ref=ref, ref_id=ref_id)
+    if !GC
+        return load_params(db_path, lowercase.(components); ref=ref, ref_id=ref_id)
+    else
+        return load_params_GC(db_path, components; ref=ref, ref_id=ref_id)
+    end
 end
 
 function load_refprop_names(_components)
