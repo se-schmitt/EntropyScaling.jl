@@ -52,12 +52,6 @@ function GCESModel(components, component_groups, eos_model)
     ϵᵢ = kB .* [eos.pcpmodel.params.epsilon.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.epsilon.values)))]
     mᵢ = eos.pcpmodel.params.segment.values
     Mw = eos.pcpmodel.params.Mw.values * 1e-3
-    println("m_alpah: ",mₐ.values)
-    println("sigma_alpha: ",σₐ .* 1e10)
-    println("sigma_i: ",σᵢ)
-    println("epsilon_i: ",ϵᵢ)
-    println("m_i: ",mᵢ)
-    println("Mw: ",Mw)
     
     A = []  # In diesen Listen stehen später die Viskositätsparameter der Substanz i
     B = []  # hier sollen also die A_i, B_i, usw. drin stehen!
@@ -95,7 +89,6 @@ function GCESModel(components, component_groups, eos_model)
     end
     
     mgcparams = [A, B, C, D]
-    println("mgcparams: ", mgcparams)
     params = GCESParams(prop, eos, component_groups, mgcparams, σᵢ , ϵᵢ, mᵢ, Mw)
 
     return GCESModel(components, component_groups, params, eos)
