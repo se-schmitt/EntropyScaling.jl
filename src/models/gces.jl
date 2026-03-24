@@ -82,6 +82,8 @@ function GCESModel(components, component_groups, eos_model)
         end
         B_i = B_i / (V_i^γ)
 
+        # A_i = A_i + log(sqrt(1/mᵢ[1]))
+
         push!(A,A_i)
         push!(B,B_i)
         push!(C,C_i)
@@ -117,8 +119,12 @@ function scaling_model(param::GCESParams{<:AbstractViscosity}, sˢ, x=Z1)
 end
 
 
-function scaling(param::GCESParams, _eos, ηˢ, T, ϱ, s, z; inv=true)
+function scaling(param::GCESParams, eos, ηˢ, T, ϱ, s, z; inv=true)
+
+    # mᵢ = eos.pcpmodel.params.segment.values[1]
+    
     ηₒ = viscosity(param.CE_model, T)
+    # ηₒ = viscosity(param.CE_model, T) * sqrt(1/mᵢ)
     return ηˢ*ηₒ
 end
 
