@@ -56,6 +56,7 @@ ES.get_m(eos::EoSModel) = :segment in fieldnames(typeof(eos.params)) ? eos.param
 ES.get_m(eos::CL.EoSVectorParam) = ES.get_m(eos.model)
 ES.get_m(eos::SingleFluid) = SA1
 ES.get_m(eos::CL.SAFTgammaMieModel) = ES.get_m(eos.vr_model)
+ES.get_m(eos::CL.HomogcPCPSAFT) = ES.get_m(eos.pcpmodel)
 ES.get_components(eos::EoSModel) = eos.components
 
 ES._eos_cache(eos::EoSModel) = CL.EoSVectorParam(eos)

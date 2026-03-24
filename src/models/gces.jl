@@ -14,7 +14,6 @@ function GCESParams(prop::AbstractTransportProperty, eos, component_groups, mgcp
     return GCESParams(mgcparams, mᵢ, CE_model, base)
 end 
 
-
 """
     GCESModel <: AbstractEntropyScalingModel
 
@@ -31,10 +30,6 @@ end
 
 function GCESModel(components, component_groups, eos_model)
     eos = eos_model.model
-
-    ηref = nothing
-    
-    _ηref = isnothing(ηref) ? "Loetgering-Lin et al. (2015)" : ηref
 
     prop = Viscosity()
     
@@ -57,6 +52,7 @@ function GCESModel(components, component_groups, eos_model)
     B = []  # hier sollen also die A_i, B_i, usw. drin stehen!
     C = []
     D = []
+    m = get_m(eos_model)
     
     for i in eachindex(component_groups) # somponents [i][1] wäre also substance i
         groups = last.(component_groups)[i] # groups ist dann die Liste der Gruppen in substance i
@@ -68,11 +64,8 @@ function GCESModel(components, component_groups, eos_model)
         V_i = 0
 
         γ = 0.45
-
-        
         
         for (group, count) in groups # group = α (z.B. "CH3") und count = n_α jeweils fur substance i
-           
             A_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 * Aₐ[group]
             B_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 * Bₐ[group]
             C_i += count * Cₐ[group]
@@ -80,6 +73,7 @@ function GCESModel(components, component_groups, eos_model)
 
             V_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 
         end
+        A_i += log(sqrt(inv(m[i])))
         B_i = B_i / (V_i^γ)
 
         push!(A,A_i)
