@@ -32,7 +32,7 @@ EntropyScalingSymbolicsExt = "Symbolics"
 EntropyScalingUnitfulExt = "Unitful"
 
 [compat]
-Clapeyron = "0.6.20"
+Clapeyron = "0.6.20 - 0.6.21"
 DelimitedFiles = "1.9.1"
 FillArrays = "1"
 ForwardDiff = "0.10,1"

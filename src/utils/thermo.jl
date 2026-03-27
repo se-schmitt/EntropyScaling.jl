@@ -96,6 +96,20 @@ Segment parameter of SAFT-type EOS.
 get_m(eos::Any) = fun_na_error("get_m",typeof(eos))
 
 """
+    get_eps(eos)
+
+Energy parameter of SAFT-type EOS.
+"""
+get_eps(eos::Any) = fun_na_error("get_eps",typeof(eos))
+
+"""
+    get_sig(eos)
+
+Size parameter of SAFT-type EOS.
+"""
+get_sig(eos::Any) = fun_na_error("get_sig",typeof(eos))
+
+"""
     get_components(eos)
 
 Number of components in the system.

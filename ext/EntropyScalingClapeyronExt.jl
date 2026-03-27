@@ -4,6 +4,7 @@ using EntropyScaling, Clapeyron
 const ES = EntropyScaling
 const CL = Clapeyron
 const Downloads = CL.Downloads
+const LA = CL.LinearAlgebra
 const SA1 = CL.SA[1.0]
 const url_refprop = "https://raw.githubusercontent.com/usnistgov/fastchebpure/50af5c154a113ac27a2c0a1c3538bc4f43a73a66/teqp_REFPROP10/dev/fluids/"
 
@@ -51,6 +52,7 @@ ES.split_model(eos::MultiFluid) = eos.pures
 ES.split_model(eos::CL.EoSVectorParam) = eos.pure
 ES.get_Mw(eos::EoSModel) = Clapeyron.mw(eos) .* 1e-3
 ES.get_Mw(eos::CL.EoSVectorParam) = ES.get_Mw(eos.model)
+ES.get_Mw(eos::CL.HomogcPCPSAFT) = ES.get_Mw(eos.pcpmodel)
 
 ES.get_m(eos::EoSModel) = :segment in fieldnames(typeof(eos.params)) ? eos.params.segment.values : ones(length(eos.name))
 ES.get_m(eos::CL.EoSVectorParam) = ES.get_m(eos.model)
@@ -58,6 +60,11 @@ ES.get_m(eos::SingleFluid) = SA1
 ES.get_m(eos::CL.SAFTgammaMieModel) = ES.get_m(eos.vr_model)
 ES.get_m(eos::CL.HomogcPCPSAFT) = ES.get_m(eos.pcpmodel)
 ES.get_components(eos::EoSModel) = eos.components
+
+ES.get_eps(eos::EoSModel) = eos.params.epsilon.values[LA.I(length(eos))]
+ES.get_eps(eos::HomogcPCPSAFT) = eos.pcpmodel.params.epsilon.values[LA.I(length(eos))]
+ES.get_sig(eos::EoSModel) = eos.params.sigma.values[LA.I(length(eos))]
+ES.get_sig(eos::HomogcPCPSAFT) = eos.pcpmodel.params.sigma.values[LA.I(length(eos))]
 
 ES._eos_cache(eos::EoSModel) = CL.EoSVectorParam(eos)
 ES._eos_cache(eos::CL.EoSVectorParam) = eos

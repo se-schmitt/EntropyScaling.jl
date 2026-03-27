@@ -7,7 +7,7 @@ struct GCESParams{P,T} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end
 
-function GCESParams(prop::AbstractTransportProperty, eos, component_groups, mgcparams::Vector{Vector{Any}}, σᵢ , ϵᵢ, mᵢ, Mw) where T
+function GCESParams(prop::AbstractTransportProperty, eos, component_groups, mgcparams::Vector{Vector{Any}}, σᵢ , ϵᵢ, mᵢ, Mw)
 
     CE_model = ChapmanEnskogModel(first.(collect(component_groups)),σᵢ,ϵᵢ,Mw,collision_integral=KimMonroe())
     base = BaseParam(prop, Mw)
@@ -19,7 +19,7 @@ end
 
 Group-contribution entropy scaling model [lotgering-lin_pure_2018](@cite) based on the homosegmented PCP-SAFT EOS [sauer_comparison_2014](@cite).
 """
-struct GCESModel{E, P, H} <: AbstractEntropyScalingModel
+struct GCESModel{E, P, H} <: AbstractEntropyScalingModel    #TODO adapt structure from Clapeyron.jl (same for params)
     components::Vector{<:AbstractString}
     groups::H
     params::P
@@ -28,66 +28,55 @@ end
 
 @modelmethods GCESModel GCESParams
 
-function GCESModel(components, component_groups, eos_model)
-    eos = eos_model.model
+function GCESModel(eos, components::Vector{<:Tuple})
+    N_comps = length(components)
+    names = first.(components)
+    groups = last.(components)
+    groups_eos = deepcopy(groups)
 
     prop = Viscosity()
-    
-    out = load_params(GCESModel, prop, collect(component_groups), GC=true)
 
-    if !ismissing(out)
-        Aₐ, Bₐ, Cₐ, Dₐ = out
-    else
-        throw(MissingException("No parameters found for system [$(join(components,", "))]"))
+    # Catch special cases
+    for groups_i in groups
+        if groups_i == ["CH3" => 2]       # ethane
+            groups_i[:] .= ["CH3_eth" => 2]
+        end
     end
+    
+    Aₐ, Bₐ, Cₐ, Dₐ = load_gc_params(GCESModel, prop, groups)
 
     mₐ = eos.params.segment
     σₐ = eos.params.sigma
-    σᵢ = [eos.pcpmodel.params.sigma.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.sigma.values)))] # in der Gleichung mit 1e10 multipliziert, da diese den Wert in Angstöm erwartet.
-    ϵᵢ = kB .* [eos.pcpmodel.params.epsilon.values[i,i] for i in 1:Int(sqrt(length(eos.pcpmodel.params.epsilon.values)))]
-    mᵢ = eos.pcpmodel.params.segment.values
-    Mw = eos.pcpmodel.params.Mw.values * 1e-3
+    σᵢ = get_sig(eos)
+    εᵢ = kB .* get_eps(eos)
+    Mw = get_Mw(eos)
+    mᵢ = get_m(eos)
     
-    A = []  # In diesen Listen stehen später die Viskositätsparameter der Substanz i
-    B = []  # hier sollen also die A_i, B_i, usw. drin stehen!
-    C = []
-    D = []
-    m = get_m(eos_model)
-    
-    for i in eachindex(component_groups) # somponents [i][1] wäre also substance i
-        groups = last.(component_groups)[i] # groups ist dann die Liste der Gruppen in substance i
-        
-        A_i = 0
-        B_i = 0
-        C_i = 0
-        D_i = 0
-        V_i = 0
+    A = zeros(N_comps)
+    B = zeros(N_comps)
+    C = zeros(N_comps)
+    D = zeros(N_comps)
 
+    for (i,(groups_i,groups_eos_i)) in enumerate(zip(groups,groups_eos))
         γ = 0.45
-        
-        for (group, count) in groups # group = α (z.B. "CH3") und count = n_α jeweils fur substance i
-            A_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 * Aₐ[group]
-            B_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 * Bₐ[group]
-            C_i += count * Cₐ[group]
-            D_i += count * Dₐ[group]
+        V_i = 0
+        for ((group, count), group_eos) in zip(groups_i, first.(groups_eos_i))
+            A[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
+            B[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Bₐ[group]
+            C[i] += count * Cₐ[group]
+            D[i] += count * Dₐ[group]
 
-            V_i += count * mₐ[group] * (σₐ[group] .* 1e10)^3 
+            V_i += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 
         end
-        A_i += log(sqrt(inv(m[i])))
-        B_i = B_i / (V_i^γ)
-
-        # A_i = A_i + log(sqrt(1/mᵢ[1]))
-
-        push!(A,A_i)
-        push!(B,B_i)
-        push!(C,C_i)
-        push!(D,D_i)
+        A[i] += log(sqrt(inv(mᵢ[i])))
+        B[i] /= (V_i^γ)
     end
     
     mgcparams = [A, B, C, D]
-    params = GCESParams(prop, eos, component_groups, mgcparams, σᵢ , ϵᵢ, mᵢ, Mw)
+    CE_model = ChapmanEnskogModel(names,σᵢ,εᵢ,Mw,collision_integral=KimMonroe())
+    params = GCESParams(mgcparams, mᵢ, CE_model, BaseParam(prop, Mw))
 
-    return GCESModel(components, component_groups, params, eos)
+    return GCESModel(names, groups, params, eos)
 end
 
 
