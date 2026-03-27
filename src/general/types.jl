@@ -5,11 +5,15 @@ abstract type AbstractTransportPropertyModel end
 const ATPM = AbstractTransportPropertyModel
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 const AESM = AbstractEntropyScalingModel
-Base.length(model::T) where {T<:AbstractTransportPropertyModel} = length(model.components)
-Base.length(model::T) where {T<:AbstractEntropyScalingModel} = length(model.eos)
+
+abstract type ESFrameworkModel <: AbstractEntropyScalingModel end
+abstract type RefpropRESModel  <: AbstractEntropyScalingModel end
 
 abstract type AbstractDiluteGasModel <: AbstractTransportPropertyModel end
-abstract type AbstractChapmanEnskogModel <: AbstractDiluteGasModel end
+abstract type ChapmanEnskogModel <: AbstractDiluteGasModel end
+
+Base.length(model::T) where {T <: AbstractTransportPropertyModel} = length(model.components)
+Base.length(model::T) where {T <: AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParams <: AbstractParam end
@@ -21,52 +25,24 @@ abstract type AbstractThermalConductivity <: AbstractTransportProperty end
 Base.broadcastable(prop::AbstractTransportProperty) = Ref(prop)
 abstract type DiffusionCoefficient <: AbstractTransportProperty end
 
+struct BaseParam{P} <: AbstractParam
+    prop::P
+    Mw::CL.SingleParam{Float64}
+end
+
+function BaseParam(prop::P, components::Vector{String}, Mw::Vector{Float64};
+                   sources=nothing) where {P <: AbstractTransportProperty}
+    sp = isnothing(sources) ? CL.SingleParam("Mw", components, Mw) :
+                              CL.SingleParam("Mw", components, Mw, fill(false,length(Mw)), sources, nothing)
+    return BaseParam(prop, sp)
+end
+
+Base.length(base::BaseParam) = length(base.Mw)
+
 abstract type AbstractTransportPropertyData end
 const ATPD = AbstractTransportPropertyData
 
 abstract type AbstractTransportPropertyMixing end
-
-struct Reference
-    doi::String
-    short::String
-end
-Reference() = Reference("", "NA")
-
-struct BaseParam{P} <: AbstractParam
-    prop::P
-    solute_name::Union{Missing,String}
-    Mw::Vector{Float64}
-    ref::Vector{Reference}
-    N_data::Int
-    T_range::Tuple{Float64,Float64}
-    p_range::Tuple{Float64,Float64}
-end
-
-function BaseParam(prop::P, Mw, dat::D; solute=missing) where
-                   {P <: AbstractTransportProperty, D <: AbstractTransportPropertyData}
-    solute_name = isnothing(solute) ? missing : get_components(solute)[1]
-    if prop isa InfDiffusionCoefficient
-        Mw = [calc_M_CE([Mw[1],get_Mw(solute)[1]])]
-    end
-
-    T_range = extrema(dat.T)
-    p_range = extrema(dat.p)
-    return BaseParam(prop, solute_name, Mw, [Reference()], dat.N_dat, T_range, p_range)
-end
-
-function BaseParam(prop::P, Mw, ref=[Reference()], N_dat=0, T_range=(NaN,NaN),
-                   p_range=(NaN,NaN); solute_name=missing) where
-                   {P <: AbstractTransportProperty}
-
-
-    Mw isa Number && (Mw = [Mw])
-    if prop isa InfDiffusionCoefficient
-        Mw = [calc_M_CE(Mw) for _ in 1:length(Mw)]
-    end
-    return BaseParam(prop, solute_name, convert(Vector{Float64},Mw), ref, N_dat, T_range, p_range)
-end
-
-Base.length(base::BaseParam) = length(base.Mw)
 
 struct Viscosity <: AbstractViscosity end
 name(::AbstractViscosity) = "viscosity"
@@ -98,23 +74,20 @@ name(::FickDiffusionCoefficient) = "Fickian diffusion coefficient"
 symbol(::FickDiffusionCoefficient) = :Dᵢⱼ
 symbol_name(::FickDiffusionCoefficient) = "D_Fick"
 
-#used for general comparisons
-transport_compare_type(P1::AbstractTransportProperty,P2::AbstractTransportProperty) = transport_compare_type(typeof(P1),typeof(P2))
-transport_compare_type(P1::Type{T},P2::Type{T}) where T <: AbstractTransportProperty = true
-#get viscosities, thermal conductivities, TODO: do the same structure with diffusion coeffficients?
-transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractViscosity,T2 <: AbstractViscosity} = true
-transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractThermalConductivity,T2 <: AbstractThermalConductivity} = true
-#fallback
-transport_compare_type(P1::Type{T1},P2::Type{T2}) where {T1 <: AbstractTransportProperty,T2 <: AbstractTransportProperty} = false
+# used for general comparisons
+transport_compare_type(P1::AbstractTransportProperty, P2::AbstractTransportProperty) = transport_compare_type(typeof(P1), typeof(P2))
+transport_compare_type(P1::Type{T}, P2::Type{T}) where T <: AbstractTransportProperty = true
+transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractViscosity, T2 <: AbstractViscosity} = true
+transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractThermalConductivity, T2 <: AbstractThermalConductivity} = true
+transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractTransportProperty, T2 <: AbstractTransportProperty} = false
 
-# Matrix type for Maxwell-Stefan diffusion coefficient
 struct MSDiffusionMatrix{T} <: AbstractMatrix{T}
     val::Vector{T}
 end
 
 Base.size(a::MSDiffusionMatrix) = begin
     N = Int((sqrt(8*length(a.val)+1)-1)/2) + 1
-    return (N,N)
+    return (N, N)
 end
 Base.getindex(a::MSDiffusionMatrix{T}, i, j) where T = begin
     i == j && return T(NaN)
@@ -126,13 +99,13 @@ Base.setindex!(a::MSDiffusionMatrix{T}, x, i) where T = begin
     return nothing
 end
 Base.setindex!(a::MSDiffusionMatrix{T}, x, i, j) where T = begin
-    if i < j 
+    if i < j
         _i = Int(i/2*(2*size(a,1)-1-i)) + (j-i-1)
         setindex!(a.val, x, _i)
-    elseif i > j 
+    elseif i > j
         setindex!(a, x, j, i)
-    end 
+    end
     return nothing
 end
 Base.zero(::Type{MSDiffusionMatrix}, N) = MSDiffusionMatrix(zeros(sum(1:N-1)))
-Base.zero(::Type{MSDiffusionMatrix{T}}, N) where T = MSDiffusionMatrix(zeros(T,sum(1:N-1)))
+Base.zero(::Type{MSDiffusionMatrix{T}}, N) where T = MSDiffusionMatrix(zeros(T, sum(1:N-1)))

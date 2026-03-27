@@ -18,22 +18,15 @@ The calculation of transport properties through entropy scaling is mostly based 
 fundamental EOS (defined in the Helmholtz energy $a$) as they allow the consistent calculation
 of all required thermodynamic properties, in particular the configurational entropy $s_{\rm conf}$. 
 The EOS calculations are not part of this package.
-However, there is an extension to the [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) package,
-which provides a large number of different thermodynamic models.
-The extension is automatically loaded when loading both packages `EntropyScaling.jl` and `Clapeyron.jl`.
-Alternatively, custom thermodynamic models can be used by 'dispatching' the functions defined 
-in the [`thermo.jl`](https://github.com/se-schmitt/EntropyScaling.jl/blob/main/src/utils/thermo.jl) file to a custom EOS type.
+[`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl) is used as thermodynamic backend for the EOS calculations providing a large number of different thermodynamic models.
 
 ```julia
 using EntropyScaling, Clapeyron
 
 eos_model = PCSAFT("n-butane")
-model = FrameworkModel(eos_model,Dict(Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]]))
+model = ESFramework(eos_model, Dict(Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]]))
 η = viscosity(model, 37.21e6, 323.)
 ```
-
-Using `EntropyScaling.jl` in combination with [`Clapeyron.jl`](https://github.com/ClapeyronThermo/Clapeyron.jl)
-is the recommended way.
 
 ## Units
 
@@ -57,8 +50,8 @@ In the following, both cases are demonstrated:
 using EntropyScaling, Unitful, Clapeyron, CoolProp
 
 # Calculate unitful transport properties
-model_CE = RefpropRESModel("methane")
-thermal_conductivity(model, 1u"atm", 80u"°F")
+model_ref = RefpropRES("methane")
+thermal_conductivity(model_ref, 1u"atm", 80u"°F")
 # 0.019529950158013242 W K^-1 m^-1
 
 # Assign units to data for fitting
@@ -70,7 +63,7 @@ T_exp = _T_exp .* 1u"K"
 data = TransportPropertyData(T_exp, ϱ_exp, η_exp)
 
 eos_model = PCSAFT("butane")
-model = FrameworkModel(eos_model, [data])                       # Fit model parameters
+model = ESFramework(eos_model, [data])                          # Fit model parameters
 
 η = viscosity(model, 1u"bar", 26.85u"°C", phase=:liquid, output = u"cP")
 # 0.16058971694885213 cP

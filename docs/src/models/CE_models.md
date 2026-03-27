@@ -11,6 +11,6 @@ D_{\varrho \rightarrow 0} \varrho^{\rm m} &= \frac{3}{8} \sqrt{\frac{M k_{\rm B}
 ```
 
 ```@docs
-EntropyScaling.ChapmanEnskogModel
+EntropyScaling.ChapmanEnskog
 EntropyScaling.Ω
 ```

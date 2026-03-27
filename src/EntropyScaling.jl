@@ -5,21 +5,25 @@ using Optim, LsqFit, StatsBase, DelimitedFiles, LinearAlgebra
 using ADTypes: AutoForwardDiff
 using ForwardDiff: ForwardDiff
 using FillArrays: FillArrays
-const Z1 = FillArrays.Fill(1,1)
-# Definition of Constants
-get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB,NA,kB*NA))
+using Clapeyron: Clapeyron
+const CL = Clapeyron
+const Z1 = FillArrays.Fill(1, 1)
+
+# Definition of constants
+get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB, NA, kB*NA))
 const (kB, NA, R) = get_kBNAR()
 
-const DB_PATH = normpath(Base.pkgdir(EntropyScaling),"database")
+const DB_PATH = normpath(Base.pkgdir(EntropyScaling), "database")
 
-#equivalent to a' * b, but with general iterators
-function _dot(a,b)
-    res = zero(Base.promote_eltype(a,b))
+# equivalent to a' * b, but with general iterators
+function _dot(a, b)
+    res = zero(Base.promote_eltype(a, b))
     for i in 1:length(a)
-        res += a[i]*b[i]
+        res += a[i] * b[i]
     end
     return res
 end
+
 # General
 include("general/types.jl")
 include("general/scalings.jl")
@@ -32,7 +36,7 @@ include("utils/misc.jl")
 include("utils/database.jl")
 include("utils/plots.jl")
 
-# Models 
+# Models
 include("models/base.jl")
 include("models/utils.jl")
 include("models/chapman_enskog.jl")
