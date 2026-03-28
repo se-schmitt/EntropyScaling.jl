@@ -22,7 +22,7 @@
 
     @testset "Property functions" begin
         # Framework model
-        model = FrameworkModel(PCSAFT("n-butane"),Dict(
+        model = ESFramework(PCSAFT("n-butane"),Dict(
             Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
             ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
             SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
@@ -39,7 +39,7 @@
 
         # Chapman-Enskog 
         σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3         # Poling et al.
-        model = ChapmanEnskogModel("methane", σ, ε, Mw)
+        model = ChapmanEnskog("methane", σ, ε, Mw)
         @test viscosity(model, NaN, 200.0u"K"; output=u"μPa*s").val ≈ 7.6848  rtol=1e-2
     end
 end

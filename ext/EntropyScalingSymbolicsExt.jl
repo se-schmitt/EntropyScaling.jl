@@ -6,10 +6,10 @@ const ES = EntropyScaling
 
 @register_symbolic ES.ϱT_viscosity(model::ES.AbstractEntropyScalingModel, ϱ, T, z::AbstractVector)
 @register_symbolic ES.ϱT_thermal_conductivity(model::ES.AbstractEntropyScalingModel, ϱ, T, z::AbstractVector)
-@register_symbolic ES.ϱT_thermal_conductivity(model::ES.RefpropRESModel, ϱ, T, z::AbstractVector) false
+@register_symbolic ES.ϱT_thermal_conductivity(model::ES.RefpropRES, ϱ, T, z::AbstractVector) false
 @register_symbolic ES.ϱT_self_diffusion_coefficient(model::ES.AbstractEntropyScalingModel, ϱ, T, z::AbstractVector)
 @register_symbolic ES.ϱT_self_diffusion_coefficient(model::ES.AbstractEntropyScalingModel, ϱ, T) false
-@register_symbolic ES.ϱT_self_diffusion_coefficient(model::ES.FrameworkModel, ϱ, T, z::AbstractVector) false
+@register_symbolic ES.ϱT_self_diffusion_coefficient(model::ES.ESFramework, ϱ, T, z::AbstractVector) false
 @register_symbolic ES.ϱT_MS_diffusion_coefficient(model::ES.AbstractEntropyScalingModel, ϱ, T, z::AbstractVector)
 
 @register_symbolic ES.viscosity(model::ES.ChapmanEnskogModel, p, T, z::AbstractVector)

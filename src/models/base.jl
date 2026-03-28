@@ -16,19 +16,19 @@ function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParam
     print(io,join(fieldnames(typeof(params)),", "))
 end
 
-#show methods for CE model
-function Base.show(io::IO, model::AbstractChapmanEnskogModel)
-    print(io,typeof(params).name.name)
+# show methods for CE model
+function Base.show(io::IO, model::ChapmanEnskogModel)
+    print(io,typeof(model).name.name)
     print(io,"{")
     print(io,join(model.components,','))
     print(io,"}")
 end
 
-function Base.show(io::IO,::MIME"text/plain", model::AbstractChapmanEnskogModel)
-    print(io,"ChapmanEnskogModel{$(join(model.components,','))}")
-    print(io,"\n σ: [$(join(round.(model.σ/1e-10,digits=5),", "))] Å")
-    print(io,"\n ε: [$(join(round.(model.ε/kB,digits=3),", "))] K")
-    print(io,"\n M: [$(join(round.(model.Mw,digits=5),", "))] kg/m³")
+function Base.show(io::IO,::MIME"text/plain", model::ChapmanEnskogModel)
+    print(io,"ChapmanEnskog{$(join(model.components,','))}")
+    print(io,"\n σ: [$(join(round.(model.σ.values/1e-10,digits=5),", "))] Å")
+    print(io,"\n ε: [$(join(round.(model.ε.values/kB,digits=3),", "))] K")
+    print(io,"\n M: [$(join(round.(model.Mw.values,digits=5),", "))] kg/mol")
     print(io,"\n Collision integral: $(typeof(model.collision).name.name)")
 end
 
@@ -46,7 +46,7 @@ function Base.show(io::IO,::MIME"text/plain",model::AbstractEntropyScalingModel)
         print(io,name(transport_property(model.params)))
     else
         np = length(model.params)
-        for i in 1:length(model.params)
+        for i in 1:np
             print(io,name(transport_property(model.params[i])))
             i != np && print(io,", ")
         end
@@ -87,9 +87,7 @@ end
 function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
     idx = findfirst(Base.Fix1(transport_compare_type,P),x)
     if isnothing(idx)
-        return quote
-            getindex_prop_error(P)
-        end
+        return getindex_prop_error(prop)
     else
         return x[idx]
     end
@@ -132,9 +130,6 @@ end
 #get_m
 
 get_m(m::AbstractEntropyScalingParams) = m.m
-
-#caching
-_eos_cache(eos) = eos
 
 # entropy scaling variable
 function scaling_variable(param::AbstractEntropyScalingParams, s, z = Z1)

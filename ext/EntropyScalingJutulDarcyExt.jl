@@ -18,8 +18,8 @@ ES.EStoJD(model::ES.AbstractEntropyScalingModel) = JDEntropyScalingModel(model)
     l, v = JD.phase_indices(sys)
 
     @inbounds for i in ix
-        Mwl = es.model.params[1].base.Mw' * FlashResults[i].liquid.mole_fractions
-        Mwv = es.model.params[1].base.Mw' * FlashResults[i].vapor.mole_fractions
+        Mwl = es.model.params[1].base.Mw.values' * FlashResults[i].liquid.mole_fractions
+        Mwv = es.model.params[1].base.Mw.values' * FlashResults[i].vapor.mole_fractions
         ϱl = PhaseMassDensities[l,i] / Mwl
         ϱv = PhaseMassDensities[v,i] / Mwv
 

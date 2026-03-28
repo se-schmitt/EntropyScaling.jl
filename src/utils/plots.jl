@@ -47,8 +47,8 @@ T, p = rand(200.:500.,200), 10.0.^(rand(200).*4 .+ 4)
 
 # Create data and model
 ηdat = ViscosityData(T,p,nothing,η)
-model_A = FrameworkModel(PCSAFT(sub), [ηdat])
-model_B = FrameworkModel(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
+model_A = ESFramework(PCSAFT(sub), [ηdat])
+model_B = ESFramework(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
 
 # Plot 
 fig = plot(model_A, ηdat; cprop=:T, linewidth=3, linecolor=:blue, label="model A (4 parameters)")

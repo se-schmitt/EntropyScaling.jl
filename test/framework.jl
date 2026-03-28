@@ -15,7 +15,7 @@
                 ThermalConductivity()=>ones(Bool,5), 
                 SelfDiffusionCoefficient()=>Bool[0,0,0,1,1])
         )
-        model = FrameworkModel(eos_model, data_pure; opts=fit_opts)
+        model = ESFramework(eos_model, data_pure; opts=fit_opts)
         (α_η, α_λ, α_D) = [model[prop_i].α for prop_i in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]]
 
         α_η_ref = [0.000000e+00;-9.490597e+00; 9.747817e+00;-1.279090e+00; 3.666153e-01;;]
@@ -36,7 +36,7 @@
             InfDiffusionCoefficientData(raw[:,1], nothing, raw[:,2], raw[:,3], :unknown)
         ]
         fit_opts = FitOptions(;what_fit=Dict(InfDiffusionCoefficient()=>Bool[0,0,0,1,1]))
-        model = FrameworkModel(solvent, data_inf; opts=fit_opts, solute=solute)
+        model = ESFramework(solvent, data_inf; opts=fit_opts, solute=solute)
 
         α_D_inf_ref = [0.0; 0.0; 0.0;-2.604944e+00;-1.567851e+00;;]
         @test all(isapprox(model[InfDiffusionCoefficient()].α, α_D_inf_ref; rtol=1e-5))
@@ -48,7 +48,7 @@
             eos_model = PCSAFT("n-butane")
             
             # ES model 
-            model = FrameworkModel(eos_model,Dict(
+            model = ESFramework(eos_model,Dict(
                 Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
                 ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
                 SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
@@ -61,12 +61,12 @@
 
         @testset "Mixtures" begin
             # ES models
-            model_1 = FrameworkModel(PCSAFT(["benzene","hexane"]), Dict(
+            model_1 = ESFramework(PCSAFT(["benzene","hexane"]), Dict(
                 ThermalConductivity() => [hcat(
                     [6.492054, 0.0, 0.0, 1.985553, 3.126438],
                     [9.756965, 0.0, 0.0, 1.657211, 5.058428])],
             ))
-            model_2 = FrameworkModel(PCSAFT(["hexane", "dodecane"]), Dict(
+            model_2 = ESFramework(PCSAFT(["hexane", "dodecane"]), Dict(
                 SelfDiffusionCoefficient() => [hcat(
                     [0.0, 0.0, 0.0, -2.5414, -1.9186],
                     [0.0, 0.0, 0.0, -4.6610, -3.2021])],

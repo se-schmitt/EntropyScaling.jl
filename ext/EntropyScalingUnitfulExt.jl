@@ -7,7 +7,7 @@ import Unitful: Pa, K, W, m, J, mol, s
 const ES = EntropyScaling
 Z1 = ES.Z1
 
-const ACEM = ES.AbstractChapmanEnskogModel
+const ACEM = ES.ChapmanEnskogModel
 const AESM = ES.AbstractEntropyScalingModel
 const _tph = Union{Symbol,Vector{Symbol}}
 
