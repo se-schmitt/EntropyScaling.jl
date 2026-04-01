@@ -1,84 +1,74 @@
-export ChapmanEnskogModel
+export ChapmanEnskog
 
 """
-    ChapmanEnskogModel <: AbstractTransportPropertyModel
+    ChapmanEnskog <: ChapmanEnskogModel
+    ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
 
 Chapman-Enskog transport properties for the zero-density limit.
 
-# Fields
-- `σ::Vector{T}`: Lennard-Jones size parameter (`[σ] = m`)
-- `ε::Vector{T}`: Lennard-Jones energy parameter (`[ε] = J`)
-- `Mw::Vector{T}`: molar mass (`[Mw] = kg mol⁻¹`)
+# Parameters
+- `σ::SingleParam{T}`: Lennard-Jones size parameter (`[σ] = Å`)
+- `ε::SingleParam{T}`: Lennard-Jones energy parameter (`[ε] = K`)
+- `Mw::SingleParam{T}`: molar mass (`[Mw] = g mol⁻¹`)
 - `collision::C`: collision integral method (`KimMonroe()` (default) or `Neufeld()`, see [`Ω`](@ref))
 
-# Constructors
-
-- `ChapmanEnskogModel(components; collision_integral=KimMonroe(), ref="", ref_id="")`: database constructor
-- `ChapmanEnskogModel(components, σ, ε, Mw; collision_integral=KimMonroe())`: custom parameters constructor
-
-Input arguments can either be single values (pure) or vectors.
-The keywords `ref` (short reference) and `ref_id` (DOI or ISBN) enable the specification of the reference.
 Currently, parameters from [poling_properties_2001](@citet) and [yang_linking_2022](@citet) are in the database.
 Mixture properties are calculated according to the models from [wilke_viscosity_1950](@citet) (viscosity), [mason_approximate_1958](@citet) (thermal conductivity), and [miller_self-diffusion_1961](@citet) (self-diffusion).
 
 # Example
 
 ```julia
-using EntropyScaling 
+using EntropyScaling
 
 # Construction with custom parameters
-σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3            # from Poling et al.
-model_methane = ChapmanEnskogModel("methane",σ,ε,Mw)
+model_methane = ChapmanEnskog("methane"; userlocations=(;sigma=3.758, epsilon=148.6, Mw=16.043)
 
-η_mix = viscosity(model_methane, NaN, 300.)
-D_mix = self_diffusion_coefficient(model_methane, NaN, 300.)
+η = viscosity(model_methane, NaN, 300.)
+D = self_diffusion_coefficient(model_methane, NaN, 300.)
 
 # Construction from database
-model_mix = ChapmanEnskogModel(["butane","methanol"]; ref="Poling et al. (2001)")
+model_mix = ChapmanEnskog(["butane","methanol"])
 
 η_mix = viscosity(model_mix, NaN, 300., [.5,.5])
 D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])
 ```
 """
-struct ChapmanEnskogModel{T,C} <: AbstractChapmanEnskogModel
-    components::Vector{<:AbstractString}
-    σ::Vector{T} 
-    ε::Vector{T}
-    Mw::Vector{T}
-    ref::Vector{Reference}
-    collision::C 
+struct ChapmanEnskog{T,C} <: ChapmanEnskogModel
+    components::Vector{String}
+    sigma::CL.SingleParam{T}
+    epsilon::CL.SingleParam{T}
+    Mw::CL.SingleParam{T}
+    collision::C
 end
 
-function ChapmanEnskogModel(comps::Vector{<:AbstractString}, σ::Vector{T}, ε::Vector{T}, Mw::Vector{T}; collision_integral=KimMonroe()) where {T} 
-    return ChapmanEnskogModel(comps, σ, ε, Mw, Reference[], collision_integral)
+function ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
+    _components = CL.format_components(components)
+
+    params = CL.getparams(_components, [get_db_path(ChapmanEnskogModel, nothing)]; userlocations)
+
+    σ = params["sigma"]
+    σ.values .*= 1e-10
+    ε = params["epsilon"]
+    ε.values .*= kB
+    Mw = params["Mw"]
+    
+    return ChapmanEnskog(_components, σ, ε, Mw, collision_integral)
 end
 
-function ChapmanEnskogModel(comps::String, σ::Float64, ε::Float64, Mw::Float64; collision_integral=KimMonroe())
-    return ChapmanEnskogModel([comps], [σ], [ε], [Mw], Reference[], collision_integral)
-end
-
-ChapmanEnskogModel(comps::String; kwargs...) = ChapmanEnskogModel([comps]; kwargs...)
-function ChapmanEnskogModel(comps::Vector{<:AbstractString}; Mw=[], ref="", ref_id="", collision_integral=KimMonroe())
-    out = load_params(ChapmanEnskogModel, "", comps; ref, ref_id)
-    ismissing(out) ? throw(MissingException("No CE parameters found for system [$(join(comps,", "))]")) : nothing
-    Mw_db, ε, σ, refs = out 
-    if isempty(Mw)
-        Mw = Mw_db
-    end
-    return ChapmanEnskogModel(comps, σ.*1e-10, ε.*kB, Mw, refs, collision_integral)
-end
-
-Base.length(model::AbstractChapmanEnskogModel) = length(model.Mw)
+Base.length(model::ChapmanEnskogModel) = length(model.components)
 
 # Viscosity
-function viscosity(model::AbstractChapmanEnskogModel, p, T, z=Z1)
+function viscosity(model::ChapmanEnskogModel, p, T, z=Z1)
     return property_CE(Viscosity(), model, T, z)
 end
-function viscosity(model::AbstractChapmanEnskogModel, T; i=1)
-    return 5/16 * √(model.Mw[i]*kB*T/NA/π) / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i))
+function viscosity(model::ChapmanEnskogModel, T; i=1)
+    σ = model.sigma.values
+    Mw = model.Mw.values .* 1e-3
+    return 5/16 * √(Mw[i]*kB*T/NA/π) / (σ[i]^2*Ω(Viscosity(),model,T;i=i))
 end
 
-function viscosity_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
+function viscosity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
+    σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
         B = second_virial_coefficient(eos,T)/NA
@@ -87,18 +77,21 @@ function viscosity_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
         B = second_virial_coefficient(eos,T,x)/NA
     end
-    return 5/16/√π / (model.σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
+    return 5/16/√π / (σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
 # Thermal conductivity
-function thermal_conductivity(model::AbstractChapmanEnskogModel, p, T, z=Z1)
+function thermal_conductivity(model::ChapmanEnskogModel, p, T, z=Z1)
     return property_CE(ThermalConductivity(), model, T, z)
 end
-function thermal_conductivity(model::AbstractChapmanEnskogModel, T; i=1)
-    return 75/64 * kB * √(R*T/model.Mw[i]/π) / (model.σ[i]^2*Ω(ThermalConductivity(),model,T;i=i))
+function thermal_conductivity(model::ChapmanEnskogModel, T; i=1)
+    σ = model.sigma.values
+    Mw = model.Mw.values .* 1e-3
+    return 75/64 * kB * √(R*T/Mw[i]/π) / (σ[i]^2*Ω(ThermalConductivity(),model,T;i=i))
 end
 
-function thermal_conductivity_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
+function thermal_conductivity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
+    σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
         B = second_virial_coefficient(eos,T)/NA
@@ -107,18 +100,21 @@ function thermal_conductivity_CE_plus(model::AbstractChapmanEnskogModel, eos, T;
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
         B = second_virial_coefficient(eos,T,x)/NA
     end
-    return 75/64/√π / (model.σ[i]^2*Ω(ThermalConductivity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
+    return 75/64/√π / (σ[i]^2*Ω(ThermalConductivity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
 # Self-diffusion coefficient
-function self_diffusion_coefficient(model::AbstractChapmanEnskogModel, p, T, z=Z1)
+function self_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z=Z1)
     return property_CE(SelfDiffusionCoefficient(), model, T, z)
 end
-function self_diffusion_coefficient(model::AbstractChapmanEnskogModel, T; i=1)
-    return 3/8 * √(model.Mw[i]*kB*T/NA/π) / (model.σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i))
+function self_diffusion_coefficient(model::ChapmanEnskogModel, T; i=1)
+    σ = model.sigma.values
+    Mw = model.Mw.values .* 1e-3
+    return 3/8 * √(Mw[i]*kB*T/NA/π) / (σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i))
 end
 
-function self_diffusion_coefficient_CE_plus(model::AbstractChapmanEnskogModel, eos, T; i=1)
+function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
+    σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
         B = second_virial_coefficient(eos,T)/NA
@@ -127,53 +123,58 @@ function self_diffusion_coefficient_CE_plus(model::AbstractChapmanEnskogModel, e
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
         B = second_virial_coefficient(eos,T,x)/NA
     end
-    return 3/8/√π / (model.σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i)) * (T*dBdT+B)^(2/3)
+    return 3/8/√π / (σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
 
 # Maxwell-Stefan diffusion coefficient
-function MS_diffusion_coefficient(model::AbstractChapmanEnskogModel, p, T, z)
-    return MS_diffusion_coefficient(model::AbstractChapmanEnskogModel, T, z)
+function MS_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z)
+    return MS_diffusion_coefficient(model, T, z)
 end
-function MS_diffusion_coefficient(model::AbstractChapmanEnskogModel, T, z=Z1)
+function MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=Z1)
+    σ = model.sigma.values
+    Mw = model.Mw.values .* 1e-3
     length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
-    return 3/8 * √(model.Mw[1]*kB*T/NA/π) / (model.σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1))
+    return 3/8 * √(Mw[1]*kB*T/NA/π) / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1))
 end
 
-function MS_diffusion_coefficient_CE_plus(model::AbstractChapmanEnskogModel, eos, T, z = Z1; i=0)
+function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z = Z1; i=0)
     length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
     if i != 0
         z = zeros(Int64,length(eos))
         z[i] = 1
     end
 
+    σ = model.sigma.values
     dBdT = second_virial_coefficient_dT(eos,T,z)/NA
     B = second_virial_coefficient(eos,T,z)/NA
-    return 3/8/√π / (model.σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1)) * (T*dBdT+B)^(2/3)
+    return 3/8/√π / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1)) * (T*dBdT+B)^(2/3)
 end
 
+MS_diffusion_coefficient_CE(model, T) = MS_diffusion_coefficient(model, T)
+
 # Chapman-Enskog mixture function
-function property_CE(prop::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T, z)
+function property_CE(prop::AbstractTransportProperty, model::ChapmanEnskogModel, T, z)
     N_c = length(model)
     if N_c == 1
-        return property_CE(prop, model, T; i=1) 
+        return property_CE(prop, model, T; i=1)
     else
         Y₀_all = [property_CE(prop, model, T; i=i) for i in 1:N_c]
         return mix_CE(prop, model, Y₀_all, z)
     end
 end
 
-function property_CE(prop::P, model::AbstractChapmanEnskogModel, T, z=Z1) where 
+function property_CE(prop::P, model::ChapmanEnskogModel, T, z=Z1) where
                     {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
-    return MS_diffusion_coefficient_CE(model, T)         # x independent
+    return MS_diffusion_coefficient_CE(model, T)
 end
 
-# Chapman-Enskog pure functions 
-property_CE(prop::Viscosity, model::AbstractChapmanEnskogModel, T; i) = viscosity(model, T; i=i)
-property_CE(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, T; i) = thermal_conductivity(model, T; i=i)
-property_CE(prop::SelfDiffusionCoefficient, model::AbstractChapmanEnskogModel, T; i) = self_diffusion_coefficient(model, T; i=i)
+# Chapman-Enskog pure functions
+property_CE(prop::Viscosity, model::ChapmanEnskogModel, T; i) = viscosity(model, T; i=i)
+property_CE(prop::ThermalConductivity, model::ChapmanEnskogModel, T; i) = thermal_conductivity(model, T; i=i)
+property_CE(prop::SelfDiffusionCoefficient, model::ChapmanEnskogModel, T; i) = self_diffusion_coefficient(model, T; i=i)
 
 # Scaled CE mixture function
-function property_CE_plus(prop::AbstractTransportProperty, model::AbstractChapmanEnskogModel, eos, T, z)
+function property_CE_plus(prop::AbstractTransportProperty, model::ChapmanEnskogModel, eos, T, z)
     N_c = length(model)
     if N_c == 1
         return property_CE_plus(prop, model, eos, T; i=1)
@@ -183,15 +184,15 @@ function property_CE_plus(prop::AbstractTransportProperty, model::AbstractChapma
     end
 end
 
-function property_CE_plus(prop::P, model::AbstractChapmanEnskogModel, eos, T, z = Z1; i=0) where
+function property_CE_plus(prop::P, model::ChapmanEnskogModel, eos, T, z=Z1; i=0) where
                     {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
     return MS_diffusion_coefficient_CE_plus(model, eos, T, z; i=i)
 end
 
 # Scaled CE pure functions
-property_CE_plus(prop::Viscosity, model::AbstractChapmanEnskogModel, eos, T; i) = viscosity_CE_plus(model, eos, T; i=i)
-property_CE_plus(prop::ThermalConductivity, model::AbstractChapmanEnskogModel, eos, T; i) = thermal_conductivity_CE_plus(model, eos, T; i=i)
-property_CE_plus(prop::SelfDiffusionCoefficient, model::AbstractChapmanEnskogModel, eos, T; i) = self_diffusion_coefficient_CE_plus(model, eos, T; i=i)
+property_CE_plus(prop::Viscosity, model::ChapmanEnskogModel, eos, T; i) = viscosity_CE_plus(model, eos, T; i=i)
+property_CE_plus(prop::ThermalConductivity, model::ChapmanEnskogModel, eos, T; i) = thermal_conductivity_CE_plus(model, eos, T; i=i)
+property_CE_plus(prop::SelfDiffusionCoefficient, model::ChapmanEnskogModel, eos, T; i) = self_diffusion_coefficient_CE_plus(model, eos, T; i=i)
 
 # Collision integrals
 abstract type AbstractCollisionIntegralMethod end
@@ -204,7 +205,7 @@ struct Neufeld <: AbstractCollisionIntegralMethod end
 Ω(prop::DiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
 
 """
-    Ω(poperty::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T)
+    Ω(poperty::AbstractTransportProperty, model::ChapmanEnskogModel, T)
 
 Calculates the collision integral for a given `model` and `property` (`Ω₁₁` for diffusion coefficients and `Ω₂₂` for viscosity/thermal conductivity) at the specified temperature `T`.
 
@@ -212,7 +213,7 @@ Two methods are implemented:
 - `KimMonroe()` [kim_high-accuracy_2014](@cite)
 - `Neufeld()` [neufeld_empirical_1972](@cite)
 """
-Ω(prop::AbstractTransportProperty, model::AbstractChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*kB/model.ε[i])
+Ω(prop::AbstractTransportProperty, model::ChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*kB/model.epsilon[i])
 
 # Ω_22
 function Ω_22(T_red)
@@ -263,6 +264,10 @@ function Ω_22_neufeld(T_red)
     return 1.6145*(T_red)^(-0.14874) + 0.52487*exp(-0.77320*T_red) + 2.16178*exp(-2.43787*T_red)
 end
 
+function Ω_11_neufeld(T_red)
+    return 1.0548*(T_red)^(-0.15504) + 0.54762*exp(-0.77320*T_red) + 2.16178*exp(-2.43787*T_red)
+end
+
 # Correspondence principle
 function correspondence_principle(Tc, pc)
     Tc_LJ = 1.321
@@ -284,7 +289,8 @@ struct MasonSaxena <: AbstractTransportPropertyMixing end
 
 function mix_CE(::Union{Wilke,MasonSaxena}, model::AbstractDiluteGasModel, Y, x; YΦ=Y)
     Y₀_mix = zero(Base.promote_eltype(Y,x))
-    enum_M = enumerate(model.Mw)
+    Mw = model.Mw.values .* 1e-3
+    enum_M = enumerate(Mw)
     for (i,Mi) in enum_M
         xΦ = zero(Y₀_mix)
         for (j,Mj) in enum_M
