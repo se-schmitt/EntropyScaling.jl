@@ -1,4 +1,4 @@
-@testset "misc" begin
+@testitem "misc" begin
     @testset "ConstantModel" begin
         vec = [
             viscosity => Viscosity(), 

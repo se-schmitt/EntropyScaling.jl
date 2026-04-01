@@ -1,4 +1,8 @@
-@testset "SymbolicsExt" begin    
+@testitem "SymbolicsExt" begin    
+    using Clapeyron
+    using CoolProp
+    using Symbolics
+
     @variables p, T
 
     @testset "framework model" begin 

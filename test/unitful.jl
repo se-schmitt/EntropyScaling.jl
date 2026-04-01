@@ -1,4 +1,6 @@
-@testset "UnitfulExt" begin
+@testitem "UnitfulExt" begin
+    using Clapeyron
+    using Unitful
 
     @testset "Data Constructors" begin
         ηdatu = ViscosityData([300.0u"K"], [1u"bar"], [1u"mPa*s"])

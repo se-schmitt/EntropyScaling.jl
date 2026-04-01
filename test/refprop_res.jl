@@ -1,5 +1,8 @@
 
-@testset "RefpropRES" begin
+@testitem "RefpropRES" begin
+    using Clapeyron
+    using CoolProp
+
     g_Yang2022 = [1.0,1.5,2.0,2.5]
 
     @testset "Pure Viscosity" begin

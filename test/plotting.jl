@@ -1,4 +1,6 @@
-@testset "Plotting" begin
+@testitem "Plotting" begin
+    using Clapeyron
+
     # Build a tiny model and small synthetic dataset (viscosity)
     eos = PCSAFT("n-butane")
     params = Dict(

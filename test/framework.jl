@@ -1,4 +1,7 @@
-@testset "Framework" begin
+@testitem "Framework" begin
+    using Clapeyron
+    using DelimitedFiles
+
     @testset "Fit Pure" begin
         # EOS models and data
         eos_model = PCSAFT("n-butane")

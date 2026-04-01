@@ -1,15 +1,4 @@
 using Test
-using EntropyScaling
-using Clapeyron
-using CoolProp
-using DelimitedFiles
-using Unitful
-using Symbolics
+using TestItemRunner
 
-include("framework.jl")
-include("refprop_res.jl")
-include("chapman_enskog.jl")
-include("unitful.jl")
-include("symbolics.jl")
-include("plotting.jl")
-include("misc.jl")
+@run_package_tests

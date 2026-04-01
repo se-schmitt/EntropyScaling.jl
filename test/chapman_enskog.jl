@@ -1,4 +1,4 @@
-@testset "Chapman-Enskog" begin
+@testitem "Chapman-Enskog" begin
     @testset "Model" begin
         # Methane 
         σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3            # Poling et al.
