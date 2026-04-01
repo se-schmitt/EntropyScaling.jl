@@ -39,6 +39,7 @@ struct ChapmanEnskog{T,C} <: ChapmanEnskogModel
     epsilon::CL.SingleParam{T}
     Mw::CL.SingleParam{T}
     collision::C
+    sources::Vector{String}
 end
 
 function ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
@@ -51,8 +52,10 @@ function ChapmanEnskog(components; userlocations=String[], collision_integral=Ki
     ε = params["epsilon"]
     ε.values .*= kB
     Mw = params["Mw"]
+
+    ref = ["978-0-07-011682-5"]
     
-    return ChapmanEnskog(_components, σ, ε, Mw, collision_integral)
+    return ChapmanEnskog(_components, σ, ε, Mw, collision_integral, ref)
 end
 
 Base.length(model::ChapmanEnskogModel) = length(model.components)
