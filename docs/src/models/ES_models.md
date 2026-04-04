@@ -38,6 +38,7 @@ EntropyScaling.ESFramework
 ## Refprop RES Model
 ```@docs
 EntropyScaling.RefpropRES
+EntropyScaling.RefpropRES2025
 ```
 
 ## Fitting Utilities

@@ -42,6 +42,7 @@ include("models/utils.jl")
 include("models/chapman_enskog.jl")
 include("models/dilute_gas_correlations.jl")
 include("models/framework.jl")
-include("models/refprop_res.jl")
+include("models/refpropres.jl")
+include("models/refpropres2025.jl")
 
 end

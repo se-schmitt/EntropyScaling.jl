@@ -16,7 +16,7 @@ Base.length(model::T) where {T <: AbstractTransportPropertyModel} = length(model
 Base.length(model::T) where {T <: AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
-abstract type AbstractEntropyScalingParams <: AbstractParam end
+abstract type AbstractEntropyScalingParams{P} <: AbstractParam end
 Base.broadcastable(param::AbstractParam) = Ref(param)
 
 abstract type AbstractTransportProperty end
@@ -74,12 +74,16 @@ name(::FickDiffusionCoefficient) = "Fickian diffusion coefficient"
 symbol(::FickDiffusionCoefficient) = :Dᵢⱼ
 symbol_name(::FickDiffusionCoefficient) = "D_Fick"
 
+name(::Type{P}) where {P<:AbstractTransportProperty} = name(P())
+symbol(::Type{P}) where {P<:AbstractTransportProperty} = symbol(P())
+symbol_name(::Type{P}) where {P<:AbstractTransportProperty} = symbol_name(P())
+
 # used for general comparisons
-transport_compare_type(P1::AbstractTransportProperty, P2::AbstractTransportProperty) = transport_compare_type(typeof(P1), typeof(P2))
-transport_compare_type(P1::Type{T}, P2::Type{T}) where T <: AbstractTransportProperty = true
-transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractViscosity, T2 <: AbstractViscosity} = true
-transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractThermalConductivity, T2 <: AbstractThermalConductivity} = true
-transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractTransportProperty, T2 <: AbstractTransportProperty} = false
+# transport_compare_type(P1::AbstractTransportProperty, P2::AbstractTransportProperty) = transport_compare_type(typeof(P1), typeof(P2))
+transport_compare_type(P1::Type{T}, P2::AbstractEntropyScalingParams{T}) where {T<:AbstractTransportProperty} = true
+transport_compare_type(P1::Type{T1}, P2::AbstractEntropyScalingParams{T2}) where {T1,T2} = false
+# transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractThermalConductivity, T2 <: AbstractThermalConductivity} = true
+# transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractTransportProperty, T2 <: AbstractTransportProperty} = false
 
 struct MSDiffusionMatrix{T} <: AbstractMatrix{T}
     val::Vector{T}

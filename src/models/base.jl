@@ -1,18 +1,18 @@
 #show methods for AbstractEntropyScalingParams
-function Base.show(io::IO,params::AbstractEntropyScalingParams)
+function Base.show(io::IO,params::AbstractEntropyScalingParams{P}) where P
     print(io,typeof(params).name.name)
     print(io,"{")
-    print(io,symbol(params.base.prop))
+    print(io,symbol(P))
     print(io,"}(;")
     print(io,join(fieldnames(typeof(params)),", "))
     print(io,")")
 end
 
-function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParams)
+function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParams{P}) where P
     print(io,typeof(params).name.name)
     print(io,"{")
-    print(io,symbol(params.base.prop))
-    print(io,"} ($(length(params.base.Mw)) components) with fields: ")
+    print(io,symbol(P))
+    print(io,"} ($(length(params.ce.Mw)) components) with fields: ")
     print(io,join(fieldnames(typeof(params)),", "))
 end
 
@@ -26,9 +26,9 @@ end
 
 function Base.show(io::IO,::MIME"text/plain", model::ChapmanEnskogModel)
     print(io,"ChapmanEnskog{$(join(model.components,','))}")
-    print(io,"\n σ: [$(join(round.(model.σ.values/1e-10,digits=5),", "))] Å")
-    print(io,"\n ε: [$(join(round.(model.ε.values/kB,digits=3),", "))] K")
-    print(io,"\n M: [$(join(round.(model.Mw.values,digits=5),", "))] kg/mol")
+    print(io,"\n σ: [$(join(round.(model.sigma.values/1e-10,digits=5),", "))] Å")
+    print(io,"\n ε: [$(join(round.(model.epsilon.values/kB,digits=3),", "))] K")
+    print(io,"\n M: [$(join(round.(model.Mw.values,digits=5),", "))] g/mol")
     print(io,"\n Collision integral: $(typeof(model.collision).name.name)")
 end
 
@@ -61,14 +61,14 @@ function Base.show(io::IO,model::AbstractEntropyScalingModel)
     print(io,"(")
     print(io,typeof(model.eos))
     print(io,", ")
-    types = map(x -> x.base.prop,model.params)
+    types = map(x -> transport_property(x),model.params)
     print(io,types)
 end
 
 #transport_property methods
 transport_property(x::AbstractTransportProperty) = x
 transport_property(x::BaseParam) = x.prop
-transport_property(x::AbstractEntropyScalingParams) = transport_property(x.base)
+transport_property(::AbstractEntropyScalingParams{P}) where P = P()
 
 #Base.getindex methods
 
@@ -146,7 +146,7 @@ function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:Abstra
     return MODEL(eos, params)
 end
 
-build_model(MODEL,components,params,eos) = MODEL(components,params,eos)
+build_model(MODEL,components,params,eos) = MODEL(components,params,eos,String[])
 build_model(::Type{MODEL},eos,params::Tuple) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
 build_model(::Type{MODEL},eos,params::AbstractVector) where MODEL = build_model(MODEL,eos,tuple(params...))
 build_model(::Type{MODEL},eos,params::AbstractEntropyScalingParams) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
