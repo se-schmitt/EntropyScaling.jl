@@ -1,0 +1,5 @@
+Clapeyron Database File,,,,,,,
+ESFramework_selfdiffusion_SAFTVRMie Like Parameters,,,,,,,
+species,α0,α1,α2,α3,αln,source
+n-hexane,0,0,-2.095,-0.609,0,10.1016/j.molliq.2023.123811
+benzene,0,0,0.979,-1.999,0,10.1016/j.molliq.2023.123811

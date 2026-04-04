@@ -1,0 +1,7 @@
+Clapeyron Database File,,,,,,,
+ESFramework_thermalconductivity_PCSAFT Like Parameters,,,,,,,
+species,α0,α1,α2,α3,αln,source
+n-butane,3.962,-82.974,20.079,1.073,98.222,10.1016/j.molliq.2023.123811
+n-hexadecane,39.064,0,6.413,17.801,0,10.1016/j.molliq.2023.123811
+carbon dioxide,1.668,32.545,-10.475,3.313,-31.829,10.1016/j.molliq.2023.123811
+1-octanol,11.186,65.556,-7.559,5.549,-63.034,10.1016/j.molliq.2023.123811
