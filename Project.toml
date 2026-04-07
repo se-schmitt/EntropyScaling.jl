@@ -33,7 +33,7 @@ EntropyScalingUnitfulExt = "Unitful"
 
 [compat]
 ADTypes = "1.21.0"
-Clapeyron = "0.6.20 - 0.6.21"
+Clapeyron = "0.6.20"
 DelimitedFiles = "1.9.1"
 FillArrays = "1"
 ForwardDiff = "0.10,1"
