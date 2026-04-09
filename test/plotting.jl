@@ -2,12 +2,7 @@
     using Clapeyron
 
     # Build a tiny model and small synthetic dataset (viscosity)
-    eos = PCSAFT("n-butane")
-    params = Dict(
-        Viscosity() => [[0.0; -14.165; 13.97; -2.382; 0.501;;]],
-        ThermalConductivity() => [[3.962; 98.222; -82.974; 20.079; 1.073;;]],
-    )
-    model = ESFramework(eos, params)
+    model = ESFramework("n-butane", PCSAFT("n-butane"))
 
     T = [300.0, 325.0, 350.0]
     p = [1e5, 5e5, 1e6]

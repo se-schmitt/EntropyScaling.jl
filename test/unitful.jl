@@ -24,11 +24,7 @@
 
     @testset "Property functions" begin
         # Framework model
-        model = ESFramework(PCSAFT("n-butane"),Dict(
-            Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
-            ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
-            SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
-        ))
+        model = ESFramework("n-butane", PCSAFT("n-butane"))
 
         @test viscosity(model, 37.21u"MPa", 323u"K"; output=u"cP").val ≈ 1.921922e-1 rtol=1e-5
         @test thermal_conductivity(model, 372.1u"bar", 49.85u"°C").val ≈ 1.199070e-1 rtol=1e-5

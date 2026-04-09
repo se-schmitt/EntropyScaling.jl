@@ -13,13 +13,9 @@
             ThermalConductivityData(raw_λ[:,1], nothing, raw_λ[:,2], raw_λ[:,3], :unknown)
             SelfDiffusionCoefficientData(raw_D[:,1], nothing, raw_D[:,2], raw_D[:,3], :unknown)
         ]
-        fit_opts = FitOptions(;
-            what_fit=Dict(
-                ThermalConductivity()=>ones(Bool,5), 
-                SelfDiffusionCoefficient()=>Bool[0,0,0,1,1])
-        )
-        model = ESFramework(eos_model, data_pure; opts=fit_opts)
-        (α_η, α_λ, α_D) = [model[prop_i].α for prop_i in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]]
+        model = ESFramework("n-butane", eos_model, data_pure; tofit=Dict(SelfDiffusionCoefficient()=>[:α2,:α3]))
+        _props = [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]
+        (α_η, α_λ, α_D) = [first.(getproperty.(model[_p],[:α0,:αln,:α1,:α2,:α3])) for _p in _props]
 
         α_η_ref = [0.000000e+00;-9.490597e+00; 9.747817e+00;-1.279090e+00; 3.666153e-01;;]
         α_λ_ref = [3.532197e+00; 1.168205e+02;-9.944405e+01; 2.424600e+01; 5.871304e-01;;]
@@ -31,18 +27,17 @@
     
     @testset "Fit Inf. Dilution" begin
         # EOS models and data
-        solvent = PCSAFT("toluene")
-        solute = PCSAFT("hexane")
+        system = PCSAFT(["hexane", "toluene"])
         raw = readdlm("data/exp_D_inf.csv",',';skipstart=1) 
 
         data_inf = [
-            InfDiffusionCoefficientData(raw[:,1], nothing, raw[:,2], raw[:,3], :unknown)
+            TransportPropertyData(InfDiffusionCoefficient(1 => 2), raw[:,1], nothing, raw[:,2], raw[:,3], :unknown)
         ]
-        fit_opts = FitOptions(;what_fit=Dict(InfDiffusionCoefficient()=>Bool[0,0,0,1,1]))
-        model = ESFramework(solvent, data_inf; opts=fit_opts, solute=solute)
+        model = ESFramework(["hexane", "toluene"], system, data_inf; tofit=Dict(InfDiffusionCoefficient(1=>2)=>[:α2,:α3]))
 
+        α_D_inf = first.(getproperty.(model[InfDiffusionCoefficient(1 => 2)],[:α0,:αln,:α1,:α2,:α3]))
         α_D_inf_ref = [0.0; 0.0; 0.0;-2.604944e+00;-1.567851e+00;;]
-        @test all(isapprox(model[InfDiffusionCoefficient()].α, α_D_inf_ref; rtol=1e-5))
+        @test all(isapprox(α_D_inf, α_D_inf_ref; rtol=1e-5))
     end
 
     @testset "Call" begin
@@ -51,10 +46,11 @@
             eos_model = PCSAFT("n-butane")
             
             # ES model 
-            model = ESFramework(eos_model,Dict(
-                Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
-                ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
-                SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
+            model = ESFramework("n-butane", eos_model; 
+                userlocations = Dict(
+                    Viscosity() => (; αln=[-14.165], α1=[13.97], α2=[-2.382], α3=[0.501]),
+                    ThermalConductivity() => (; α0=[3.962], αln=[98.222], α1=[-82.974], α2=[20.079], α3=[1.073]),
+                    SelfDiffusionCoefficient() => (; α2=[-3.507], α3=[-0.997]),
             ))
 
             @test viscosity(model, 37.21e6, 323.) ≈ 1.921922e-4 rtol=1e-5
@@ -64,18 +60,13 @@
 
         @testset "Mixtures" begin
             # ES models
-            model_1 = ESFramework(PCSAFT(["benzene","hexane"]), Dict(
-                ThermalConductivity() => [hcat(
-                    [6.492054, 0.0, 0.0, 1.985553, 3.126438],
-                    [9.756965, 0.0, 0.0, 1.657211, 5.058428])],
+            model_1 = ESFramework(["benzene","hexane"], PCSAFT(["benzene","hexane"]);
+                userlocations=Dict(
+                    ThermalConductivity() => (; α0=[6.492054,9.756965], α2=[1.985553,1.657211], α3=[3.126438,5.058428])
             ))
-            model_2 = ESFramework(PCSAFT(["hexane", "dodecane"]), Dict(
-                SelfDiffusionCoefficient() => [hcat(
-                    [0.0, 0.0, 0.0, -2.5414, -1.9186],
-                    [0.0, 0.0, 0.0, -4.6610, -3.2021])],
-                InfDiffusionCoefficient() => [hcat(
-                    [0.0, 0.0, 0.0, -2.5463, -1.8070],
-                    [0.0, 0.0, 0.0, -4.0610, -3.4267])],
+            model_2 = ESFramework(["hexane", "dodecane"], PCSAFT(["hexane", "dodecane"]);
+                userlocations=Dict(
+                    DiffusionCoefficient() => (; α2=[-2.5414 -4.0610;-2.5463 -4.6610], α3=[-1.9186 -3.4267;-1.8070 -3.2021]),
             ))
 
             @test thermal_conductivity(model_1, 0.1e6, 294.7, [.5,.5]) ≈ 1.338512e-1 rtol=1e-5

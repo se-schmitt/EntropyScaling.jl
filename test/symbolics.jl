@@ -6,10 +6,7 @@
     @variables p, T
 
     @testset "framework model" begin 
-        model_FW = ESFramework(PCSAFT("n-butane"),Dict(
-            Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
-            SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
-        ))
+        model_FW = ESFramework("n-butane", PCSAFT("n-butane"))
 
         @test viscosity(model_FW, p, T) isa Num
         @test self_diffusion_coefficient(model_FW, p, T) isa Num
