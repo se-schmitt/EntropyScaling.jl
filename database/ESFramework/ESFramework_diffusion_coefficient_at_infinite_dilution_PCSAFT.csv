@@ -1,0 +1,5 @@
+Clapeyron Database File,,,,,,
+ESFramework_infdiffusion_PCSAFT pair parameters,,,,,,
+species1,species2,α0,α1,α2,α3,αln,source
+hexane~|~n-hexane,dodecane~|~n-dodecane,0.0,0.0,-4.0610,-3.4267,0.0,10.1038/s41467-025-57780-z
+dodecane~|~n-dodecane,hexane~|~n-hexane,0.0,0.0,-2.5463,-1.8070,0.0,10.1038/s41467-025-57780-z

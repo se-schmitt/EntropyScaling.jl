@@ -1,8 +1,8 @@
 Clapeyron Database File,,,,,,,
 ESFramework_viscosity_SAFTVRMie Like Parameters,,,,,,,
-species,α0,α1,α2,α3,αln,source
-n-hexane,0,2.883,0.178,0.152,-1.906,10.1016/j.molliq.2023.123811
-n-hexane (p≤10MPa),0,2.991,0.207,0.142,-2.135,10.1016/j.molliq.2023.123811
-benzene,0,7.779,-1.152,0.363,-7.591,10.1016/j.molliq.2023.123811
-nitrogen,-0.013,3.005,-0.037,0.25,-2.291,10.1016/j.molliq.2023.123811
-1-propanol,0,0,0.69,0.158,0,10.1016/j.molliq.2023.123811
+species,α0,α1,α2,α3,αln,source,
+hexane~|~n-hexane,0.0,2.883,0.178,0.152,-1.906,10.1016/j.molliq.2023.123811,
+n-hexane (p≤10MPa),0.0,2.991,0.207,0.142,-2.135,10.1016/j.molliq.2023.123811,
+benzene,0.0,7.779,-1.152,0.363,-7.591,10.1016/j.molliq.2023.123811,
+nitrogen,-0.013,3.005,-0.037,0.25,-2.291,10.1016/j.molliq.2023.123811,
+propanol~|~1-propanol~|~propan-1-ol,0.0,0.0,0.69,0.158,0.0,10.1016/j.molliq.2023.123811,

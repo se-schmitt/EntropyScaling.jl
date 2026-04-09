@@ -1,4 +1,4 @@
 Clapeyron Database File,,,,,,,
 ESFramework_viscosity_sCPA Like Parameters,,,,,,,
-species,α0,α1,α2,α3,αln,source
-methanol,0.118,11.046,-2.159,0.444,-12.592,10.1016/j.molliq.2023.123811
+species,α0,α1,α2,α3,αln,source,
+methanol,0.118,11.046,-2.159,0.444,-12.592,10.1016/j.molliq.2023.123811,

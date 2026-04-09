@@ -1,7 +1,7 @@
 Clapeyron Database File,,,,,,,
 ESFramework_viscosity_PCSAFT Like Parameters,,,,,,,
-species,α0,α1,α2,α3,αln,source
-n-butane,0,13.97,-2.382,0.501,-14.165,10.1016/j.molliq.2023.123811
-n-hexadecane,0,-6.898,3.01,0.172,10.987,10.1016/j.molliq.2023.123811
-carbon dioxide,0,9.498,-1.76,0.418,-9.576,10.1016/j.molliq.2023.123811
-1-octanol,0,18.866,-3.858,0.807,-18.349,10.1016/j.molliq.2023.123811
+species,α0,α1,α2,α3,αln,source,
+butane~|~n-butane,0.0,13.97,-2.382,0.501,-14.165,10.1016/j.molliq.2023.123811,
+hexadecane~|~n-hexadecane,0.0,-6.898,3.01,0.172,10.987,10.1016/j.molliq.2023.123811,
+carbon dioxide,0.0,9.498,-1.76,0.418,-9.576,10.1016/j.molliq.2023.123811,
+1-octanol~|~octan-1-ol,0.0,18.866,-3.858,0.807,-18.349,10.1016/j.molliq.2023.123811,
