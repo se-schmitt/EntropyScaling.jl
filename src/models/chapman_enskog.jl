@@ -1,5 +1,14 @@
 export ChapmanEnskog
 
+struct ChapmanEnskog{T,C} <: ChapmanEnskogModel
+    components::Vector{String}
+    sigma::CL.SingleParam{T}
+    epsilon::CL.SingleParam{T}
+    Mw::CL.SingleParam{T}
+    collision::C
+    sources::Vector{String}
+end
+
 """
     ChapmanEnskog <: ChapmanEnskogModel
     ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
@@ -33,19 +42,14 @@ model_mix = ChapmanEnskog(["butane","methanol"])
 D_mix = self_diffusion_coefficient(model_mix, NaN, 300., [.5,.5])
 ```
 """
-struct ChapmanEnskog{T,C} <: ChapmanEnskogModel
-    components::Vector{String}
-    sigma::CL.SingleParam{T}
-    epsilon::CL.SingleParam{T}
-    Mw::CL.SingleParam{T}
-    collision::C
-    sources::Vector{String}
-end
+ChapmanEnskog
+
+db_model_path(::Type{ChapmanEnskogModel}) = joinpath("ChapmanEnskog", "ChapmanEnskog.csv")
 
 function ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
     _components = CL.format_components(components)
 
-    params = CL.getparams(_components, [get_db_path(ChapmanEnskogModel, nothing)]; userlocations)
+    params = CL.getparams(_components, [get_db_path(ChapmanEnskogModel, nothing, nothing)]; userlocations)
 
     σ = params["sigma"]
     σ.values .*= 1e-10
@@ -122,7 +126,8 @@ function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i
         dBdT = second_virial_coefficient_dT(eos,T)/NA
         B = second_virial_coefficient(eos,T)/NA
     else
-        x = zeros(Int64,length(model)); x[i] = 1
+        x = zeros(Int64,length(model))
+        x[i] = 1
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
         B = second_virial_coefficient(eos,T,x)/NA
     end
@@ -187,6 +192,15 @@ function property_CE_plus(prop::AbstractTransportProperty, model::ChapmanEnskogM
     end
 end
 
+#TODO used somewhere?
+function property_CE_plus(prop::SelfDiffusionCoefficient, models::Matrix{<:ChapmanEnskogModel}, eos, T, z)
+    N = length(eos)
+    pures = split_model(eos)
+    _eos = repeat(permutedims(pures),N,1)
+    Y₀⁺_all = property_CE_plus.(prop, models, _eos, T; i=1)
+    return [mix_CE(prop, models[i,i], Y₀⁺_all[i,:], z) for i in eachindex(z)]
+end
+
 function property_CE_plus(prop::P, model::ChapmanEnskogModel, eos, T, z=Z1; i=0) where
                     {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
     return MS_diffusion_coefficient_CE_plus(model, eos, T, z; i=i)
@@ -203,9 +217,9 @@ struct KimMonroe <: AbstractCollisionIntegralMethod end
 struct Neufeld <: AbstractCollisionIntegralMethod end
 
 Ω(prop::Union{Viscosity,ThermalConductivity},method::KimMonroe,T_red) = Ω_22(T_red)
-Ω(prop::DiffusionCoefficient,method::KimMonroe,T_red) = Ω_11(T_red)
+Ω(prop::AbstractDiffusionCoefficient,method::KimMonroe,T_red) = Ω_11(T_red)
 Ω(prop::Union{Viscosity,ThermalConductivity},method::Neufeld,T_red) = Ω_22_neufeld(T_red)
-Ω(prop::DiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
+Ω(prop::AbstractDiffusionCoefficient,method::Neufeld,T_red) = Ω_11_neufeld(T_red)
 
 """
     Ω(poperty::AbstractTransportProperty, model::ChapmanEnskogModel, T)
@@ -276,8 +290,8 @@ function correspondence_principle(Tc, pc)
     Tc_LJ = 1.321
     pc_LJ = 0.129
 
-    ε = kB*Tc/Tc_LJ
-    σ = cbrt(pc_LJ/pc*ε)
+    ε = Tc/Tc_LJ
+    σ = cbrt(pc_LJ/pc*ε*kB)/1e-10
     return σ, ε
 end
 
@@ -311,8 +325,12 @@ function mix_CE(::MillerCarman,model::AbstractDiluteGasModel, Y, x)
     return 1.0 / sum(x[i] / Y[i] for i in eachindex(Y))
 end
 
-function mix_CE(prop::DiffusionCoefficient, model::AbstractDiluteGasModel,Y,x)
+function mix_CE(prop::AbstractDiffusionCoefficient, model::AbstractDiluteGasModel,Y::Vector,x)
     return mix_CE(MillerCarman(),model,Y,x)
+end
+
+function mix_CE(prop::AbstractDiffusionCoefficient, model::AbstractDiluteGasModel,Y::Matrix,x)
+    return [mix_CE(MillerCarman(),model,Y[i,:],x) for i in eachindex(x)]
 end
 
 function mix_CE(prop::Viscosity, model::AbstractDiluteGasModel, Y, x)
