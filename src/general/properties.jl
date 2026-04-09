@@ -90,11 +90,12 @@ end
 
 function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
     N = length(model)
-    param = model[InfDiffusionCoefficient()]
+    params_diff = model.params[DiffusionCoefficient()]
+    param = _init_msdiff_param(params_diff)
     
     Ðᵢⱼ = zero(MSDiffusionMatrix, N)
     for i in 1:N, j in i+1:N
-        #TODO extend to multicomponent mixtures
+        _set_msdiff_param!(param, params_diff, i, j)
         s = entropy_conf(model.eos, ϱ, T, z)
         sˢ = scaling_variable(param, s, z)
         Dˢ = scaling_model(param, sˢ, z)

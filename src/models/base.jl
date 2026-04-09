@@ -1,5 +1,29 @@
-#show methods for AbstractEntropyScalingParams
-function Base.show(io::IO,params::AbstractEntropyScalingParams{P}) where P
+struct ParamVector{ETA,LAMBDA,D}
+    viscosity::ETA
+    thermal_conductivity::LAMBDA
+    diffusion::D
+end
+ParamVector(d::Dict) = ParamVector(d[Viscosity()], d[ThermalConductivity()], d[DiffusionCoefficient()])
+_get_empty_params_dict() = Dict{AbstractTransportProperty,Any}(prop => missing for prop in [Viscosity(), ThermalConductivity(), DiffusionCoefficient()])
+Base.getindex(x::ParamVector, ::Viscosity) = x.viscosity
+Base.getindex(x::ParamVector, ::ThermalConductivity) = x.thermal_conductivity
+Base.getindex(x::ParamVector, ::AbstractDiffusionCoefficient) = x.diffusion
+Base.ismissing(::ParamVector{E,L,D}) where {E,L,D} = _is_Missing(E) && _is_Missing(L) && _is_Missing(D)
+_is_Missing(x) = x == Missing
+Base.length(::ParamVector{E,L,D}) where {E,L,D} = _is_Missing(E) + _is_Missing(L) + _is_Missing(D)
+get_props(params::ParamVector) = begin
+    props = AbstractTransportProperty[]
+    for field in fieldnames(ParamVector)
+        val = getproperty(params, field)
+        if !ismissing(val)
+            push!(props, transport_property(val))
+        end
+    end
+    return props
+end
+
+#show methods for AbstractEntropyScalingParam
+function Base.show(io::IO,params::AbstractEntropyScalingParam{P}) where P
     print(io,typeof(params).name.name)
     print(io,"{")
     print(io,symbol(P))
@@ -8,11 +32,11 @@ function Base.show(io::IO,params::AbstractEntropyScalingParams{P}) where P
     print(io,")")
 end
 
-function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParams{P}) where P
+function Base.show(io::IO,::MIME"text/plain",params::AbstractEntropyScalingParam{P}) where P
     print(io,typeof(params).name.name)
     print(io,"{")
     print(io,symbol(P))
-    print(io,"} ($(length(params.ce.Mw)) components) with fields: ")
+    print(io,"} ($(length(params)) components) with fields: ")
     print(io,join(fieldnames(typeof(params)),", "))
 end
 
@@ -42,15 +66,7 @@ function Base.show(io::IO,::MIME"text/plain",model::AbstractEntropyScalingModel)
     Base.print_matrix(IOContext(io, :compact => true),model.components)
     println(io)
     print(io," Available properties: ")
-    if model.params isa AbstractEntropyScalingParams
-        print(io,name(transport_property(model.params)))
-    else
-        np = length(model.params)
-        for i in 1:np
-            print(io,name(transport_property(model.params[i])))
-            i != np && print(io,", ")
-        end
-    end
+    print(io,join(name.(get_props(model.params)), ", "))
     println(io)
     print(io," Equation of state: ")
     print(io,model.eos)
@@ -68,7 +84,7 @@ end
 #transport_property methods
 transport_property(x::AbstractTransportProperty) = x
 transport_property(x::BaseParam) = x.prop
-transport_property(::AbstractEntropyScalingParams{P}) where P = P()
+transport_property(::AbstractEntropyScalingParam{P}) where P = P()
 
 #Base.getindex methods
 
@@ -76,14 +92,18 @@ function Base.getindex(model::AbstractEntropyScalingModel, prop::P) where P <: A
     return getindex_prop(model.params,prop)
 end
 
+function getindex_prop(params::ParamVector, prop::AbstractTransportProperty)
+    return params[prop]
+end
+
 get_prop_type(m) = typeof(transport_property(m))
 get_prop_type(m::Type{BaseParam{P}}) where P = P
 
-function get_prop_type(::Type{T}) where T <: AbstractEntropyScalingParams
+function get_prop_type(::Type{T}) where T <: AbstractEntropyScalingParam
     return get_prop_type(fieldtype(T,:base))
 end
 
-#valid for any container of AbstractEntropyScalingParams
+#valid for any container of AbstractEntropyScalingParam
 function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
     idx = findfirst(Base.Fix1(transport_compare_type,P),x)
     if isnothing(idx)
@@ -94,7 +114,7 @@ function getindex_prop(x,prop::P) where P <: AbstractTransportProperty
 end
 
 #when the param is just a AbstractEntropyScalingParam
-function getindex_prop(x::AbstractEntropyScalingParams,prop::P) where P <: AbstractTransportProperty
+function getindex_prop(x::AbstractEntropyScalingParam,prop::P) where P <: AbstractTransportProperty
     T = get_prop_type(x)
     if !transport_compare_type(T,P)
         return getindex_prop_error(P)
@@ -104,14 +124,14 @@ function getindex_prop(x::AbstractEntropyScalingParams,prop::P) where P <: Abstr
 end
 
 #=
-when the param is a tuple of AbstractEntropyScalingParams.
+when the param is a tuple of AbstractEntropyScalingParam.
 
 note to developers,
 
 this function allows access to the properties without allocations, but it is a generated function
 so no function inside can be overloaded during a julia session.
 =#
-@generated function getindex_prop(x::T,prop::P) where {T<:NTuple{<:Any,AbstractEntropyScalingParams},P<:AbstractTransportProperty}
+@generated function getindex_prop(x::T,prop::P) where {T<:NTuple{<:Any,AbstractEntropyScalingParam},P<:AbstractTransportProperty}
     idx = findfirst(xi -> transport_compare_type(get_prop_type(xi),P),fieldtypes(T))
     if isnothing(idx)
         return quote
@@ -129,10 +149,10 @@ end
 
 #get_m
 
-get_m(m::AbstractEntropyScalingParams) = m.m
+get_m(m::AbstractEntropyScalingParam) = m.m
 
 # entropy scaling variable
-function scaling_variable(param::AbstractEntropyScalingParams, s, z = Z1)
+function scaling_variable(param::AbstractEntropyScalingParam, s, z = Z1)
     return -s / R
 end
 
@@ -149,8 +169,8 @@ end
 build_model(MODEL,components,params,eos) = MODEL(components,params,eos,String[])
 build_model(::Type{MODEL},eos,params::Tuple) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
 build_model(::Type{MODEL},eos,params::AbstractVector) where MODEL = build_model(MODEL,eos,tuple(params...))
-build_model(::Type{MODEL},eos,params::AbstractEntropyScalingParams) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
-function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,ps) where PARAM <: AbstractEntropyScalingParams
+build_model(::Type{MODEL},eos,params::AbstractEntropyScalingParam) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
+function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,ps) where PARAM <: AbstractEntropyScalingParam
     PARAM(prop,eos,ps...)
 end
 
