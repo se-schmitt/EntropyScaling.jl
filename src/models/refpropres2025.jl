@@ -51,7 +51,7 @@ model_mix = RefpropRES2025(["decane","butane"])
 """
 RefpropRES2025
 
-db_prefix(::Type{RefpropRES2025}) = "RefpropRES2025"
+db_model_path(::Type{RefpropRES2025}) = joinpath("RefpropRES", "RefpropRES2025_[PROP].csv")
 
 function RefpropRES2025(components, eos=nothing; userlocations=String[], ce_userlocations=String[], verbose=false)
     _components = CL.format_components(components)
@@ -61,7 +61,7 @@ function RefpropRES2025(components, eos=nothing; userlocations=String[], ce_user
     params = RefpropRES2025Param[]
     for prop in [Viscosity()]
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
-        _params = CL.getparams(_components, [get_db_path(RefpropRES2025, prop)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_REFPROPRES)
+        _params = CL.getparams(_components, [get_db_path(RefpropRES2025, prop, nothing)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_REFPROPRES)
         components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
 
         if any(components_missing)

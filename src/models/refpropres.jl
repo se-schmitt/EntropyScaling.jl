@@ -7,7 +7,7 @@ struct CritTCNParam{T} <: AbstractParam
     Tref::CL.SingleParam{T}
 end
 
-abstract type AbstractRefpropRESParam{P,T} <: AbstractEntropyScalingParams{P} end
+abstract type AbstractRefpropRESParam{P,T} <: AbstractEntropyScalingParam{P} end
 
 struct RefpropRESParam{P,T} <: AbstractRefpropRESParam{P,T}
     n1::CL.SingleParam{T}
@@ -67,19 +67,19 @@ model_mix = RefpropRES(["decane","butane"])
 """
 RefpropRES
 
-db_prefix(::Type{RefpropRES}) = "RefpropRES"
+db_model_path(::Type{RefpropRES}) = joinpath("RefpropRES", "RefpropRES_[PROP].csv")
 const PARAMS_REFPROPRES = ["ξ","n1","n2","n3","n4","φ0","Γ","qD","Tref"]
-const CE_YANG2021_PATH = joinpath(DB_PATH,"ChapmanEnskogYang2021.csv")
+const CE_YANG2021_PATH = joinpath(DB_PATH, "ChapmanEnskog", "ChapmanEnskogYang2021.csv")
 
 function RefpropRES(components, eos=nothing; userlocations=String[], ce_userlocations=String[], verbose=false)
     _components = CL.format_components(components)
 
     _eos = _build_multifluid(_components, eos)
     
-    params = RefpropRESParam[]
+    params_dict = _get_empty_params_dict()
     for prop in [Viscosity(), ThermalConductivity()]
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
-        _params = CL.getparams(_components, [get_db_path(RefpropRES, prop)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_REFPROPRES)
+        _params = CL.getparams(_components, [get_db_path(RefpropRES, prop, nothing)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_REFPROPRES)
         components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
 
         if any(components_missing)
@@ -95,11 +95,12 @@ function RefpropRES(components, eos=nothing; userlocations=String[], ce_userloca
             ce = ChapmanEnskog(_components; userlocations=_ce_userlocations, collision_integral=KimMonroe())
             crit = CritTCNParam(_params["φ0"], _params["Γ"], _params["qD"], _params["Tref"])
 
-            push!(params, RefpropRESParam(n1,n2,n3,n4,ξ,crit,ce,prop))
+            params_dict[prop] = RefpropRESParam(n1,n2,n3,n4,ξ,crit,ce,prop)
         end
     end
 
-    isempty(params) && error("No parameters found for components: $(join(components, ',')).")
+    params = ParamVector(params_dict)
+    ismissing(params) && error("No parameters found for components: $(join(components, ',')).")
 
     ref = ["10.1007/s10765-022-03096-9","10.1021/acs.iecr.1c02154"]
 
@@ -172,7 +173,7 @@ end
 
 function thermal_conductivity_internal(η₀, cₚ, Mw)
     f_int = 1.32
-    return f_int * η₀/Mw * (cₚ - 5/2*R)
+    return f_int * η₀/(Mw*1e-3) * (cₚ - 5/2*R)
 end
 
 function thermal_conductivity_critical(crit, eos, ϱ, T, η, z)

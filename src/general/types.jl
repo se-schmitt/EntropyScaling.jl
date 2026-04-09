@@ -1,4 +1,4 @@
-export Viscosity, ThermalConductivity, SelfDiffusionCoefficient
+export Viscosity, ThermalConductivity, SelfDiffusionCoefficient, DiffusionCoefficient
 export InfDiffusionCoefficient, MaxwellStefanDiffusionCoefficient, FickDiffusionCoefficient
 
 abstract type AbstractTransportPropertyModel end
@@ -16,14 +16,15 @@ Base.length(model::T) where {T <: AbstractTransportPropertyModel} = length(model
 Base.length(model::T) where {T <: AbstractEntropyScalingModel} = length(model.eos)
 
 abstract type AbstractParam end
-abstract type AbstractEntropyScalingParams{P} <: AbstractParam end
+abstract type AbstractEntropyScalingParam{P} <: AbstractParam end
 Base.broadcastable(param::AbstractParam) = Ref(param)
+Base.length(param::AbstractParam) = length(param.ce.Mw)
 
 abstract type AbstractTransportProperty end
 abstract type AbstractViscosity <: AbstractTransportProperty end
 abstract type AbstractThermalConductivity <: AbstractTransportProperty end
 Base.broadcastable(prop::AbstractTransportProperty) = Ref(prop)
-abstract type DiffusionCoefficient <: AbstractTransportProperty end
+abstract type AbstractDiffusionCoefficient <: AbstractTransportProperty end
 
 struct BaseParam{P} <: AbstractParam
     prop::P
@@ -54,22 +55,40 @@ name(::AbstractThermalConductivity) = "thermal conductivity"
 symbol(::AbstractThermalConductivity) = :λ
 symbol_name(::AbstractThermalConductivity) = "lambda"
 
-struct SelfDiffusionCoefficient <: DiffusionCoefficient end
+struct DiffusionCoefficient <: AbstractDiffusionCoefficient end
+name(::DiffusionCoefficient) = "diffusion coefficient"
+symbol(::DiffusionCoefficient) = :D
+symbol_name(::DiffusionCoefficient) = "D"
+
+struct SelfDiffusionCoefficient <: AbstractDiffusionCoefficient end
 name(::SelfDiffusionCoefficient) = "self-diffusion coefficient"
 symbol(::SelfDiffusionCoefficient) = :D
 symbol_name(::SelfDiffusionCoefficient) = "D"
 
-struct InfDiffusionCoefficient <: DiffusionCoefficient end
+struct InfDiffusionCoefficient <: AbstractDiffusionCoefficient 
+    solute::Int64
+    solvent::Int64
+end
+InfDiffusionCoefficient(x::Pair) = InfDiffusionCoefficient(x.first, x.second)
+InfDiffusionCoefficient() = InfDiffusionCoefficient(0,0)
 name(::InfDiffusionCoefficient) = "diffusion coefficient at infinite dilution"
 symbol(::InfDiffusionCoefficient) = :D∞
 symbol_name(::InfDiffusionCoefficient) = "D_inf"
 
-struct MaxwellStefanDiffusionCoefficient <: DiffusionCoefficient end
+struct MaxwellStefanDiffusionCoefficient <: AbstractDiffusionCoefficient 
+    A::Int64
+    B::Int64
+end
+MaxwellStefanDiffusionCoefficient() = MaxwellStefanDiffusionCoefficient(0,0)
 name(::MaxwellStefanDiffusionCoefficient) = "Maxwell-Stefan diffusion coefficient"
 symbol(::MaxwellStefanDiffusionCoefficient) = :Ð
 symbol_name(::MaxwellStefanDiffusionCoefficient) = "D_MS"
 
-struct FickDiffusionCoefficient <: DiffusionCoefficient end
+struct FickDiffusionCoefficient <: AbstractDiffusionCoefficient 
+    A::Int64
+    B::Int64
+end
+FickDiffusionCoefficient() = FickDiffusionCoefficient(0,0)
 name(::FickDiffusionCoefficient) = "Fickian diffusion coefficient"
 symbol(::FickDiffusionCoefficient) = :Dᵢⱼ
 symbol_name(::FickDiffusionCoefficient) = "D_Fick"
@@ -80,8 +99,8 @@ symbol_name(::Type{P}) where {P<:AbstractTransportProperty} = symbol_name(P())
 
 # used for general comparisons
 # transport_compare_type(P1::AbstractTransportProperty, P2::AbstractTransportProperty) = transport_compare_type(typeof(P1), typeof(P2))
-transport_compare_type(P1::Type{T}, P2::AbstractEntropyScalingParams{T}) where {T<:AbstractTransportProperty} = true
-transport_compare_type(P1::Type{T1}, P2::AbstractEntropyScalingParams{T2}) where {T1,T2} = false
+transport_compare_type(P1::Type{T}, P2::AbstractEntropyScalingParam{T}) where {T<:AbstractTransportProperty} = true
+transport_compare_type(P1::Type{T1}, P2::AbstractEntropyScalingParam{T2}) where {T1,T2} = false
 # transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractThermalConductivity, T2 <: AbstractThermalConductivity} = true
 # transport_compare_type(P1::Type{T1}, P2::Type{T2}) where {T1 <: AbstractTransportProperty, T2 <: AbstractTransportProperty} = false
 

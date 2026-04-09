@@ -28,17 +28,19 @@ struct PolynomialDiluteGasModel{P,T} <: AbstractDiluteGasModel
     components::Vector{<:AbstractString}
     m::Matrix{T}
     Mw::Vector{T}
-    ref::Vector{Reference}
+    sources::Vector{String}
     prop::P
 end
+
+db_model_path(::Type{PolynomialDiluteGasModel}) = joinpath("Others", "PolynomialDiluteGas_[PROP].csv")
 
 # Constructor
 function PolynomialDiluteGasModel(comps::Vector{<:AbstractString}; ref="", ref_id="", prop=Viscosity())
     out = load_params(PolynomialDiluteGasModel, prop, comps; ref, ref_id)
     ismissing(out) ? throw(MissingException("No polynomial dilute gas parameters found for system [$(join(comps,", "))]")) : nothing
-    Mw, _m..., refs = out 
+    Mw, _m..., sources = out
     m = permutedims(hcat(_m...))
-    return PolynomialDiluteGasModel(comps, m, Mw, refs, prop)
+    return PolynomialDiluteGasModel(comps, m, Mw, sources, prop)
 end
 PolynomialDiluteGasModel(comps::String; kwargs...) = PolynomialDiluteGasModel([comps]; kwargs...)
 

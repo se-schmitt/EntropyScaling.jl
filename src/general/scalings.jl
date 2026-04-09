@@ -23,7 +23,7 @@ function rosenfeld_scaling(param::BaseParam{<:AbstractThermalConductivity}, λ, 
     return λ / ((ϱ*NA)^(2/3) * kB)^k * sqrt(Mw / (T * kB * NA))^k
 end
 
-function rosenfeld_scaling(param::BaseParam{<:DiffusionCoefficient}, D, T, ϱ, z = Z1; inv=false)
+function rosenfeld_scaling(param::BaseParam{<:AbstractDiffusionCoefficient}, D, T, ϱ, z = Z1; inv=false)
     k = !inv ? 1 : -1
     Mw = _dot(param.Mw,z)*1e-3
     return D * sqrt(Mw / (NA * kB * T))^k * (ϱ*NA)^(k/3)
