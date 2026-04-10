@@ -37,7 +37,7 @@
 
         # Chapman-Enskog 
         σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3         # Poling et al.
-        model = ChapmanEnskog("methane", σ, ε, Mw)
+        model = ChapmanEnskog("methane")
         @test viscosity(model, NaN, 200.0u"K"; output=u"μPa*s").val ≈ 7.6848  rtol=1e-2
     end
 end
