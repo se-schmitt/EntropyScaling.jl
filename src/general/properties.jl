@@ -12,10 +12,10 @@ end
 
 function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
     param = model[Viscosity()]          
-    s = entropy_conf(model.eos, ϱ, T, z)    # enstrpicht (s_res)
-    sˢ = scaling_variable(param, s, z)      # enstrpicht (z)
-    ηˢ = scaling_model(param, sˢ, z)        # entspricht (η*)
-    return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true) # entspricht (η)
+    s = entropy_conf(model.eos, ϱ, T, z)
+    sˢ = scaling_variable(param, s, z)
+    ηˢ = scaling_model(param, sˢ, z)
+    return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true)
 end
 
 

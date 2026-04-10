@@ -40,7 +40,10 @@ EntropyScaling.FrameworkModel
 EntropyScaling.RefpropRESModel
 ```
 
-#TODO
+## Group-contribution model
+```@docs
+EntropyScaling.GCESModel
+```
 
 ## Fitting Utilities
 

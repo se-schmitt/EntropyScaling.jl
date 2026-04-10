@@ -1,7 +1,7 @@
 # Load Parameters
 function load_params(file::String, components::Vector{<:AbstractString}; ref="", ref_id="")
     data, header = readdlm(file, ','; header=true)
-    j_subs = findfirst(header[:] .== "substance") 
+    j_subs = findfirst(header[:] .== "substance")
     j_ref = findfirst(header[:] .== "ref")
     j_ref_id = findfirst(header[:] .== "ref_id")
     @assert !any(isnothing.([j_subs,j_ref,j_ref_id])) "Wrong format of header in file $file." 
@@ -40,7 +40,7 @@ function load_gc_params(file::String, groups; ref="", ref_id="")
 
     grps_uni = unique(first.(vcat(groups...)))
     idx_grps_uni = [findfirst(data[:, j_groups] .== group) for group in grps_uni]
-    A = Dict(_grp => data[_idx,j_params[1]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni)) #TODO use Clapeyrons SingleParam
+    A = Dict(_grp => data[_idx,j_params[1]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
     B = Dict(_grp => data[_idx,j_params[2]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
     C = Dict(_grp => data[_idx,j_params[3]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
     D = Dict(_grp => data[_idx,j_params[4]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
