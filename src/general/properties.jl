@@ -24,7 +24,7 @@ function viscosity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknow
 end
 
 function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
-    param = model[Viscosity()]
+    param = model[Viscosity()]          
     s = entropy_conf(model.eos, ϱ, T, z)
     sˢ = scaling_variable(param, s, z)
     ηˢ = scaling_model(param, sˢ, z)

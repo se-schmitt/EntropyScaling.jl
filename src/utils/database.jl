@@ -29,6 +29,30 @@ function load_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, compon
     return load_params(db_path, lowercase.(components); ref=ref, ref_id=ref_id)
 end
 
+function load_gc_params(file::String, groups; ref="", ref_id="")
+    data, header = readdlm(file, ','; header=true)
+    j_groups = findfirst(header[:] .== "groups") #Spaltenindex für groups
+    j_ref = findfirst(header[:] .== "ref")
+    j_ref_id = findfirst(header[:] .== "ref_id")
+    @assert !any(isnothing.([j_groups,j_ref,j_ref_id])) "Wrong format of header in file $file." 
+    N_cols = length(header)
+    j_params = findall((!).(in).(1:N_cols,Ref(vcat(j_groups,j_ref,j_ref_id)))) #Spaltenidizes für Parameter
+
+    grps_uni = unique(first.(vcat(groups...)))
+    idx_grps_uni = [findfirst(data[:, j_groups] .== group) for group in grps_uni]
+    A = Dict(_grp => data[_idx,j_params[1]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
+    B = Dict(_grp => data[_idx,j_params[2]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
+    C = Dict(_grp => data[_idx,j_params[3]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
+    D = Dict(_grp => data[_idx,j_params[4]] for (_idx,_grp) in zip(idx_grps_uni, grps_uni))
+
+    return A, B, C, D
+end
+
+function load_gc_params(MODEL::Type{<:AbstractTransportPropertyModel}, prop, groups; ref="", ref_id="")
+    db_path = get_db_path(MODEL, prop)
+    return load_gc_params(db_path, groups; ref=ref, ref_id=ref_id)
+end
+
 function load_refprop_names(_components)
     components = lowercase.(_components)
     refprop_names = fill("",size(components))
