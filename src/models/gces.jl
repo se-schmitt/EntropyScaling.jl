@@ -10,17 +10,38 @@ struct GCESParams{P,T} <: AbstractEntropyScalingParams
     base::BaseParam{P}
 end
 
-"""
-    GCESModel <: AbstractEntropyScalingModel
-
-Group-contribution entropy scaling model [lotgering-lin_pure_2018](@cite) based on the homosegmented PCP-SAFT EOS [sauer_comparison_2014](@cite).
-"""
-struct GCESModel{E, P, H} <: AbstractEntropyScalingModel    #TODO adapt structure from Clapeyron.jl (same for params)
+struct GCESModel{E, P, G} <: AbstractEntropyScalingModel
     components::Vector{<:AbstractString}
-    groups::H
+    groups::G
     params::P
     eos::E
 end
+
+"""
+    GCESModel
+
+Group contribution model for the viscosity from Löterging-Lin and Gross (2015) [lotgering-lin_group_2015](@cite).
+The model is based on the homosegmented GC-PCP-SAFT EOS.
+
+# Parameters
+
+- `A` - `B`: component-specific parameters calculated from the groups
+
+`m` (segment parameter of molecular-based EOS) are additional internal parameters (not to be set at 
+construction).
+
+# Example 
+
+```julia
+using EntropyScaling, Clapeyron, GCIdentifier
+
+component = get_groups_from_smiles("CCCO", gcPCPSAFTGroups)
+model = GCESModel(HomogcPCPSAFT(component), [component])
+
+η = viscosity(model, 0.1e6, 300.)
+```
+"""
+GCESModel
 
 @modelmethods GCESModel GCESParams
 

@@ -41,6 +41,7 @@ EntropyScaling.RefpropRESModel
 ```
 
 ## Group-contribution model
+
 ```@docs
 EntropyScaling.GCESModel
 ```
