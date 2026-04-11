@@ -41,6 +41,12 @@ EntropyScaling.RefpropRES
 EntropyScaling.RefpropRES2025
 ```
 
+## Group-contribution model
+
+```@docs
+EntropyScaling.GCESModel
+```
+
 ## Fitting Utilities
 
 Some entropy scaling models allow the fitting of substance-specific parameters to experimental data.

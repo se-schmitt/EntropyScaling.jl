@@ -44,5 +44,6 @@ include("models/dilute_gas_correlations.jl")
 include("models/framework.jl")
 include("models/refpropres.jl")
 include("models/refpropres2025.jl")
+include("models/gces.jl")
 
 end
