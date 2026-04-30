@@ -62,6 +62,24 @@ function ChapmanEnskog(components; userlocations=String[], collision_integral=Ki
     return ChapmanEnskog(_components, σ, ε, Mw, collision_integral, ref)
 end
 
+function ChapmanEnskog(eos::CL.EoSModel; collision_integral=KimMonroe())
+    components = eos.components
+    σ = CL.SingleParam("sigma", components, diag(eos.params.sigma.values))
+    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*kB)
+    Mw = eos.params.Mw
+    ref = eos.references
+    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref)
+end
+
+function ChapmanEnskog(eos::CL.HomogcPCPSAFTModel; collision_integral=KimMonroe())
+    components = eos.components
+    σ = CL.SingleParam("sigma", components, diag(eos.pcpmodel.params.sigma.values))
+    ε = CL.SingleParam("epsilon", components, diag(eos.pcpmodel.params.epsilon.values).*kB)
+    Mw = eos.pcpmodel.params.Mw
+    ref = eos.references
+    return ChapmanEnskog(eos.components, σ, ε, Mw, collision_integral, ref)
+end
+
 Base.length(model::ChapmanEnskogModel) = length(model.components)
 
 # Viscosity
