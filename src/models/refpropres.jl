@@ -71,7 +71,7 @@ db_model_path(::Type{RefpropRES}) = joinpath("RefpropRES", "RefpropRES_[PROP].cs
 const PARAMS_REFPROPRES = ["ξ","n1","n2","n3","n4","φ0","Γ","qD","Tref"]
 const CE_YANG2021_PATH = joinpath(DB_PATH, "ChapmanEnskog", "ChapmanEnskogYang2021.csv")
 
-function RefpropRES(components, eos=nothing; userlocations=String[], ce_userlocations=String[], verbose=false)
+function RefpropRES(components, eos=nothing; userlocations=Dict(), ce_userlocations=String[], verbose=false)
     _components = CL.format_components(components)
 
     _eos = _build_multifluid(_components, eos)
