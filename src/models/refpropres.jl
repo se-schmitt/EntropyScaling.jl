@@ -27,8 +27,6 @@ struct RefpropRES{E,P} <: RefpropRESModel
     sources::Vector{String}
 end
 
-# @modelmethods RefpropRES RefpropRESParam
-
 """
     RefpropRES{E,P} <: RefpropRESModel
 
@@ -144,9 +142,9 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
         each_ind = eachindex(z)
         λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
         η₀   = [viscosity(param.ce, T; i) for i in each_ind]
-        pure_eos = split_model(eos)
+        pure_eos = CL.split_model(eos)
         cₚ₀  = isobaric_heat_capacity.(pure_eos, 1e-10, T)
-        λ_int = thermal_conductivity_internal.(η₀, cₚ₀, get_Mw(eos))
+        λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
         Δλ_c  = thermal_conductivity_critical(param.crit, eos, ϱ, T, η, z)
         Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
     else

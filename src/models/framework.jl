@@ -158,7 +158,7 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
             _eos = eos
             _components = _components
         else
-            _eos = split_model(eos)[prop.solvent]
+            _eos = CL.split_model(eos)[prop.solvent]
             _components = ["$(_components[prop.solute]) in $(_components[prop.solvent])"]
         end
         data = collect_data(datasets, prop)
@@ -216,13 +216,13 @@ get_α0(::ThermalConductivity, components) = begin
 end
 
 function init_framework_params(eos, prop; collision_integral)
-    eos_pure = split_model(eos)
+    eos_pure = CL.split_model(eos)
     cs = crit_pure.(eos_pure)
     (Tc, pc) = [getindex.(cs, i) for i in 1:2]
     σε = correspondence_principle.(Tc, pc)
     (σ, ε) = [getindex.(σε, i) for i in 1:2]
 
-    Mw = get_Mw(eos)
+    Mw = CL.mw(eos)
     if typeof(prop) == InfDiffusionCoefficient
         idx_sol = [prop.solvent,prop.solute]
         σ = [mean(σ[idx_sol])]

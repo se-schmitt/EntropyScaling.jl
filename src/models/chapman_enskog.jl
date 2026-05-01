@@ -213,7 +213,7 @@ end
 #TODO used somewhere?
 function property_CE_plus(prop::SelfDiffusionCoefficient, models::Matrix{<:ChapmanEnskogModel}, eos, T, z)
     N = length(eos)
-    pures = split_model(eos)
+    pures = CL.split_model(eos)
     _eos = repeat(permutedims(pures),N,1)
     Y₀⁺_all = property_CE_plus.(prop, models, _eos, T; i=1)
     return [mix_CE(prop, models[i,i], Y₀⁺_all[i,:], z) for i in eachindex(z)]

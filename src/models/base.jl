@@ -155,34 +155,3 @@ get_m(m::AbstractEntropyScalingParam) = m.m
 function scaling_variable(param::AbstractEntropyScalingParam, s, z = Z1)
     return -s / R
 end
-
-function build_model(::Type{MODEL},eos,param_dict::Dict{P}) where {MODEL<:AbstractEntropyScalingModel,P<:AbstractTransportProperty}
-    params_vec = Any[]
-    PARAM = paramstype(MODEL)
-    for (prop, ps) in param_dict
-        push!(params_vec, build_param(PARAM, prop, eos, ps))
-    end
-    params = tuple(params_vec...)
-    return MODEL(eos, params)
-end
-
-build_model(MODEL,components,params,eos) = MODEL(components,params,eos,String[])
-build_model(::Type{MODEL},eos,params::Tuple) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
-build_model(::Type{MODEL},eos,params::AbstractVector) where MODEL = build_model(MODEL,eos,tuple(params...))
-build_model(::Type{MODEL},eos,params::AbstractEntropyScalingParam) where MODEL = build_model(MODEL,get_components(eos),params,_eos_cache(eos))
-function build_param(::Type{PARAM},prop::AbstractTransportProperty,eos,ps) where PARAM <: AbstractEntropyScalingParam
-    PARAM(prop,eos,ps...)
-end
-
-function paramstype end
-#a macro that automates some definitions of model methods.
-#TODO: handle fitting for arbitrary methods.
-macro modelmethods(model,param)
-    return quote
-        EntropyScaling.paramstype(::Type{<:$model}) = $param
-        $model(eos,params::Tuple) = EntropyScaling.build_model($model,eos,params)
-        $model(eos,params::AbstractVector) = EntropyScaling.build_model($model,eos,params)
-        $model(eos,params::Dict{P}) where P<:EntropyScaling.AbstractTransportProperty = EntropyScaling.build_model($model,eos,params)
-        $model(eos,params::$param) = EntropyScaling.build_model($model,eos,params)
-    end |> esc
-end
