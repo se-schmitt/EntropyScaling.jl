@@ -147,10 +147,6 @@ function getindex_prop_error(P)
     throw(error("cannot find specified property $P"))
 end
 
-#get_m
-
-get_m(m::AbstractEntropyScalingParam) = m.m
-
 # entropy scaling variable
 function scaling_variable(param::AbstractEntropyScalingParam, s, z = Z1)
     return -s / R
