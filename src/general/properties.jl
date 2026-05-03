@@ -62,7 +62,7 @@ self_diffusion_coefficient
 function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
     V = CL.volume(model.eos, p, T, z; phase=phase)
     if length(model) == 1
-        return VT_self_diffusion_coefficient(model, V, T)
+        return VT_self_diffusion_coefficient(model, V/sum(z), T)
     else
         return VT_self_diffusion_coefficient(model, V, T, z)
     end
@@ -73,7 +73,7 @@ function VT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T)
     s = CL.VT_entropy_res(model.eos, V, T)
     sˢ = scaling_variable(param, s)
     Dˢ = scaling_model(param, sˢ)
-    return scaling(param, model.eos, Dˢ, T, sum(z)/V, s; inv=true)
+    return scaling(param, model.eos, Dˢ, T, inv(V), s; inv=true)
 end
 
 """

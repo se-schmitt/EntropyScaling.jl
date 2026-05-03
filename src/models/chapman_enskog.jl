@@ -210,15 +210,6 @@ function property_CE_plus(prop::AbstractTransportProperty, model::ChapmanEnskogM
     end
 end
 
-#TODO used somewhere?
-function property_CE_plus(prop::SelfDiffusionCoefficient, models::Matrix{<:ChapmanEnskogModel}, eos, T, z)
-    N = length(eos)
-    pures = CL.split_model(eos)
-    _eos = repeat(permutedims(pures),N,1)
-    Y₀⁺_all = property_CE_plus.(prop, models, _eos, T; i=1)
-    return [mix_CE(prop, models[i,i], Y₀⁺_all[i,:], z) for i in eachindex(z)]
-end
-
 function property_CE_plus(prop::P, model::ChapmanEnskogModel, eos, T, z=Z1; i=0) where
                     {P <: Union{MaxwellStefanDiffusionCoefficient,InfDiffusionCoefficient}}
     return MS_diffusion_coefficient_CE_plus(model, eos, T, z; i=i)
