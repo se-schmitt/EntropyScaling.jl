@@ -174,10 +174,10 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
         param = ESFrameworkParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce, prop)
 
         for k in findall(isnan.(data.ϱ))
-            data.ϱ[k] = molar_density(_eos, data.p[k], data.T[k])
+            data.ϱ[k] = inv(CL.volume(_eos, data.p[k], data.T[k]))
         end
 
-        s   = entropy_conf.(_eos, data.ϱ, data.T)
+        s   = CL.VT_entropy_res.(_eos, inv.(data.ϱ), data.T)
         sˢ  = scaling_variable.(param, s)
         Yˢ  = scaling.(param, _eos, data.Y, data.T, data.ϱ, s)
 
@@ -217,7 +217,7 @@ end
 
 function init_framework_params(eos, prop; collision_integral)
     eos_pure = CL.split_model(eos)
-    cs = crit_pure.(eos_pure)
+    cs = CL.crit_pure.(eos_pure)
     (Tc, pc) = [getindex.(cs, i) for i in 1:2]
     σε = correspondence_principle.(Tc, pc)
     (σ, ε) = [getindex.(σε, i) for i in 1:2]
@@ -298,11 +298,12 @@ function scaling_variable(param::Union{ESFrameworkParam, ESFrameworkDiffParam}, 
     return -s / R / _dot(param.m, z)
 end
 
-function ϱT_self_diffusion_coefficient(model::ESFramework, ϱ, T, z::AbstractVector)
+function VT_self_diffusion_coefficient(model::ESFramework, V, T, z::AbstractVector)
     params_diff = model.params[DiffusionCoefficient()]
     param = _init_selfdiff_param(params_diff)
-    s  = entropy_conf(model.eos, ϱ, T, z)
+    s  = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
+    ϱ = sum(z)/V
 
     D = zero(z)
     for i in eachindex(z)

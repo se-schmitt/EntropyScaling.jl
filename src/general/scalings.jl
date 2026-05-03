@@ -1,8 +1,8 @@
 
 """
-    rosenfeld_scaling(param::BaseParam{Viscosity},η,T,ϱN;inv=false)
-    rosenfeld_scaling(param::BaseParam{ThermalConductivity},λ,T,ϱN;inv=false)
-    rosenfeld_scaling(param::BaseParam{DiffusionCoefficient},D,T,ϱN;inv=false)
+    rosenfeld_scaling(param::BaseParam{Viscosity}, η, T, ϱ; inv=false)
+    rosenfeld_scaling(param::BaseParam{ThermalConductivity}, λ, T, ϱ; inv=false)
+    rosenfeld_scaling(param::BaseParam{DiffusionCoefficient}, D, T, ϱ; inv=false)
 
 Rosenfeld scaling for transport properties.
 
@@ -30,7 +30,7 @@ function rosenfeld_scaling(param::BaseParam{<:AbstractDiffusionCoefficient}, D, 
 end
 
 """
-    plus_scaling(param::BaseParam,Y,T,ϱN,s;inv=false)
+    plus_scaling(param::BaseParam, Y, T, ϱ, s; inv=false)
 
 Plus scaling for transport properties.
 

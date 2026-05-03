@@ -136,6 +136,7 @@ end
 
 function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inv=true, η=nothing) where {P,TT}
     k  = !inv ? 1 : -1
+    V = inv(ϱ)
     tp = transport_property(param)
 
     if tp == ThermalConductivity()
@@ -143,9 +144,9 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
         λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
         η₀   = [viscosity(param.ce, T; i) for i in each_ind]
         pure_eos = CL.split_model(eos)
-        cₚ₀  = isobaric_heat_capacity.(pure_eos, 1e-10, T)
+        cₚ₀  = CL.VT_isobaric_heat_capacity.(pure_eos, 1e10, T)
         λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
-        Δλ_c  = thermal_conductivity_critical(param.crit, eos, ϱ, T, η, z)
+        Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
         Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
     else
         Y₀ = property_CE(tp, param.ce, T, z)
@@ -156,16 +157,16 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
     if inv
         return plus_scaling(base, Y, T, ϱ, s, z; inv=true) + Y₀
     else
-        return plus_scaling(base, Y - Y₀, ϱ, s, z; inv=false)
+        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inv=false)
     end
 end
 
-function ϱT_thermal_conductivity(model::RefpropRES, ϱ, T, z::AbstractVector=Z1)
+function VT_thermal_conductivity(model::RefpropRES, V, T, z::AbstractVector=Z1)
     param = model[ThermalConductivity()]
-    s  = entropy_conf(model.eos, ϱ, T, z)
+    s  = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    η  = ϱT_viscosity(model, ϱ, T, z)
+    η  = VT_viscosity(model, V, T, z)
     return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η)
 end
 
@@ -174,7 +175,7 @@ function thermal_conductivity_internal(η₀, cₚ, Mw)
     return f_int * η₀/(Mw*1e-3) * (cₚ - 5/2*R)
 end
 
-function thermal_conductivity_critical(crit, eos, ϱ, T, η, z)
+function thermal_conductivity_critical(crit, eos, V, T, η, z)
     RD   = 1.02
     ν_γ  = 0.63 / 1.239
 
@@ -183,22 +184,22 @@ function thermal_conductivity_critical(crit, eos, ϱ, T, η, z)
 
     φ0, Γ, qD, Tref = (_dot(getproperty(crit,k), z) for k in (:φ0, :Γ, :qD, :Tref))
 
-    ∂ϱ∂p      = ForwardDiff.derivative(xp -> molar_density(eos, xp, T,    z; ϱ0=ϱ), pressure(eos, ϱ, T,    z))
-    ∂ϱ∂p_Tref = ForwardDiff.derivative(xp -> molar_density(eos, xp, Tref, z; ϱ0=ϱ), pressure(eos, ϱ, Tref, z))
+    ∂ϱ∂p      = ForwardDiff.derivative(xp -> CL.molar_density(eos, xp, T,    z; vol0=V), CL.pressure(eos, V, T,    z))
+    ∂ϱ∂p_Tref = ForwardDiff.derivative(xp -> CL.molar_density(eos, xp, Tref, z; vol0=V), CL.pressure(eos, V, Tref, z))
     Δ∂ϱ∂p = ∂ϱ∂p - Tref/T * ∂ϱ∂p_Tref
     if Δ∂ϱ∂p < 0
         return 0.0
     else
-        cₚ     = isobaric_heat_capacity(eos, ϱ, T, z)
-        cᵥ     = isochoric_heat_capacity(eos, ϱ, T, z)
-        _, pc, ϱc = crit_mix(eos, z)
+        cₚ     = CL.VT_isobaric_heat_capacity(eos, V, T, z)
+        cᵥ     = CL.VT_isochoric_heat_capacity(eos, V, T, z)
+        _, pc, Vc = CL.crit_mix(eos, z)
 
         cᵥ_cₚ  = cᵥ / cₚ
-        ϱr     = ϱ / ϱc
-        φ      = φ0 * (pc/ϱc * ϱr/Γ * Δ∂ϱ∂p)^(ν_γ)
+        ϱr     = Vc / V
+        φ      = φ0 * (pc*Vc * ϱr/Γ * Δ∂ϱ∂p)^(ν_γ)
         qDφ    = qD * φ
         ΔΩ     = 2/π * ((1-cᵥ_cₚ)*atan(qDφ) + cᵥ_cₚ*qDφ - 1 + exp(-qDφ/(1 + qDφ/3*(qDφ/ϱr)^2)))
 
-        return ϱ*cₚ*RD*kB*T / (6π*η*φ) * ΔΩ
+        return cₚ*RD*kB*T / (6π*η*φ*V) * ΔΩ
     end
 end

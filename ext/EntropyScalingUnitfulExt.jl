@@ -64,7 +64,7 @@ for (fn,unit) in [
         (:self_diffusion_coefficient, m^2/s),
         (:MS_diffusion_coefficient, m^2/s)
     ]
-    ϱT_fn = Symbol(:ϱT_,fn)
+    VT_fn = Symbol(:VT_,fn)
     @eval begin
         # Entropy Scaling models
         function ES.$fn(model::AESM, p::Unitful.Pressure, T::Unitful.Temperature, z=Z1; phase=:unknown, output=$unit)
@@ -75,7 +75,8 @@ for (fn,unit) in [
         function ES.$fn(model::AESM, ϱ::__DensityKind, T::Unitful.Temperature, z=Z1; output=$unit)
             x = z./sum(z)
             _ϱ, _T = ustrip_ϱ(ϱ, x, CL.mw(model.eos).*1e-3), ustrip(K, T)
-            _Y = ES.$ϱT_fn(model, _ϱ, _T, x)*$unit
+            _V = inv(_ϱ)
+            _Y = ES.$VT_fn(model, _V, _T, x)*$unit
             return uconvert(output, _Y)
         end
 

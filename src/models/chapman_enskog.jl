@@ -96,11 +96,11 @@ function viscosity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
-        B = second_virial_coefficient(eos,T)/NA
+        B = CL.second_virial_coefficient(eos,T)/NA
     else
         x = zeros(Int64,length(model)); x[i] = 1
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-        B = second_virial_coefficient(eos,T,x)/NA
+        B = CL.second_virial_coefficient(eos,T,x)/NA
     end
     return 5/16/√π / (σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
@@ -119,11 +119,11 @@ function thermal_conductivity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
-        B = second_virial_coefficient(eos,T)/NA
+        B = CL.second_virial_coefficient(eos,T)/NA
     else
         x = zeros(Int64,length(model)); x[i] = 1
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-        B = second_virial_coefficient(eos,T,x)/NA
+        B = CL.second_virial_coefficient(eos,T,x)/NA
     end
     return 75/64/√π / (σ[i]^2*Ω(ThermalConductivity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
@@ -142,12 +142,12 @@ function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i
     σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
-        B = second_virial_coefficient(eos,T)/NA
+        B = CL.second_virial_coefficient(eos,T)/NA
     else
         x = zeros(Int64,length(model))
         x[i] = 1
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-        B = second_virial_coefficient(eos,T,x)/NA
+        B = CL.second_virial_coefficient(eos,T,x)/NA
     end
     return 3/8/√π / (σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
@@ -172,7 +172,7 @@ function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z =
 
     σ = model.sigma.values
     dBdT = second_virial_coefficient_dT(eos,T,z)/NA
-    B = second_virial_coefficient(eos,T,z)/NA
+    B = CL.second_virial_coefficient(eos,T,z)/NA
     return 3/8/√π / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1)) * (T*dBdT+B)^(2/3)
 end
 
@@ -314,7 +314,7 @@ function correspondence_principle(Tc, pc)
 end
 
 function correspondence_principle(eos)
-    Tc,pc,_ = crit_pure(eos)
+    Tc,pc,_ = CL.crit_pure(eos)
     return correspondence_principle(Tc, pc)
 end
 

@@ -71,11 +71,12 @@ function calc_plot_data(model::AESM, data; slims, prop)
     if !isnothing(data)
         ϱdat = deepcopy(data.ϱ)
         what_ϱ_nan = isnan.(ϱdat)
-        ϱdat[what_ϱ_nan] = [molar_density(model.eos, data.p[i], data.T[i]; phase=data.phase[i]) 
+        ϱdat[what_ϱ_nan] = [inv(CL.volume(model.eos, data.p[i], data.T[i]; phase=data.phase[i])) 
                             for i in findall(what_ϱ_nan)]
-        sdat = entropy_conf.(model.eos, ϱdat, data.T)
+        Vdat = 1 ./ ϱdat
+        sdat = CL.VT_entropy_res.(model.eos, Vdat, data.T)
         sˢdata = scaling_variable.(param, sdat)
-        Yˢdata = scaling.(param, model.eos, data.Y, data.T, ϱdat, sdat)
+        Yˢdata = scaling.(param, model.eos, data.Y, data.T, Vdat, sdat)
     else
         (sˢdata, Yˢdata) = (nothing, nothing)
     end
