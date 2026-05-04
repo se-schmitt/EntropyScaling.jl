@@ -1,4 +1,6 @@
-# Chapman-Enskog Model
+# Zero-density Transport models
+
+## Chapman-Enskog Model
 
 Chapman-Enskog model for transport properties at the zero-density limit based on the kinetic gas theory.
 
@@ -13,4 +15,10 @@ D_{\varrho \rightarrow 0} \varrho^{\rm m} &= \frac{3}{8} \sqrt{\frac{M k_{\rm B}
 ```@docs
 EntropyScaling.ChapmanEnskog
 EntropyScaling.Ω
+```
+
+## Polynomial Dilute Gas Model
+
+```@docs
+EntropyScaling.PolynomialDiluteGas
 ```
