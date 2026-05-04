@@ -167,7 +167,7 @@ function VT_thermal_conductivity(model::RefpropRES, V, T, z::AbstractVector=Z1)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
     η  = VT_viscosity(model, V, T, z)
-    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inverse=true, η)
+    return scaling(param, model.eos, λˢ, T, sum(z)/V, s, z; inverse=true, η)
 end
 
 function thermal_conductivity_internal(η₀, cₚ, Mw)
