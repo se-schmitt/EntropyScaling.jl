@@ -280,8 +280,8 @@ end
 #sigmoid function with bias
 W(x, sₓ=0.5, κ=20.0) = 1.0/(1.0+exp(κ*(x-sₓ)))
 
-function scaling(param::ESFrameworkParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inv=false) where {P,TT}
-    k = !inv ? 1 : -1
+function scaling(param::ESFrameworkParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inverse=false) where {P,TT}
+    k = !inverse ? 1 : -1
 
     prop   = transport_property(param)
     Y₀⁺    = property_CE_plus(prop, param.ce, eos, T, z)
@@ -290,7 +290,7 @@ function scaling(param::ESFrameworkParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inv=fals
     sˢ  = scaling_variable(param, s, z)
     Ws  = W(sˢ)
     base = BaseParam(P(),param.ce.Mw)
-    Yˢ  = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^k * plus_scaling(base, Y, T, ϱ, s, z; inv=inv)
+    Yˢ  = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^k * plus_scaling(base, Y, T, ϱ, s, z; inverse)
     return Yˢ
 end
 
@@ -309,7 +309,7 @@ function VT_self_diffusion_coefficient(model::ESFramework, V, T, z::AbstractVect
     for i in eachindex(z)
         _set_selfdiff_param!(param, params_diff, i)
         Dˢ = scaling_model(param, sˢ, z)
-        D[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
+        D[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inverse=true)
     end
     
     return D

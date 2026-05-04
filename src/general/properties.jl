@@ -28,7 +28,7 @@ function VT_viscosity(model::AbstractEntropyScalingModel, V, T, z::AbstractVecto
     s = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
     ηˢ = scaling_model(param, sˢ, z)
-    return scaling(param, model.eos, ηˢ, T, sum(z)/V, s, z; inv=true)
+    return scaling(param, model.eos, ηˢ, T, sum(z)/V, s, z; inverse=true)
 end
 
 
@@ -49,7 +49,7 @@ function VT_thermal_conductivity(model::AbstractEntropyScalingModel, V, T, z::Ab
     s = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    return scaling(param, model.eos, λˢ, T, sum(z)/V, s, z; inv=true)
+    return scaling(param, model.eos, λˢ, T, sum(z)/V, s, z; inverse=true)
 end
 
 """
@@ -73,7 +73,7 @@ function VT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T)
     s = CL.VT_entropy_res(model.eos, V, T)
     sˢ = scaling_variable(param, s)
     Dˢ = scaling_model(param, sˢ)
-    return scaling(param, model.eos, Dˢ, T, inv(V), s; inv=true)
+    return scaling(param, model.eos, Dˢ, T, inv(V), s; inverse=true)
 end
 
 """
@@ -99,7 +99,7 @@ function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z
         s = CL.VT_entropy_res(model.eos, V, T, z)
         sˢ = scaling_variable(param, s, z)
         Dˢ = scaling_model(param, sˢ, z)
-        Ðᵢⱼ[i,j] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inv=true)
+        Ðᵢⱼ[i,j] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inverse=true)
     end
     return Ðᵢⱼ
 end

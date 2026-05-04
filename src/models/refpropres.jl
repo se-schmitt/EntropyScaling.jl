@@ -134,8 +134,8 @@ function powerseries_scaling_model(param, s, x, g)
     return Y⁺
 end
 
-function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inv=true, η=nothing) where {P,TT}
-    k  = !inv ? 1 : -1
+function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inverse=true, η=nothing) where {P,TT}
+    k  = !inverse ? 1 : -1
     V = inv(ϱ)
     tp = transport_property(param)
 
@@ -154,10 +154,10 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
 
     base = BaseParam(P(),param.ce.Mw)
 
-    if inv
-        return plus_scaling(base, Y, T, ϱ, s, z; inv=true) + Y₀
+    if inverse
+        return plus_scaling(base, Y, T, ϱ, s, z; inverse=true) + Y₀
     else
-        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inv=false)
+        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inverse=false)
     end
 end
 
@@ -167,7 +167,7 @@ function VT_thermal_conductivity(model::RefpropRES, V, T, z::AbstractVector=Z1)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
     η  = VT_viscosity(model, V, T, z)
-    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true, η)
+    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inverse=true, η)
 end
 
 function thermal_conductivity_internal(η₀, cₚ, Mw)

@@ -140,8 +140,8 @@ function scaling_model(param::GCESParams{<:AbstractViscosity,T}, sˢ, x=Z1) wher
     return ηˢ
 end
 
-function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inv=true)
-    k = inv ? 1 : -1
+function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inverse=true)
+    k = inverse ? 1 : -1
     prop = transport_property(param)
     Y₀ = property_CE(prop, param.ce, T, z)
     return Yˢ*Y₀^k
