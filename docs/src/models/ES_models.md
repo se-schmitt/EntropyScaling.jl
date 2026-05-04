@@ -44,7 +44,7 @@ EntropyScaling.RefpropRES2025
 ## Group-contribution model
 
 ```@docs
-EntropyScaling.GCESModel
+EntropyScaling.GCES
 ```
 
 ## Fitting Utilities
@@ -60,5 +60,4 @@ Therefore, a unified interface is provided including the handling of the data an
 
 ```@docs
 EntropyScaling.TransportPropertyData
-EntropyScaling.FitOptions
 ```

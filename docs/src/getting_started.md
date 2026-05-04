@@ -75,5 +75,5 @@ Plotting functionality is available through extensions to [`Makie.jl`](https://d
 In particular, "entropy scaling" plots, i.e. the scaled transport property $Y^s$ as function of the scaled entropy $s^s$, can easily be created as described below.
 
 ```@docs
-EntropyScaling.plot
+EntropyScaling.plot_scaling
 ```
