@@ -71,7 +71,6 @@ viscosity(eta_model, nothing, nothing, [0.5,0.5]) # Error
 PureModelContainer
 
 function PureModelContainer(prop, ::Type{𝕄}, components; kwargs...) where {𝕄<:AESM}
-    # models = [init_model(MODEL, c, userlocations, verbose) for c in components]
     models = [𝕄(c) for c in components]
     return PureModelContainer(prop, models)
 end

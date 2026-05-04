@@ -1,4 +1,6 @@
-@testset "UnitfulExt" begin
+@testitem "UnitfulExt" begin
+    using Clapeyron
+    using Unitful
 
     @testset "Data Constructors" begin
         ηdatu = ViscosityData([300.0u"K"], [1u"bar"], [1u"mPa*s"])
@@ -22,11 +24,7 @@
 
     @testset "Property functions" begin
         # Framework model
-        model = FrameworkModel(PCSAFT("n-butane"),Dict(
-            Viscosity() => [[0.;-14.165;13.97;-2.382;0.501;;]],
-            ThermalConductivity() => [[3.962;98.222;-82.974;20.079;1.073;;]],
-            SelfDiffusionCoefficient() => [[0.;0.;0.;-3.507;-0.997;;]]
-        ))
+        model = ESFramework("n-butane", PCSAFT("n-butane"))
 
         @test viscosity(model, 37.21u"MPa", 323u"K"; output=u"cP").val ≈ 1.921922e-1 rtol=1e-5
         @test thermal_conductivity(model, 372.1u"bar", 49.85u"°C").val ≈ 1.199070e-1 rtol=1e-5
@@ -39,7 +37,7 @@
 
         # Chapman-Enskog 
         σ, ε, Mw = 3.758e-10, 148.6*EntropyScaling.kB, 16.043e-3         # Poling et al.
-        model = ChapmanEnskogModel("methane", σ, ε, Mw)
+        model = ChapmanEnskog("methane")
         @test viscosity(model, NaN, 200.0u"K"; output=u"μPa*s").val ≈ 7.6848  rtol=1e-2
     end
 end

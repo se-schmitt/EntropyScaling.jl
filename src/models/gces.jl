@@ -1,20 +1,23 @@
-export GCESModel, GCESParams
+export GCES
 
-struct GCESParams{P,T} <: AbstractEntropyScalingParams
-    A::Vector{T}
-    B::Vector{T}
-    C::Vector{T}
-    D::Vector{T}
-    m::Vector{T}
-    CE_model::ChapmanEnskogModel{T,<:AbstractCollisionIntegralMethod}
-    base::BaseParam{P}
+abstract type GCESModel <: AbstractEntropyScalingModel end
+
+struct GCESParams{P,T} <: AbstractEntropyScalingParam{P}
+    A::CL.SingleParam{T}
+    B::CL.SingleParam{T}
+    C::CL.SingleParam{T}
+    D::CL.SingleParam{T}
+    m::CL.SingleParam{T}
+    ce::ChapmanEnskog{T,<:AbstractCollisionIntegralMethod}
+    prop::P
 end
 
-struct GCESModel{E, P, G} <: AbstractEntropyScalingModel
+struct GCES{E, P} <: GCESModel
     components::Vector{<:AbstractString}
-    groups::G
+    groups::CL.GroupParam{Float64}
     params::P
     eos::E
+    sources::Vector{String}
 end
 
 """
@@ -41,60 +44,89 @@ model = GCESModel(HomogcPCPSAFT(component), [component])
 η = viscosity(model, 0.1e6, 300.)
 ```
 """
-GCESModel
+GCES
 
-@modelmethods GCESModel GCESParams
+db_model_path(::Type{GCES}) = joinpath("GCES", "GCES_[PROP].csv")
+const PARAMS_GCES = ["A","B","C","D"]
 
-function GCESModel(eos, components::Vector{<:Tuple})
-    N_comps = length(components)
-    names = first.(components)
-    groups = last.(components)
+function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
+    _components = CL.format_components(components)
+
+    γ = 0.45
+
+    _eos = _build_homogc_pcsaft(_components, eos)
+    groups = _eos.groups
     groups_eos = deepcopy(groups)
-
-    prop = Viscosity()
+    mₐ = _eos.params.segment
+    σₐ = _eos.params.sigma
+    σᵢ = _eos.pcpmodel.params.sigma
+    εᵢ = _eos.pcpmodel.params.epsilon
+    mᵢ = _eos.pcpmodel.params.segment
 
     # Catch special cases
-    for groups_i in groups
-        if groups_i == ["CH3" => 2]       # ethane
-            groups_i[:] .= ["CH3_eth" => 2]
+    idx_eth = findfirst(groups.groups .== Ref(["CH3"]))
+    if !isnothing(idx_eth)
+        _groups = setindex!(copy(groups.groups), ["CH3_eth"], idx_eth)
+        _N_groups_old = length(groups.flattenedgroups)
+        _flattenedgroups = vcat(copy(groups.flattenedgroups), "CH3_eth")
+        _n_flattenedgroups = [i == idx_eth ? vcat(zeros(_N_groups_old), 2.0) : vcat(v, 0.0) for (i,v) in enumerate(groups.n_flattenedgroups)]
+        _i_groups = findall.(.!iszero.(v) for v in _n_flattenedgroups)
+        groups = CL.GroupParam(_components, _groups, :gcPCPSAFT_ES, groups.n_groups, groups.n_intergroups, _i_groups, _flattenedgroups, _n_flattenedgroups, groups.sourcecsvs)
+    end
+
+    params_dict = _get_empty_params_dict()
+    for prop in [Viscosity()]
+        _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
+        _params = CL.getparams(groups, [get_db_path(GCES, prop, nothing)]; userlocations=_userlocations)
+        components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
+
+        if any(components_missing)
+            verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
+        else
+            Aₐ = _params["A"]
+            Bₐ = _params["B"]
+            Cₐ = _params["C"]
+            Dₐ = _params["D"]
+
+            Aᵢ = CL.SingleParam("A", _components, zeros(length(_components)))
+            Bᵢ = CL.SingleParam("B", _components, zeros(length(_components)))
+            Cᵢ = CL.SingleParam("C", _components, zeros(length(_components)))
+            Dᵢ = CL.SingleParam("D", _components, zeros(length(_components)))
+
+            for (i,(n_i, grps_i, grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
+                Vᵢ = 0
+                for (count, group, group_eos) in zip(n_i, grps_i, grps_eos_i)
+                    Aᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
+                    Bᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Bₐ[group]
+                    Cᵢ[i] += count * Cₐ[group]
+                    Dᵢ[i] += count * Dₐ[group]
+
+                    Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 
+                end
+                Aᵢ[i] += log(sqrt(inv(mᵢ[i])))
+                Bᵢ[i] /= (Vᵢ^γ)
+            end
+            
+            ce = ChapmanEnskog(_eos; collision_integral=KimMonroe())
+
+            params_dict[prop] = GCESParams(Aᵢ,Bᵢ,Cᵢ,Dᵢ,mᵢ,ce,prop)
         end
     end
-    
-    Aₐ, Bₐ, Cₐ, Dₐ = load_gc_params(GCESModel, prop, groups)
 
-    mₐ = eos.params.segment
-    σₐ = eos.params.sigma
-    σᵢ = get_sig(eos)
-    εᵢ = kB .* get_eps(eos)
-    Mw = get_Mw(eos)
-    mᵢ = get_m(eos)
-    
-    Aᵢ = zeros(N_comps)
-    Bᵢ = zeros(N_comps)
-    Cᵢ = zeros(N_comps)
-    Dᵢ = zeros(N_comps)
+    params = ParamVector(params_dict)
+    ismissing(params) && error("No parameters found for components: $(join(components, ',')).")
 
-    for (i,(groups_i,groups_eos_i)) in enumerate(zip(groups,groups_eos))
-        γ = 0.45
-        Vᵢ = 0
-        for ((group, count), group_eos) in zip(groups_i, first.(groups_eos_i))
-            Aᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
-            Bᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Bₐ[group]
-            Cᵢ[i] += count * Cₐ[group]
-            Dᵢ[i] += count * Dₐ[group]
+    ref = ["10.1021/acs.iecr.5b01698"]
 
-            Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 
-        end
-        Aᵢ[i] += log(sqrt(inv(mᵢ[i])))
-        Bᵢ[i] /= (Vᵢ^γ)
-    end
-    
-    CE_model = ChapmanEnskogModel(names,σᵢ,εᵢ,Mw,collision_integral=KimMonroe())
-    params = GCESParams(Aᵢ, Bᵢ, Cᵢ, Dᵢ, mᵢ, CE_model, BaseParam(prop, Mw))
-
-    return GCESModel(names, groups, params, eos)
+    return GCES(_components, groups, params, _eos, ref)
 end
 
+# Internal helper: build a MultiFluid EOS from component names
+_build_homogc_pcsaft(components, eos::CL.EoSModel) = eos
+function _build_homogc_pcsaft(components, ::Nothing)
+    eos = CL.HomogcPCPSAFT(components; assoc_options=CL.AssocOptions(;combining =:cr1))
+    return eos
+end
 
 function scaling_model(param::GCESParams{<:AbstractViscosity,T}, sˢ, x=Z1) where T
     m_mix = _dot(param.m, x)
@@ -108,11 +140,10 @@ function scaling_model(param::GCESParams{<:AbstractViscosity,T}, sˢ, x=Z1) wher
     return ηˢ
 end
 
-
-function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inv=true)
-    k = inv ? 1 : -1
+function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inverse=true)
+    k = inverse ? 1 : -1
     prop = transport_property(param)
-    Y₀ = property_CE(prop, param.CE_model, T, z)
+    Y₀ = property_CE(prop, param.ce, T, z)
     return Yˢ*Y₀^k
 end
 

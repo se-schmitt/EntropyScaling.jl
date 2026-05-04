@@ -3,3 +3,4 @@ Manifest.toml
 docs/build/
 scripts/
 *.cov
+debug*

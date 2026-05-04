@@ -1,0 +1,9 @@
+Clapeyron Database File,,,,,,
+ESFramework_self-diffusion_PCSAFT Like Parameters,,,,,,
+species,α0,α1,α2,α3,αln,source
+butane~|~n-butane,0.0,0.0,-3.507,-0.997,0.0,10.1016/j.molliq.2023.123811
+hexadecane~|~n-hexadecane,0.0,0.0,-7.316,-2.958,0.0,10.1016/j.molliq.2023.123811
+carbon dioxide,0.0,0.0,0.0,-3.491,0.0,10.1016/j.molliq.2023.123811
+1-octanol~|~octan-1-ol,0.0,0.0,0.497,-3.341,0.0,10.1016/j.molliq.2023.123811
+hexane~|~n-hexane,0.0,0.0,-2.5414,-1.9186,0.0,10.1038/s41467-025-57780-z
+dodecane~|~n-dodecane,0.0,0.0,-4.3257,-3.2885,0.0,10.1038/s41467-025-57780-z

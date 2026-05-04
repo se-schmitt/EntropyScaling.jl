@@ -1,7 +1,9 @@
+export plot_scaling, plot_scaling!
+
 """
-    plot(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
-    plot!(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
-    plot!(axis, model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
+    plot_scaling(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
+    plot_scaling!(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
+    plot_scaling!(axis, model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
 
 Plots the scaled transport property as a function of the entropy-scaling variable (e.g. the reduced entropy).
 The entropy scaling model as well as the scaled transport property data are shown.
@@ -47,23 +49,25 @@ T, p = rand(200.:500.,200), 10.0.^(rand(200).*4 .+ 4)
 
 # Create data and model
 ηdat = ViscosityData(T,p,nothing,η)
-model_A = FrameworkModel(PCSAFT(sub), [ηdat])
-model_B = FrameworkModel(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
+model_A = ESFramework(PCSAFT(sub), [ηdat])
+model_B = ESFramework(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
 
 # Plot 
-fig = plot(model_A, ηdat; cprop=:T, linewidth=3, linecolor=:blue, label="model A (4 parameters)")
-plot!(model_B, nothing; slims=(0,3), prop=Viscosity(), linestyle=:dash, label="model B (2 parameters)")
+fig = plot_scaling(model_A, ηdat; cprop=:T, linewidth=3, linecolor=:blue, label="model A (4 parameters)")
+plot_scaling!(model_B, nothing; slims=(0,3), prop=Viscosity(), linestyle=:dash, label="model B (2 parameters)")
 axislegend(position=:lt, framevisible=false)
 ax2 = Axis(fig[2,1])
-plot!(ax2, model_A, ηdat; marker=:star5, markercolor=:red, label="model A again")
+plot_scaling!(ax2, model_A, ηdat; marker=:star5, markercolor=:red, label="model A again")
 axislegend(position=:lt, framevisible=false)
 ax2.yscale = identity
 fig
 ```
 ![Plot example](./assets/plot_example.svg)
 """
-plot
-plot() = nothing
+plot_scaling
+
+plot_scaling() = error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)")
+plot_scaling!() = error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)")
 
 function calc_plot_data(model::AESM, data; slims, prop)
     param = model[prop]
@@ -71,9 +75,9 @@ function calc_plot_data(model::AESM, data; slims, prop)
     if !isnothing(data)
         ϱdat = deepcopy(data.ϱ)
         what_ϱ_nan = isnan.(ϱdat)
-        ϱdat[what_ϱ_nan] = [molar_density(model.eos, data.p[i], data.T[i]; phase=data.phase[i]) 
+        ϱdat[what_ϱ_nan] = [inv(CL.volume(model.eos, data.p[i], data.T[i]; phase=data.phase[i])) 
                             for i in findall(what_ϱ_nan)]
-        sdat = entropy_conf.(model.eos, ϱdat, data.T)
+        sdat = CL.VT_entropy_res.(model.eos, inv.(ϱdat), data.T)
         sˢdata = scaling_variable.(param, sdat)
         Yˢdata = scaling.(param, model.eos, data.Y, data.T, ϱdat, sdat)
     else
