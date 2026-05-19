@@ -80,13 +80,14 @@ const REF_FRAMEWORK = ["10.1016/j.molliq.2023.123811","10.1038/s41467-025-57780-
 # Parameter function
 function ESFramework(components, eos; userlocations=Dict(), collision_integral=KimMonroe(), verbose=false)
     _components = CL.format_components(components)
+    _eos = _build_eos(_components, eos)
     
     params_dict = _get_empty_params_dict()
     for prop in [Viscosity(), ThermalConductivity(), DiffusionCoefficient()]
         _userlocations = get(userlocations, prop, String[])
-        if prop == DiffusionCoefficient() && length(eos) > 1
-            length(eos) == 1 && break
-            filepaths = [get_db_path(ESFramework, prop, eos) for prop in [InfDiffusionCoefficient(), SelfDiffusionCoefficient()]]
+        if prop == DiffusionCoefficient() && length(_eos) > 1
+            length(_eos) == 1 && break
+            filepaths = [get_db_path(ESFramework, prop, _eos) for prop in [InfDiffusionCoefficient(), SelfDiffusionCoefficient()]]
             _params = CL.getparams(_components, filepaths; userlocations=_userlocations, asymmetricparams=PARAMS_FRAMEWORK, ignore_missing_singleparams=PARAMS_FRAMEWORK)
             for par in PARAMS_FRAMEWORK
                 if !(par in keys(_params))
@@ -96,7 +97,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
             _prop = prop
         else
             _prop = (prop == DiffusionCoefficient()) ? SelfDiffusionCoefficient() : prop
-            filepaths = get_db_path(ESFramework, _prop, eos)
+            filepaths = get_db_path(ESFramework, _prop, _eos)
             _params = CL.getparams(_components, [filepaths]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_FRAMEWORK)
         end
         components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
@@ -113,25 +114,25 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
             α3 = _params["α3"]
             αln = _params["αln"]
 
-            m = eos.params.segment
+            m = _eos.params.segment
 
             if _prop isa DiffusionCoefficient
-                N = length(eos)
+                N = length(_eos)
                 ce = Matrix{ChapmanEnskog}(undef,2,2)
                 Y₀⁺min = CL.PairParam("minimum(Y₀⁺)", _components)
                 for i in 1:N, j = 1:N 
                     if i == j
-                        _eos = first(CL.split_model(eos, [i]))
-                        _ce, _Y₀⁺min = init_framework_params(_eos, SelfDiffusionCoefficient(); collision_integral)
+                        _eos_pure = first(CL.split_model(eos, [i]))
+                        _ce, _Y₀⁺min = init_framework_params(_eos_pure, SelfDiffusionCoefficient(); collision_integral)
                     else
-                        _ce, _Y₀⁺min = init_framework_params(eos, InfDiffusionCoefficient(i => j); collision_integral)
+                        _ce, _Y₀⁺min = init_framework_params(_eos, InfDiffusionCoefficient(i => j); collision_integral)
                     end
                     ce[i,j] = _ce
                     Y₀⁺min.values[i,j] = only(_Y₀⁺min)
                 end
                 param = ESFrameworkDiffParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce)
             else
-                ce, _Y₀⁺min = init_framework_params(eos, _prop; collision_integral)
+                ce, _Y₀⁺min = init_framework_params(_eos, _prop; collision_integral)
                 Y₀⁺min = CL.SingleParam("minimum(Y₀⁺)", _components, _Y₀⁺min)
                 param = ESFrameworkParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce,_prop)
             end
@@ -143,43 +144,44 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
     params = ParamVector(params_dict)
     ismissing(params) && error("No parameters found for components: $(join(components, ',')).")
 
-    return ESFramework(_components, params, eos, REF_FRAMEWORK)
+    return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
 
 # Fitting function
 function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), collision_integral=KimMonroe(), verbose=false)
     _components = CL.format_components(components)
+    _eos = _build_eos(_components, eos)
 
     params = ESFrameworkParam[]
     _dataprops = getproperty.(datasets, :prop) |> unique
     for prop in _dataprops
         if prop in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]
-            length(eos) != 1 && error("Only one component allowed for fitting.")
-            _eos = eos
+            length(_eos) != 1 && error("Only one component allowed for fitting.")
+            _eos_pure = _eos
             _components = _components
         else
-            _eos = CL.split_model(eos)[prop.solvent]
+            _eos_pure = CL.split_model(_eos)[prop.solvent]
             _components = ["$(_components[prop.solute]) in $(_components[prop.solvent])"]
         end
         data = collect_data(datasets, prop)
 
         _tofit = prop in keys(tofit) ? tofit[prop] : get_tofit(ESFramework, prop)
 
-        ce, _Y₀⁺min = init_framework_params(eos, prop; collision_integral)
+        ce, _Y₀⁺min = init_framework_params(_eos, prop; collision_integral)
         α0, α1, α2, α3, αln = get_α0(prop, _components)
 
-        m = _eos.params.segment
+        m = _eos_pure.params.segment
         Y₀⁺min = CL.SingleParam("minimum(Y₀⁺)", _components, _Y₀⁺min)
 
         param = ESFrameworkParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce, prop)
 
         for k in findall(isnan.(data.ϱ))
-            data.ϱ[k] = inv(CL.volume(_eos, data.p[k], data.T[k]))
+            data.ϱ[k] = inv(CL.volume(_eos_pure, data.p[k], data.T[k]))
         end
 
-        s   = CL.VT_entropy_res.(_eos, inv.(data.ϱ), data.T)
+        s   = CL.VT_entropy_res.(_eos_pure, inv.(data.ϱ), data.T)
         sˢ  = scaling_variable.(param, s)
-        Yˢ  = scaling.(param, _eos, data.Y, data.T, data.ϱ, s)
+        Yˢ  = scaling.(param, _eos_pure, data.Y, data.T, data.ϱ, s)
 
         f_scale(x) = prop isa ThermalConductivity ? x : log(x)
         fit_fun(xs, p) = begin
@@ -199,7 +201,7 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
         push!(params, param)
     end
 
-    return ESFramework(_components, params, eos, REF_FRAMEWORK)
+    return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
 
 # Fitting utils

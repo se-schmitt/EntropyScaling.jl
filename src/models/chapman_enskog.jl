@@ -221,7 +221,6 @@ property_CE_plus(prop::ThermalConductivity, model::ChapmanEnskogModel, eos, T; i
 property_CE_plus(prop::SelfDiffusionCoefficient, model::ChapmanEnskogModel, eos, T; i) = self_diffusion_coefficient_CE_plus(model, eos, T; i=i)
 
 # Collision integrals
-abstract type AbstractCollisionIntegralMethod end
 struct KimMonroe <: AbstractCollisionIntegralMethod end
 struct Neufeld <: AbstractCollisionIntegralMethod end
 

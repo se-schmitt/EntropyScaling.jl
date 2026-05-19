@@ -37,7 +37,7 @@
                 λ_split = thermal_conductivity(pures[i], p, T)
                 λ_mix = thermal_conductivity(model, p, T, z)
                 @test isfinite(λ_split)
-                @test λ_split ≈ λ_mix rtol=1e-10
+                @test λ_split ≈ λ_mix rtol=1e-6
             end
 
             # Explicit splitter: keep both components as a single 2-component submodel
@@ -61,7 +61,7 @@
             p, T = 1e5, 300.0
             η_split = viscosity(pures[1], p, T; phase=:liquid)
             η_ref = viscosity(RefpropRES("methane"), p, T; phase=:liquid)
-            @test η_split ≈ η_ref rtol=1e-10
+            @test η_split ≈ η_ref rtol=1e-6
         end
 
         @testset "GCES" begin

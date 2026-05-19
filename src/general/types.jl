@@ -15,10 +15,14 @@ abstract type ChapmanEnskogModel <: AbstractDiluteGasModel end
 Base.length(model::T) where {T <: AbstractTransportPropertyModel} = length(model.components)
 Base.length(model::T) where {T <: AbstractEntropyScalingModel} = length(model.eos)
 
+abstract type AbstractCollisionIntegralMethod end
+
 abstract type AbstractParam end
 abstract type AbstractEntropyScalingParam{P} <: AbstractParam end
 Base.broadcastable(param::AbstractParam) = Ref(param)
 Base.length(param::AbstractParam) = length(param.ce.Mw)
+
+abstract type AbstractParamVector end
 
 abstract type AbstractTransportProperty end
 abstract type AbstractViscosity <: AbstractTransportProperty end

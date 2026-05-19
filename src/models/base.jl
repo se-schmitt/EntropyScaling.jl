@@ -1,17 +1,17 @@
-struct ParamVector{ETA,LAMBDA,D}
+struct ParamVector{ETA,LAMBDA,D} <: AbstractParamVector
     viscosity::ETA
     thermal_conductivity::LAMBDA
     diffusion::D
 end
 ParamVector(d::Dict) = ParamVector(d[Viscosity()], d[ThermalConductivity()], d[DiffusionCoefficient()])
 _get_empty_params_dict() = Dict{AbstractTransportProperty,Any}(prop => missing for prop in [Viscosity(), ThermalConductivity(), DiffusionCoefficient()])
-Base.getindex(x::ParamVector, ::Viscosity) = x.viscosity
-Base.getindex(x::ParamVector, ::ThermalConductivity) = x.thermal_conductivity
-Base.getindex(x::ParamVector, ::AbstractDiffusionCoefficient) = x.diffusion
+Base.getindex(x::AbstractParamVector, ::Viscosity) = x.viscosity
+Base.getindex(x::AbstractParamVector, ::ThermalConductivity) = x.thermal_conductivity
+Base.getindex(x::AbstractParamVector, ::AbstractDiffusionCoefficient) = x.diffusion
 Base.ismissing(::ParamVector{E,L,D}) where {E,L,D} = _is_Missing(E) && _is_Missing(L) && _is_Missing(D)
 _is_Missing(x) = x == Missing
 Base.length(::ParamVector{E,L,D}) where {E,L,D} = _is_Missing(E) + _is_Missing(L) + _is_Missing(D)
-get_props(params::ParamVector) = begin
+get_props(params::AbstractParamVector) = begin
     props = AbstractTransportProperty[]
     for field in fieldnames(ParamVector)
         val = getproperty(params, field)
@@ -92,7 +92,7 @@ function Base.getindex(model::AbstractEntropyScalingModel, prop::P) where P <: A
     return getindex_prop(model.params,prop)
 end
 
-function getindex_prop(params::ParamVector, prop::AbstractTransportProperty)
+function getindex_prop(params::AbstractParamVector, prop::AbstractTransportProperty)
     return params[prop]
 end
 
