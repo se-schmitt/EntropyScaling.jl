@@ -35,6 +35,7 @@ include("utils/thermo.jl")
 include("utils/misc.jl")
 include("utils/database.jl")
 include("utils/plots.jl")
+include("utils/split_models.jl")
 
 # Models
 include("models/base.jl")
