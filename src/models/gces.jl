@@ -39,7 +39,7 @@ construction).
 using EntropyScaling, Clapeyron, GCIdentifier
 
 component = get_groups_from_smiles("CCCO", gcPCPSAFTGroups)
-model = GCESModel(HomogcPCPSAFT(component), [component])
+model = GCES(component, HomogcPCPSAFT(component))
 
 η = viscosity(model, 0.1e6, 300.)
 ```
