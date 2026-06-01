@@ -159,22 +159,52 @@ function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inverse=true)
     return Yˢ * Y₀^k
 end
 
-function scaling(param::GCESParams{<:AbstractThermalConductivity,T}, eos, Yˢ, T, ϱ, s, z; inverse=true)
+#function scaling(param::GCESParams{<:AbstractThermalConductivity,T}, eos, Yˢ, F, ϱ, s, z; inverse=true) where {T}
+#k = inverse ? 1 : -1
+#prop = transport_property(param)
+#Y₀ = property_CE(prop, param.ce, F, z)  #! Skalierung anpassen
+#m_mix = _dot(param.m, x)
+#ε_mix = _dot(param.ε, x)
+#Tˢ = R * F / (m_mix / ε_mix)
+#c1 = -0.0167141
+#c2 = 0.0470581
+#return Yˢ * (Y₀ + exp(-sˢ / -0.5) * (m_mix^2 * ϱ^3 * ε_mix / R) * (c1 * Tˢ + c2 * Tˢ))^k
+#end
 
+function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T, ϱ, s, z; inverse=true) where {F}
+    #k = inverse ? 1 : -1
     prop = transport_property(param)
-    Y₀ = property_CE(prop, param.ce, T, z)  #! Skalierung anpassen
-    #λ_ref = Y₀ + phi * λ_int
-    #λ = λˢ * λ_ref
-    return Yˢ * Y₀^k
+
+    # λ_CE aus Chapman-Enskog
+    λ_CE = property_CE(prop, param.ce, T, z)
+
+    # Molekülparameter
+    x = z ./ sum(z)
+    m_mix = _dot(param.m, x)
+    σ_mix = sum(x[i] * eos.pcpmodel.params.sigma[i, i] for i in eachindex(x))
+    ε_mix = sum(x[i] * eos.pcpmodel.params.epsilon[i, i] for i in eachindex(x))
+
+    # Dimensionslose Temperatur T* = k·T / (m/ε)  
+    Tˢ = CL.k_B * T * m_mix / ε_mix
+
+    # λ_int
+    c1 = -0.0167141
+    c2 = 0.0470581
+    λ_int = (m_mix^2 * σ_mix^3 * ε_mix / CL.k_B) * (c1 * Tˢ + c2 * Tˢ^2) * 1e25
+
+    # Übergangsfunktion φ(s*)
+    sˢ = scaling_variable(param, s, z)
+    φ = exp(-sˢ / (-0.5))
+
+    # Referenz-Wärmeleitfähigkeit
+    λ_ref = λ_CE + φ * λ_int
+
+    return Yˢ * λ_ref #^k
 end
+
 
 function scaling_variable(param::GCESParams, s, x=Z1)
     m_mix = _dot(param.m, x)
     return s / R / m_mix
 end
 
-function scaling_variable(param::GCESParams{<:AbstractThermalConductivity,T}, s, x=Z1)
-    m_mix = _dot(param.m, x)
-    sˢ = s / (Clapeyron.k_B * m_mix)
-    return sˢ
-end

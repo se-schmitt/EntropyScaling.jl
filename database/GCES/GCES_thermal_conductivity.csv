@@ -1,8 +1,8 @@
 Clapeyron Database File,,,,,
 GCES Like Parameters,,,,,
 species,A,B,C,D,source
--CH3,-0.022767,-0.271017,0.631023,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
-−CH2−,0.023790,-0.000372,-0.000737,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
+CH3,-0.022767,-0.271017,0.631023,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
+CH2,0.023790,-0.000372,-0.000737,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 H3C−CH3,-0.171653,-0.395063,1.884401,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 CH4,0.083389,-0.525218,1.144751,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 −CH<,0.073479,0.268006,-0.715219,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
@@ -23,7 +23,7 @@ HCOO−,0.139924,-0.390715,0.141069,0,https://pubs.acs.org/doi/suppl/10.1021/acs
 −O−CH2−,-0.279392,-0.455717,0.458677,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 −O−,-0.900976,0.253726,1.716688,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 >C=O,-0.209035,0.052247,0.226533,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
-−OH,0.095944,0.227526,1.182451,0.0038,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
+OH,0.095944,0.227526,1.182451,0.0038,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 CH3OH,-0.558730,-0.434812,0.894255,0.0038,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 −NH2,0.260570,-0.062493,0.661768,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
 >NH,0.185228,0.238233,0.393120,0,https://pubs.acs.org/doi/suppl/10.1021/acs.iecr.9b04289/suppl_file/ie9b04289_si_001.pdf
