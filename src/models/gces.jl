@@ -96,15 +96,24 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
             for (i, (n_i, grps_i, grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
                 Vᵢ = 0
                 for (count, group, group_eos) in zip(n_i, grps_i, grps_eos_i)
-                    Aᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
-                    Bᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Bₐ[group]
+                    if prop isa AbstractViscosity
+                        Aᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
+                        Bᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Bₐ[group]
+                    elseif prop isa AbstractThermalConductivity
+                        Aᵢ[i] += count * Aₐ[group]
+                        Bᵢ[i] += count * Bₐ[group]
+                    end
+
                     Cᵢ[i] += count * Cₐ[group]
                     Dᵢ[i] += count * Dₐ[group]
 
                     Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3
                 end
-                Aᵢ[i] += log(sqrt(inv(mᵢ[i])))
-                Bᵢ[i] /= (Vᵢ^γ)
+
+                if prop isa AbstractViscosity
+                    Aᵢ[i] += log(sqrt(inv(mᵢ[i])))
+                    Bᵢ[i] /= (Vᵢ^γ)
+                end
             end
 
             ce = ChapmanEnskog(_eos; collision_integral=KimMonroe())
