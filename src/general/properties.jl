@@ -135,7 +135,7 @@ function VT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T,
 end
 
 """
-    inf_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown, solute=nothing, solvent=nothing)
+    inf_diffusion_coefficient(model::EntropyScalingModel, p, T; phase=:unknown, solute=nothing, solvent=nothing)
 
 Returns all diffusion coefficients at infinite dilution of the system (if parameters are available):
 
