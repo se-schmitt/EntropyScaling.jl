@@ -12,7 +12,8 @@ struct GCESParams{P,T} <: AbstractEntropyScalingParam{P}
     prop::P
 end
 
-struct GCES{E, P} <: GCESModel
+struct GCES{E,P} <: GCESModel
+
     components::Vector{<:AbstractString}
     groups::CL.GroupParam{Float64}
     params::P
@@ -47,11 +48,10 @@ model = GCES(component, HomogcPCPSAFT(component))
 GCES
 
 db_model_path(::Type{GCES}) = joinpath("GCES", "GCES_[PROP].csv")
-const PARAMS_GCES = ["A","B","C","D"]
+const PARAMS_GCES = ["A", "B", "C", "D"]
 
 function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
     _components = CL.format_components(components)
-
     γ = 0.45
 
     _eos = _build_homogc_pcsaft(_components, eos)
@@ -69,16 +69,16 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
         _groups = setindex!(copy(groups.groups), ["CH3_eth"], idx_eth)
         _N_groups_old = length(groups.flattenedgroups)
         _flattenedgroups = vcat(copy(groups.flattenedgroups), "CH3_eth")
-        _n_flattenedgroups = [i == idx_eth ? vcat(zeros(_N_groups_old), 2.0) : vcat(v, 0.0) for (i,v) in enumerate(groups.n_flattenedgroups)]
+        _n_flattenedgroups = [i == idx_eth ? vcat(zeros(_N_groups_old), 2.0) : vcat(v, 0.0) for (i, v) in enumerate(groups.n_flattenedgroups)]
         _i_groups = findall.(.!iszero.(v) for v in _n_flattenedgroups)
         groups = CL.GroupParam(_components, _groups, :gcPCPSAFT_ES, groups.n_groups, groups.n_intergroups, _i_groups, _flattenedgroups, _n_flattenedgroups, groups.sourcecsvs)
     end
 
     params_dict = _get_empty_params_dict()
-    for prop in [Viscosity()]
+    for prop in [Viscosity(), ThermalConductivity()] #TC hinzugefügt
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
         _params = CL.getparams(groups, [get_db_path(GCES, prop, nothing)]; userlocations=_userlocations)
-        components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
+        components_missing = [all(_v.ismissingvalues[i] for (_, _v) in _params) for i in eachindex(_components)]
 
         if any(components_missing)
             verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
@@ -93,7 +93,7 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
             Cᵢ = CL.SingleParam("C", _components, zeros(length(_components)))
             Dᵢ = CL.SingleParam("D", _components, zeros(length(_components)))
 
-            for (i,(n_i, grps_i, grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
+            for (i, (n_i, grps_i, grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
                 Vᵢ = 0
                 for (count, group, group_eos) in zip(n_i, grps_i, grps_eos_i)
                     Aᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
@@ -101,15 +101,15 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
                     Cᵢ[i] += count * Cₐ[group]
                     Dᵢ[i] += count * Dₐ[group]
 
-                    Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 
+                    Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3
                 end
                 Aᵢ[i] += log(sqrt(inv(mᵢ[i])))
                 Bᵢ[i] /= (Vᵢ^γ)
             end
-            
+
             ce = ChapmanEnskog(_eos; collision_integral=KimMonroe())
 
-            params_dict[prop] = GCESParams(Aᵢ,Bᵢ,Cᵢ,Dᵢ,mᵢ,ce,prop)
+            params_dict[prop] = GCESParams(Aᵢ, Bᵢ, Cᵢ, Dᵢ, mᵢ, ce, prop)
         end
     end
 
@@ -124,30 +124,87 @@ end
 # Internal helper: build a MultiFluid EOS from component names
 _build_homogc_pcsaft(components, eos::CL.EoSModel) = eos
 function _build_homogc_pcsaft(components, ::Nothing)
-    eos = CL.HomogcPCPSAFT(components; assoc_options=CL.AssocOptions(;combining =:cr1))
+    eos = CL.HomogcPCPSAFT(components; assoc_options=CL.AssocOptions(; combining=:cr1))
     return eos
 end
 
-function scaling_model(param::GCESParams{<:AbstractViscosity,T}, sˢ, x=Z1) where T
+function scaling_model(param::GCESParams{<:AbstractViscosity,T}, sˢ, x=Z1) where {T}
     m_mix = _dot(param.m, x)
-    mx = x.*param.m./m_mix
+    mx = x .* param.m ./ m_mix
     A = _dot(param.A, x)
     B = _dot(param.B, mx)
     C = _dot(param.C, mx)
     D = _dot(param.D, mx)
 
-    ηˢ = exp(A + B*sˢ + C*(sˢ^2) + D*(sˢ^3))
+    ηˢ = exp(A + B * sˢ + C * (sˢ^2) + D * (sˢ^3))
     return ηˢ
+end
+
+function scaling_model(param::GCESParams{<:AbstractThermalConductivity,T}, sˢ, x=Z1) where {T}
+    m_mix = _dot(param.m, x)
+    mx = x .* param.m ./ m_mix
+    A = _dot(param.A, x)
+    B = _dot(param.B, mx)
+    C = _dot(param.C, mx)
+    D = _dot(param.D, mx)
+
+    λˢ = exp(A + B * sˢ + C * (1 - exp(sˢ)) + D * sˢ * 2)
+    return λˢ
 end
 
 function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inverse=true)
     k = inverse ? 1 : -1
     prop = transport_property(param)
-    Y₀ = property_CE(prop, param.ce, T, z)
-    return Yˢ*Y₀^k
+    Y₀ = property_CE(prop, param.ce, T, z)  #! Skalierung anpassen
+    return Yˢ * Y₀^k
 end
 
-function scaling_variable(param::GCESParams, s, x = Z1)
-    m_mix = _dot(param.m, x) 
+#function scaling(param::GCESParams{<:AbstractThermalConductivity,T}, eos, Yˢ, F, ϱ, s, z; inverse=true) where {T}
+#k = inverse ? 1 : -1
+#prop = transport_property(param)
+#Y₀ = property_CE(prop, param.ce, F, z)  #! Skalierung anpassen
+#m_mix = _dot(param.m, x)
+#ε_mix = _dot(param.ε, x)
+#Tˢ = R * F / (m_mix / ε_mix)
+#c1 = -0.0167141
+#c2 = 0.0470581
+#return Yˢ * (Y₀ + exp(-sˢ / -0.5) * (m_mix^2 * ϱ^3 * ε_mix / R) * (c1 * Tˢ + c2 * Tˢ))^k
+#end
+
+function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T, ϱ, s, z; inverse=true) where {F}
+    #k = inverse ? 1 : -1
+    prop = transport_property(param)
+
+    # λ_CE aus Chapman-Enskog
+    λ_CE = property_CE(prop, param.ce, T, z)
+
+    # Molekülparameter
+    x = z ./ sum(z)
+    m_mix = _dot(param.m, x)
+    σ_mix = sum(x[i] * eos.pcpmodel.params.sigma[i, i] for i in eachindex(x))
+    ε_mix = sum(x[i] * eos.pcpmodel.params.epsilon[i, i] for i in eachindex(x))
+
+    # Dimensionslose Temperatur T* = k·T / (m/ε)  
+    Tˢ = CL.k_B * T * m_mix / ε_mix
+
+    # λ_int
+    c1 = -0.0167141
+    c2 = 0.0470581
+    λ_int = (m_mix^2 * σ_mix^3 * ε_mix / CL.k_B) * (c1 * Tˢ + c2 * Tˢ^2) * 1e25
+
+    # Übergangsfunktion φ(s*)
+    sˢ = scaling_variable(param, s, z)
+    φ = exp(-sˢ / (-0.5))
+
+    # Referenz-Wärmeleitfähigkeit
+    λ_ref = λ_CE + φ * λ_int
+
+    return Yˢ * λ_ref #^k
+end
+
+
+function scaling_variable(param::GCESParams, s, x=Z1)
+    m_mix = _dot(param.m, x)
     return s / R / m_mix
 end
+
