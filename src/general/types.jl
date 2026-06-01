@@ -64,7 +64,10 @@ name(::DiffusionCoefficient) = "diffusion coefficient"
 symbol(::DiffusionCoefficient) = :D
 symbol_name(::DiffusionCoefficient) = "D"
 
-struct SelfDiffusionCoefficient <: AbstractDiffusionCoefficient end
+struct SelfDiffusionCoefficient <: AbstractDiffusionCoefficient 
+    component::Int64
+end
+SelfDiffusionCoefficient() = SelfDiffusionCoefficient(0)
 name(::SelfDiffusionCoefficient) = "self-diffusion coefficient"
 symbol(::SelfDiffusionCoefficient) = :D
 symbol_name(::SelfDiffusionCoefficient) = "D"

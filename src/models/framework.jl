@@ -116,24 +116,10 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
 
             m = _eos.params.segment
 
+            ce, Y₀⁺min = init_framework_params(_eos, _prop; collision_integral)
             if _prop isa DiffusionCoefficient
-                N = length(_eos)
-                ce = Matrix{ChapmanEnskog}(undef,2,2)
-                Y₀⁺min = CL.PairParam("minimum(Y₀⁺)", _components)
-                for i in 1:N, j = 1:N 
-                    if i == j
-                        _eos_pure = first(CL.split_model(eos, [i]))
-                        _ce, _Y₀⁺min = init_framework_params(_eos_pure, SelfDiffusionCoefficient(); collision_integral)
-                    else
-                        _ce, _Y₀⁺min = init_framework_params(_eos, InfDiffusionCoefficient(i => j); collision_integral)
-                    end
-                    ce[i,j] = _ce
-                    Y₀⁺min.values[i,j] = only(_Y₀⁺min)
-                end
                 param = ESFrameworkDiffParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce)
             else
-                ce, _Y₀⁺min = init_framework_params(_eos, _prop; collision_integral)
-                Y₀⁺min = CL.SingleParam("minimum(Y₀⁺)", _components, _Y₀⁺min)
                 param = ESFrameworkParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce,_prop)
             end
 
@@ -148,58 +134,100 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
 end
 
 # Fitting function
-function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), collision_integral=KimMonroe(), verbose=false)
+function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), α_initial=nothing, collision_integral=KimMonroe(), verbose=false)
     _components = CL.format_components(components)
     _eos = _build_eos(_components, eos)
 
-    params = ESFrameworkParam[]
+    params_dict = _get_empty_params_dict()
     _dataprops = getproperty.(datasets, :prop) |> unique
+    D_nan = ones(Bool, length(_eos), length(_eos))
     for prop in _dataprops
-        if prop in [Viscosity(), ThermalConductivity(), SelfDiffusionCoefficient()]
+        @show prop
+        if prop in [Viscosity(), ThermalConductivity()]
             length(_eos) != 1 && error("Only one component allowed for fitting.")
             _eos_pure = _eos
-            _components = _components
-        else
+        elseif prop isa SelfDiffusionCoefficient
+            idx = (prop.component, prop.component)
+            _eos_pure = CL.split_model(_eos)[prop.component]
+        elseif prop isa InfDiffusionCoefficient
+            idx = (prop.solute, prop.solvent)
             _eos_pure = CL.split_model(_eos)[prop.solvent]
-            _components = ["$(_components[prop.solute]) in $(_components[prop.solvent])"]
         end
         data = collect_data(datasets, prop)
 
         _tofit = prop in keys(tofit) ? tofit[prop] : get_tofit(ESFramework, prop)
 
-        ce, _Y₀⁺min = init_framework_params(_eos, prop; collision_integral)
-        α0, α1, α2, α3, αln = get_α0(prop, _components)
+        if prop isa AbstractDiffusionCoefficient
+            _prop = DiffusionCoefficient()
+            D_nan[idx...] = false
+        else
+            _prop = prop
+        end
 
-        m = _eos_pure.params.segment
-        Y₀⁺min = CL.SingleParam("minimum(Y₀⁺)", _components, _Y₀⁺min)
-
-        param = ESFrameworkParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce, prop)
+        if !(prop isa AbstractDiffusionCoefficient) || ismissing(params_dict[DiffusionCoefficient()])
+            ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral)
+            α0, α1, α2, α3, αln = get_α0(prop, _components)
+            m = _eos.params.segment
+            if prop isa AbstractDiffusionCoefficient
+                param = ESFrameworkDiffParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce)
+            else
+                param = ESFrameworkParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce, prop)
+            end
+        else
+            param = params_dict[DiffusionCoefficient()]
+        end
 
         for k in findall(isnan.(data.ϱ))
             data.ϱ[k] = inv(CL.volume(_eos_pure, data.p[k], data.T[k]))
         end
 
-        s   = CL.VT_entropy_res.(_eos_pure, inv.(data.ϱ), data.T)
-        sˢ  = scaling_variable.(param, s)
-        Yˢ  = scaling.(param, _eos_pure, data.Y, data.T, data.ϱ, s)
+        if prop isa InfDiffusionCoefficient
+            _param = _init_param(param, prop; idx=prop.solvent:prop.solvent)
+            _set_ij_diff_param!(_param, param, prop.solute, prop.solvent)
+        elseif prop isa SelfDiffusionCoefficient
+            _param = _init_param(param, prop; idx=prop.component:prop.component)
+            _set_ij_diff_param!(_param, param, prop.component, prop.component)
+        else
+            _param = param
+        end
+
+        s = CL.VT_entropy_res.(_eos_pure, inv.(data.ϱ), data.T)
+        sˢ  = scaling_variable.(_param, s)
+        Yˢ = scaling.(_param, _eos_pure, data.Y, data.T, data.ϱ, s)
 
         f_scale(x) = prop isa ThermalConductivity ? x : log(x)
         fit_fun(xs, p) = begin
             _T = Base.promote_eltype(xs,p)
-            _param = CL.promote_model_struct(_T, param)
+            __param = CL.promote_model_struct(_T, _param)
             for (i,_n) in enumerate(_tofit)
-                getproperty(_param, _n) .= p[i]
+                getproperty(__param, _n) .= p[i]
             end
-            return f_scale.(scaling_model.(_param, xs))
+            return f_scale.(scaling_model.(__param, xs))
         end
-        sol = curve_fit(fit_fun, sˢ, f_scale.(Yˢ), randn(length(_tofit)); autodiff=:forwarddiff)
+        _α_initial = isnothing(α_initial) ? zeros(length(_tofit)) : α_initial
+        sol = curve_fit(fit_fun, sˢ, f_scale.(Yˢ), _α_initial; autodiff=:forwarddiff)
         α_fitted = coef(sol)
-        for (i,_n) in enumerate(_tofit)
-            getproperty(param, _n) .= α_fitted[i]
-        end
 
-        push!(params, param)
+        if !(prop isa AbstractDiffusionCoefficient) || ismissing(params_dict[DiffusionCoefficient()])
+            for (i,_n) in enumerate(_tofit)
+                getproperty(param, _n).values[idx...] = α_fitted[i]
+            end
+            
+            params_dict[_prop] = param
+        else
+            for (i,_n) in enumerate(_tofit)
+                getproperty(params_dict[_prop], _n).values[idx...] = α_fitted[i]
+            end
+        end
     end
+
+    if !ismissing(params_dict[DiffusionCoefficient()])
+        for _idx in findall(D_nan), _n in [:α0, :α1, :α2, :α3, :αln]
+            getproperty(params_dict[DiffusionCoefficient()], _n).values[_idx] = NaN
+        end
+    end
+
+    params = ParamVector(params_dict)
 
     return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
@@ -216,34 +244,67 @@ get_α0(::ThermalConductivity, components) = begin
     N = length(components)
     return (CL.SingleParam(_n,components,(_n == "α0") ? ones(N) : zeros(N)) for _n in ("α0","α1","α2","α3","αln"))
 end
+get_α0(::AbstractDiffusionCoefficient, components) = begin 
+    N = length(components)
+    return (CL.PairParam(_n,components,zeros(N,N)) for _n in ("α0","α1","α2","α3","αln"))
+end
 
 function init_framework_params(eos, prop; collision_integral)
+    N = length(eos)
+
     eos_pure = CL.split_model(eos)
     cs = CL.crit_pure.(eos_pure)
-    (Tc, pc) = [getindex.(cs, i) for i in 1:2]
+    (Tc, pc) = (getindex.(cs, 1), getindex.(cs, 2))
     σε = correspondence_principle.(Tc, pc)
-    (σ, ε) = [getindex.(σε, i) for i in 1:2]
+    (σ, ε) = (getindex.(σε, 1), getindex.(σε, 2))
 
     Mw = CL.mw(eos)
-    if typeof(prop) == InfDiffusionCoefficient
-        idx_sol = [prop.solvent,prop.solute]
-        σ = [mean(σ[idx_sol])]
-        ε = [geomean(ε[idx_sol])]
-        Mw = [calc_M_CE(Mw[idx_sol])]
-        __components = get_components(eos)
-        _components = ["$(__components[prop.solute]) in $(__components[prop.solvent])"]
-    else
-        _components = get_components(eos)
-    end
-
+    _components = get_components(eos)
+    
     ce = ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral)
 
-    idx_Y = (prop isa InfDiffusionCoefficient) ? (prop.solvent:prop.solvent) : 1:length(eos)
-    Y₀⁺min = zeros(length(idx_Y))
-    for (i,idx) in enumerate(idx_Y)
-        optf(x) = property_CE_plus(prop, ce, eos, x[1]; i=idx)
-        sol = optimize(optf, [2*Tc[idx]], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
-        Y₀⁺min[i] = Optim.minimum(sol)[1]
+    _Y₀⁺min = zeros(N)
+    for i in 1:N
+        optf(x) = property_CE_plus(prop, ce, eos, x[1]; i)
+        sol = optimize(optf, [2*Tc[i]], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
+        _Y₀⁺min[i] = Optim.minimum(sol)[1]
+    end
+    Y₀⁺min = CL.SingleParam("minimum(Y₀⁺)", _components, _Y₀⁺min)
+
+    return ce, Y₀⁺min
+end
+
+function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_integral)
+    N = length(eos)
+
+    eos_pure = CL.split_model(eos)
+    cs = CL.crit_pure.(eos_pure)
+    (Tc, pc) = (getindex.(cs, 1), getindex.(cs, 2))
+    σε = correspondence_principle.(Tc, pc)
+    (σ, ε) = (getindex.(σε, 1), getindex.(σε, 2))
+
+    Mw = CL.mw(eos)
+    _components = get_components(eos)
+
+    ce = Matrix{ChapmanEnskog}(undef,2,2)
+    Y₀⁺min = CL.PairParam("minimum(Y₀⁺)", _components)
+
+    for i in 1:N, j = 1:N 
+        if i == j
+            _ul = (; sigma=σ[i:j], epsilon=ε[i:j], Mw=Mw[i:j])
+            _ce = ChapmanEnskog(_components[i]; userlocations=_ul, collision_integral)
+            _prop = SelfDiffusionCoefficient(i)
+            _eos = only(CL.split_model(eos, [i]))
+        else
+            _ul = (; sigma=[mean(σ[[i,j]])], epsilon=[geomean(ε[[i,j]])], Mw=[calc_M_CE(Mw[[j,i]])])
+            _ce = ChapmanEnskog("$(_components[i]) in $(_components[j])"; userlocations=_ul, collision_integral)
+            _prop = InfDiffusionCoefficient(i => j)
+            _eos = eos
+        end
+        optf(x) = property_CE_plus(_prop, _ce, _eos, x[1]; i=j)
+        sol = optimize(optf, [2*Tc[j]], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
+        ce[i,j] = _ce
+        Y₀⁺min.values[i,j] = Optim.minimum(sol)[1]
     end
 
     return ce, Y₀⁺min
@@ -365,6 +426,17 @@ function _set_msdiff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiffP
         vals = first.(getproperty.(getproperty.(param_all.ce, k), :values))
         getproperty(param.ce, k).values[1] = vals[j,i]
         getproperty(param.ce, k).values[2] = vals[j,i]
+    end
+    return nothing
+end
+
+function _set_ij_diff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiffParam, i, j)
+    for k in (:α0, :α1, :α2, :α3, :αln, :Y₀⁺min)
+        getproperty(param, k).values[1] = getproperty(param_all, k).values[i,j]
+    end
+    for k in (:Mw, :sigma, :epsilon)
+        # @show getproperty(param_all.ce[i,j]
+        getproperty(param.ce, k).values[1] = first(getproperty(getproperty(param_all.ce[i,j], k), :values))
     end
     return nothing
 end
