@@ -85,8 +85,11 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
     params_dict = _get_empty_params_dict()
     for prop in [Viscosity(), ThermalConductivity(), DiffusionCoefficient()]
         _userlocations = get(userlocations, prop, String[])
-        if prop == DiffusionCoefficient() && length(_eos) > 1
-            length(_eos) == 1 && break
+        if length(_eos) == 1 && prop == DiffusionCoefficient() && isempty(_userlocations)
+            _userlocations = get(userlocations, SelfDiffusionCoefficient(), String[])
+        end
+        if prop == DiffusionCoefficient()
+            _userlocations = !isempty(_userlocations) ? map(_ensure_matrix, _userlocations) : _userlocations
             filepaths = [get_db_path(ESFramework, prop, _eos) for prop in [InfDiffusionCoefficient(), SelfDiffusionCoefficient()]]
             _params = CL.getparams(_components, filepaths; userlocations=_userlocations, asymmetricparams=PARAMS_FRAMEWORK, ignore_missing_singleparams=PARAMS_FRAMEWORK)
             for par in PARAMS_FRAMEWORK
@@ -117,7 +120,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
             m = _eos.params.segment
 
             ce, Y₀⁺min = init_framework_params(_eos, _prop; collision_integral)
-            if _prop isa DiffusionCoefficient
+            if _prop isa AbstractDiffusionCoefficient
                 param = ESFrameworkDiffParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce)
             else
                 param = ESFrameworkParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce,_prop)
@@ -142,10 +145,10 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
     _dataprops = getproperty.(datasets, :prop) |> unique
     D_nan = ones(Bool, length(_eos), length(_eos))
     for prop in _dataprops
-        @show prop
         if prop in [Viscosity(), ThermalConductivity()]
             length(_eos) != 1 && error("Only one component allowed for fitting.")
             _eos_pure = _eos
+            idx = 1
         elseif prop isa SelfDiffusionCoefficient
             idx = (prop.component, prop.component)
             _eos_pure = CL.split_model(_eos)[prop.component]
@@ -232,6 +235,9 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
     return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
 
+_ensure_matrix(x::AbstractMatrix) = x
+_ensure_matrix(x::AbstractVector) = permutedims(x)
+
 # Fitting utils
 get_tofit(::Type{ESFramework}, prop::AbstractTransportProperty) = [:α1,:α2,:α3,:αln]
 get_tofit(::Type{ESFramework}, prop::ThermalConductivity) = [:α0,:α1,:α2,:α3,:αln]
@@ -286,7 +292,7 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
     Mw = CL.mw(eos)
     _components = get_components(eos)
 
-    ce = Matrix{ChapmanEnskog}(undef,2,2)
+    ce = Matrix{ChapmanEnskog}(undef,N,N)
     Y₀⁺min = CL.PairParam("minimum(Y₀⁺)", _components)
 
     for i in 1:N, j = 1:N 
@@ -361,23 +367,6 @@ function scaling_variable(param::Union{ESFrameworkParam, ESFrameworkDiffParam}, 
     return -s / R / _dot(param.m, z)
 end
 
-function VT_self_diffusion_coefficient(model::ESFramework, V, T, z::AbstractVector)
-    params_diff = model.params[DiffusionCoefficient()]
-    param = _init_selfdiff_param(params_diff)
-    s  = CL.VT_entropy_res(model.eos, V, T, z)
-    sˢ = scaling_variable(param, s, z)
-    ϱ = sum(z)/V
-
-    D = zero(z)
-    for i in eachindex(z)
-        _set_selfdiff_param!(param, params_diff, i)
-        Dˢ = scaling_model(param, sˢ, z)
-        D[i] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inverse=true)
-    end
-    
-    return D
-end
-
 _init_selfdiff_param(params::ESFrameworkDiffParam) = _init_param(params, SelfDiffusionCoefficient())
 _init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient())
 
@@ -435,7 +424,6 @@ function _set_ij_diff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiff
         getproperty(param, k).values[1] = getproperty(param_all, k).values[i,j]
     end
     for k in (:Mw, :sigma, :epsilon)
-        # @show getproperty(param_all.ce[i,j]
         getproperty(param.ce, k).values[1] = first(getproperty(getproperty(param_all.ce[i,j], k), :values))
     end
     return nothing

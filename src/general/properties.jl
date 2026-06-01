@@ -59,21 +59,31 @@ Self-diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
 """
 self_diffusion_coefficient
 
-function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
-    V = CL.volume(model.eos, p, T, z; phase=phase)
-    if length(model) == 1
-        return VT_self_diffusion_coefficient(model, V/sum(z), T)
-    else
-        return VT_self_diffusion_coefficient(model, V, T, z)
-    end
+function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T; phase=:unknown)
+    V = CL.volume(model.eos, p, T; phase=phase)
+    return only(VT_self_diffusion_coefficient(model, V, T))
 end
 
-function VT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T)
-    param = model[SelfDiffusionCoefficient()]
-    s = CL.VT_entropy_res(model.eos, V, T)
-    sˢ = scaling_variable(param, s)
-    Dˢ = scaling_model(param, sˢ)
-    return scaling(param, model.eos, Dˢ, T, inv(V), s; inverse=true)
+function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
+    V = CL.volume(model.eos, p, T, z; phase=phase)
+    return VT_self_diffusion_coefficient(model, V, T, z)
+end
+
+function VT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z::AbstractVector=Z1)
+    params_diff = model.params[DiffusionCoefficient()]
+    param = _init_selfdiff_param(params_diff)
+    s  = CL.VT_entropy_res(model.eos, V, T, z)
+    sˢ = scaling_variable(param, s, z)
+
+    N = length(z)
+    D = zeros(N)
+    for i in eachindex(z)
+        _set_selfdiff_param!(param, params_diff, i)
+        Dˢ = scaling_model(param, sˢ, z)
+        D[i] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inverse=true)
+    end
+    
+    return D
 end
 
 """

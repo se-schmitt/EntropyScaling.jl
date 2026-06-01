@@ -35,7 +35,7 @@
         ]
         model = ESFramework(["hexane", "toluene"], system, data_inf; tofit=Dict(InfDiffusionCoefficient(1=>2)=>[:α2,:α3]))
 
-        α_D_inf = first.(getproperty.(model[InfDiffusionCoefficient(1 => 2)],[:α0,:αln,:α1,:α2,:α3]))
+        α_D_inf = getindex.(getproperty.(model[DiffusionCoefficient()], [:α0,:αln,:α1,:α2,:α3]), 1, 2)
         α_D_inf_ref = [0.0; 0.0; 0.0;-2.604944e+00;-1.567851e+00;;]
         @test all(isapprox(α_D_inf, α_D_inf_ref; rtol=1e-5))
     end
