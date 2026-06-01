@@ -172,34 +172,28 @@ end
 #end
 
 function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T, ϱ, s, z; inverse=true) where {F}
-    #k = inverse ? 1 : -1
+    k = inverse ? 1 : -1
     prop = transport_property(param)
 
-    # λ_CE aus Chapman-Enskog
     λ_CE = property_CE(prop, param.ce, T, z)
 
-    # Molekülparameter
     x = z ./ sum(z)
     m_mix = _dot(param.m, x)
     σ_mix = sum(x[i] * eos.pcpmodel.params.sigma[i, i] for i in eachindex(x))
     ε_mix = sum(x[i] * eos.pcpmodel.params.epsilon[i, i] for i in eachindex(x))
 
-    # Dimensionslose Temperatur T* = k·T / (m/ε)  
     Tˢ = CL.k_B * T * m_mix / ε_mix
 
-    # λ_int
     c1 = -0.0167141
     c2 = 0.0470581
-    λ_int = (m_mix^2 * σ_mix^3 * ε_mix / CL.k_B) * (c1 * Tˢ + c2 * Tˢ^2) * 1e25
+    λ_int = (m_mix^2 * σ_mix^3 * ε_mix) * (c1 * Tˢ + c2 * Tˢ^2) * 1e25
 
-    # Übergangsfunktion φ(s*)
     sˢ = scaling_variable(param, s, z)
     φ = exp(-sˢ / (-0.5))
 
-    # Referenz-Wärmeleitfähigkeit
     λ_ref = λ_CE + φ * λ_int
 
-    return Yˢ * λ_ref #^k
+    return Yˢ * λ_ref^k
 end
 
 
