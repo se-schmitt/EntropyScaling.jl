@@ -159,18 +159,6 @@ function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inverse=true)
     return Yˢ * Y₀^k
 end
 
-#function scaling(param::GCESParams{<:AbstractThermalConductivity,T}, eos, Yˢ, F, ϱ, s, z; inverse=true) where {T}
-#k = inverse ? 1 : -1
-#prop = transport_property(param)
-#Y₀ = property_CE(prop, param.ce, F, z)  #! Skalierung anpassen
-#m_mix = _dot(param.m, x)
-#ε_mix = _dot(param.ε, x)
-#Tˢ = R * F / (m_mix / ε_mix)
-#c1 = -0.0167141
-#c2 = 0.0470581
-#return Yˢ * (Y₀ + exp(-sˢ / -0.5) * (m_mix^2 * ϱ^3 * ε_mix / R) * (c1 * Tˢ + c2 * Tˢ))^k
-#end
-
 function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T, ϱ, s, z; inverse=true) where {F}
     k = inverse ? 1 : -1
     prop = transport_property(param)
@@ -182,7 +170,7 @@ function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T
     σ_mix = sum(x[i] * eos.pcpmodel.params.sigma[i, i] for i in eachindex(x))
     ε_mix = sum(x[i] * eos.pcpmodel.params.epsilon[i, i] for i in eachindex(x))
 
-    Tˢ = CL.k_B * T * m_mix / ε_mix
+    Tˢ = T / (ε_mix * m_mix)
 
     c1 = -0.0167141
     c2 = 0.0470581
@@ -191,11 +179,16 @@ function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T
     sˢ = scaling_variable(param, s, z)
     φ = exp(-sˢ / (-0.5))
 
+    println(σ_mix)
+    println(ε_mix)
+    println(Tˢ)
+    println(λ_int)
+    println(λ_CE)
+    println(φ)
     λ_ref = λ_CE + φ * λ_int
 
     return Yˢ * λ_ref^k
 end
-
 
 function scaling_variable(param::GCESParams, s, x=Z1)
     m_mix = _dot(param.m, x)
