@@ -38,7 +38,12 @@ The rich thermodynamics library `Clapeyron.jl` [@walker_clapeyronjl_2022] is use
 
 # Statement of need
 
-
+`EntropyScaling.jl` is a thermodynamic modeling package for transport properties like the viscosity, thermal conductivity, or diffusion coefficients based on physically sound methods.
+Among those, entropy scaling, which is also giving the package its name, enables modeling transport properties in a wide range of different states while only requiring a minimal set of experimental data by exploting the predictive capabilities of equations of state.
+Besides entropy scaling, transport property models for gases based on the Chapman-Enskog theory are implemented.
+Through `EntropyScaling.jl`, those methods for modeling transport properties are made available for applications in engineering tasks, e.g. separation processes or heat transfer.
+Through Julia's excellent extensibility, the package can easily be coupled with the wider modeling ecosystem.
+Moreover, using the strong interoperability with other programming languages (in particular Python), the methods from `EntropySclaing.jl` can also be used in a large number of different applications.
 
 # State of the field                                                                                                                  
 
