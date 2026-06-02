@@ -236,7 +236,7 @@ end
 
 _ensure_matrix(x::AbstractMatrix) = x
 _ensure_matrix(x::AbstractVector) = begin
-    length(x) == 1 && error("Only works for 1 component yet! Please report a bug.")
+    length(x) > 1 && error("Only works for 1 component yet! Please report a bug.")
     return permutedims(x)
 end
 function _ensure_pairparams!(params::AbstractDict)
