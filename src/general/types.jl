@@ -5,6 +5,7 @@ abstract type AbstractTransportPropertyModel end
 const ATPM = AbstractTransportPropertyModel
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 const AESM = AbstractEntropyScalingModel
+Base.broadcastable(model::AbstractTransportPropertyModel) = Ref(model)
 
 abstract type ESFrameworkModel <: AbstractEntropyScalingModel end
 abstract type RefpropRESModel  <: AbstractEntropyScalingModel end
