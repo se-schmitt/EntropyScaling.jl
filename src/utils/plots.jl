@@ -84,7 +84,7 @@ function calc_plot_data(model::AESM, data; slims, prop)
         (sˢdata, Yˢdata) = (nothing, nothing)
     end
     
-    @assert !(isnothing(slims) && isnothing(sˢdata)) "Please provide `slims` if `data == nothing`"
+    isnothing(slims) && isnothing(sˢdata) && error("Please provide `slims` if `data == nothing`")
     slims = isnothing(slims) ? extrema(sˢdata) : slims
     sˢx = [range(slims..., length=100);]
     Yˢx = scaling_model.(param, sˢx)
