@@ -72,22 +72,46 @@ plot_scaling!() = error("Only works if a plotting package is loaded (either a Ma
 function calc_plot_data(model::AESM, data; slims, prop)
     param = model[prop]
 
+    if prop isa InfDiffusionCoefficient
+        _param = _init_param(param, prop; idx=prop.solvent:prop.solvent)
+        _set_ij_diff_param!(_param, param, prop.solute, prop.solvent)
+        _eos_pure = CL.split_model(model.eos)[prop.solvent]
+    elseif prop isa SelfDiffusionCoefficient
+        _param = _init_param(param, prop; idx=prop.component:prop.component)
+        _set_ij_diff_param!(_param, param, prop.component, prop.component)
+        _eos_pure = CL.split_model(model.eos)[prop.component]
+    else
+        _param = param
+        _eos_pure = model.eos
+    end
+
     if !isnothing(data)
         ϱdat = deepcopy(data.ϱ)
         what_ϱ_nan = isnan.(ϱdat)
-        ϱdat[what_ϱ_nan] = [inv(CL.volume(model.eos, data.p[i], data.T[i]; phase=data.phase[i])) 
+        if length(model) == 1
+            z = Z1
+        elseif prop isa SelfDiffusionCoefficient
+            z = zeros(length(model))
+            z[prop.component] = 1
+        elseif prop isa InfDiffusionCoefficient
+            z = zeros(length(model))
+            z[prop.solvent] = 1
+        else
+            error("Case not implemented. Report a bug!")
+        end
+        ϱdat[what_ϱ_nan] = [inv(CL.volume(model.eos, data.p[i], data.T[i], z; phase=data.phase[i])) 
                             for i in findall(what_ϱ_nan)]
-        sdat = CL.VT_entropy_res.(model.eos, inv.(ϱdat), data.T)
-        sˢdata = scaling_variable.(param, sdat)
-        Yˢdata = scaling.(param, model.eos, data.Y, data.T, ϱdat, sdat)
+        sdat = CL.VT_entropy_res.(model.eos, inv.(ϱdat), data.T, Ref(z))
+        sˢdata = scaling_variable.(_param, sdat)
+        Yˢdata = scaling.(_param, _eos_pure, data.Y, data.T, ϱdat, sdat)
     else
         (sˢdata, Yˢdata) = (nothing, nothing)
     end
     
-    @assert !(isnothing(slims) && isnothing(sˢdata)) "Please provide `slims` if `data == nothing`"
+    isnothing(slims) && isnothing(sˢdata) && error("Please provide `slims` if `data == nothing`")
     slims = isnothing(slims) ? extrema(sˢdata) : slims
     sˢx = [range(slims..., length=100);]
-    Yˢx = scaling_model.(param, sˢx)
+    Yˢx = scaling_model.(_param, sˢx)
     
     return (sˢdata, Yˢdata), (sˢx, Yˢx)
 end 

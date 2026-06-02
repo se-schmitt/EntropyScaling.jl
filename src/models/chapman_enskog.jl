@@ -139,17 +139,20 @@ function self_diffusion_coefficient(model::ChapmanEnskogModel, T; i=1)
 end
 
 function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
-    σ = model.sigma.values
     if length(eos) == 1
         dBdT = second_virial_coefficient_dT(eos,T)/NA
         B = CL.second_virial_coefficient(eos,T)/NA
+        σ = only(model.sigma.values)
+        _i = 1
     else
         x = zeros(Int64,length(model))
         x[i] = 1
         dBdT = second_virial_coefficient_dT(eos,T,x)/NA
         B = CL.second_virial_coefficient(eos,T,x)/NA
+        σ = model.sigma.values[i]
+        _i = i
     end
-    return 3/8/√π / (σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i)) * (T*dBdT+B)^(2/3)
+    return 3/8/√π / (σ^2*Ω(SelfDiffusionCoefficient(),model,T;i=_i)) * (T*dBdT+B)^(2/3)
 end
 
 # Maxwell-Stefan diffusion coefficient
@@ -218,7 +221,7 @@ end
 # Scaled CE pure functions
 property_CE_plus(prop::Viscosity, model::ChapmanEnskogModel, eos, T; i) = viscosity_CE_plus(model, eos, T; i=i)
 property_CE_plus(prop::ThermalConductivity, model::ChapmanEnskogModel, eos, T; i) = thermal_conductivity_CE_plus(model, eos, T; i=i)
-property_CE_plus(prop::SelfDiffusionCoefficient, model::ChapmanEnskogModel, eos, T; i) = self_diffusion_coefficient_CE_plus(model, eos, T; i=i)
+property_CE_plus(prop::P, model::ChapmanEnskogModel, eos, T; i) where {P<:SelfDiffusionCoefficient} = self_diffusion_coefficient_CE_plus(model, eos, T; i=i)
 
 # Collision integrals
 struct KimMonroe <: AbstractCollisionIntegralMethod end

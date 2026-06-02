@@ -5,6 +5,7 @@ abstract type AbstractTransportPropertyModel end
 const ATPM = AbstractTransportPropertyModel
 abstract type AbstractEntropyScalingModel <: AbstractTransportPropertyModel end
 const AESM = AbstractEntropyScalingModel
+Base.broadcastable(model::AbstractTransportPropertyModel) = Ref(model)
 
 abstract type ESFrameworkModel <: AbstractEntropyScalingModel end
 abstract type RefpropRESModel  <: AbstractEntropyScalingModel end
@@ -64,7 +65,10 @@ name(::DiffusionCoefficient) = "diffusion coefficient"
 symbol(::DiffusionCoefficient) = :D
 symbol_name(::DiffusionCoefficient) = "D"
 
-struct SelfDiffusionCoefficient <: AbstractDiffusionCoefficient end
+struct SelfDiffusionCoefficient <: AbstractDiffusionCoefficient 
+    component::Int64
+end
+SelfDiffusionCoefficient() = SelfDiffusionCoefficient(1)
 name(::SelfDiffusionCoefficient) = "self-diffusion coefficient"
 symbol(::SelfDiffusionCoefficient) = :D
 symbol_name(::SelfDiffusionCoefficient) = "D"
