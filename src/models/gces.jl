@@ -157,7 +157,7 @@ function scaling_model(param::GCESParams{<:AbstractThermalConductivity,T}, sˢ, 
     C = _dot(param.C, mx)
     D = _dot(param.D, mx)
 
-    λˢ = exp(A + B * sˢ + C * (1 - exp(sˢ)) + D * sˢ * 2)
+    λˢ = exp(A + B * sˢ + C * (1 - exp(sˢ)) + D * sˢ^2)
     return λˢ
 end
 
@@ -172,28 +172,22 @@ function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T
     k = inverse ? 1 : -1
     prop = transport_property(param)
 
-    λ_CE = property_CE(prop, param.ce, T, z)
-
     x = z ./ sum(z)
     m_mix = _dot(param.m, x)
     σ_mix = sum(x[i] * eos.pcpmodel.params.sigma[i, i] for i in eachindex(x))
     ε_mix = sum(x[i] * eos.pcpmodel.params.epsilon[i, i] for i in eachindex(x))
 
-    Tˢ = T / (ε_mix * m_mix)
+    λ_CE = property_CE(prop, param.ce, T, z) * sqrt(m_mix)
+
+    Tˢ = T / (ε_mix* m_mix)
 
     c1 = -0.0167141
     c2 = 0.0470581
     λ_int = (m_mix^2 * σ_mix^3 * ε_mix) * (c1 * Tˢ + c2 * Tˢ^2) * 1e25
 
     sˢ = scaling_variable(param, s, z)
-    φ = exp(-sˢ / (-0.5))
+    φ = exp(2*sˢ)
 
-    println(σ_mix)
-    println(ε_mix)
-    println(Tˢ)
-    println(λ_int)
-    println(λ_CE)
-    println(φ)
     λ_ref = λ_CE + φ * λ_int
 
     return Yˢ * λ_ref^k
