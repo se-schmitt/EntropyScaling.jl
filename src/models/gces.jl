@@ -95,6 +95,7 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
 
             for (i, (n_i, grps_i, grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
                 Vᵢ = 0
+                n_total = sum(n_i)
                 for (count, group, group_eos) in zip(n_i, grps_i, grps_eos_i)
                     if prop isa AbstractViscosity
                         Aᵢ[i] += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3 * Aₐ[group]
@@ -105,7 +106,7 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
                     end
 
                     Cᵢ[i] += count * Cₐ[group]
-                    Dᵢ[i] += count * Dₐ[group]
+                    Dᵢ[i] += n_total * Dₐ[group]
 
                     Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3
                 end
@@ -179,14 +180,14 @@ function scaling(param::GCESParams{<:AbstractThermalConductivity,F}, eos, Yˢ, T
 
     λ_CE = property_CE(prop, param.ce, T, z) * sqrt(m_mix)
 
-    Tˢ = T / (ε_mix* m_mix)
+    Tˢ = T / (ε_mix * m_mix)
 
     c1 = -0.0167141
     c2 = 0.0470581
     λ_int = (m_mix^2 * σ_mix^3 * ε_mix) * (c1 * Tˢ + c2 * Tˢ^2) * 1e25
 
     sˢ = scaling_variable(param, s, z)
-    φ = exp(2*sˢ)
+    φ = exp(2 * sˢ)
 
     λ_ref = λ_CE + φ * λ_int
 
