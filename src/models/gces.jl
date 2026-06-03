@@ -77,12 +77,17 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
     params_dict = _get_empty_params_dict()
     for prop in [Viscosity(), ThermalConductivity()] #TC hinzugefügt
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
-        _params = CL.getparams(groups, [get_db_path(GCES, prop, nothing)]; userlocations=_userlocations)
-        components_missing = [all(_v.ismissingvalues[i] for (_, _v) in _params) for i in eachindex(_components)]
+        _params = try
+        CL.getparams(groups, [get_db_path(GCES, prop, nothing)]; userlocations=_userlocations)
+    catch
+        verbose && @info "No GCES $(name(prop)) parameters found."
+        continue
+    end
+    components_missing = [all(_v.ismissingvalues[i] for (_, _v) in _params) for i in eachindex(_components)]
 
-        if any(components_missing)
-            verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
-        else
+    if any(components_missing)
+        verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
+    else
             Aₐ = _params["A"]
             Bₐ = _params["B"]
             Cₐ = _params["C"]
