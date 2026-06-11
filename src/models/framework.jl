@@ -382,7 +382,7 @@ function scaling_variable(param::Union{ESFrameworkParam, ESFrameworkDiffParam}, 
 end
 
 _init_selfdiff_param(params::ESFrameworkDiffParam) = _init_param(params, SelfDiffusionCoefficient())
-_init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient())
+_init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient(); idx=1:2)
 
 function _init_param(params::ESFrameworkDiffParam, prop; idx=nothing)
     _idx = isnothing(idx) ? (1:length(params)) : idx
