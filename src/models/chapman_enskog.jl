@@ -167,7 +167,6 @@ function MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=Z1)
 end
 
 function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z = Z1; i=0)
-    length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
     if i != 0
         z = zeros(Int64,length(eos))
         z[i] = 1

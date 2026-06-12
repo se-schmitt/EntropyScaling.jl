@@ -91,6 +91,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
         if prop == DiffusionCoefficient()
             _userlocations = !isempty(_userlocations) ? map(_ensure_matrix, _userlocations) : _userlocations
             filepaths = [get_db_path(ESFramework, prop, _eos) for prop in [InfDiffusionCoefficient(), SelfDiffusionCoefficient()]]
+            filepaths = filepaths[isfile.(filepaths)]
             _params = CL.getparams(_components, filepaths; userlocations=_userlocations, asymmetricparams=PARAMS_FRAMEWORK, ignore_missing_singleparams=PARAMS_FRAMEWORK)
             _ensure_pairparams!(_params)
             for par in PARAMS_FRAMEWORK
@@ -98,14 +99,16 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
                     _params[par] = CL.PairParam(par, _components)
                 end
             end
+            components_missing = [all(all(_v.ismissingvalues[i,:]) for (_,_v) in _params) for i in eachindex(_components)]
         else
-            filepaths = get_db_path(ESFramework, prop, _eos)
-            _params = CL.getparams(_components, [filepaths]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_FRAMEWORK)
+            filepaths = [get_db_path(ESFramework, prop, _eos)]
+            filepaths = filepaths[isfile.(filepaths)]
+            _params = CL.getparams(_components, filepaths; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_FRAMEWORK)
+            components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
         end
-        components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
-    
+
         if any(components_missing)
-            verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
+            verbose && @info "No $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
         else
             α0 = _params["α0"]
             if prop == ThermalConductivity()
@@ -130,7 +133,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
     end
 
     params = ParamVector(params_dict)
-    ismissing(params) && error("No parameters found for components: $(join(components, ',')).")
+    ismissing(params) && error("No parameters found for components: $(join(components, ", ")).")
 
     return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
@@ -234,6 +237,7 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
     return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
 
+_ensure_matrix(s::AbstractString) = s
 _ensure_matrix(x::AbstractMatrix) = x
 _ensure_matrix(x::AbstractVector) = begin
     length(x) > 1 && error("Only works for 1 component yet! Please report a bug.")
@@ -378,7 +382,7 @@ function scaling_variable(param::Union{ESFrameworkParam, ESFrameworkDiffParam}, 
 end
 
 _init_selfdiff_param(params::ESFrameworkDiffParam) = _init_param(params, SelfDiffusionCoefficient())
-_init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient())
+_init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient(); idx=1:2)
 
 function _init_param(params::ESFrameworkDiffParam, prop; idx=nothing)
     _idx = isnothing(idx) ? (1:length(params)) : idx
