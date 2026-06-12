@@ -122,7 +122,7 @@ Base.size(a::MSDiffusionMatrix) = begin
 end
 Base.getindex(a::MSDiffusionMatrix{T}, i, j) where T = begin
     i == j && return T(NaN)
-    i < j && return a.val[Int(i/2*(2*size(a,1)-1-i)) + (j-i-1)]
+    i < j && return a.val[Int((i-1)*size(a,1) - i*(i+1)/2 + j)]
     return a[j,i]
 end
 Base.setindex!(a::MSDiffusionMatrix{T}, x, i) where T = begin
@@ -131,7 +131,7 @@ Base.setindex!(a::MSDiffusionMatrix{T}, x, i) where T = begin
 end
 Base.setindex!(a::MSDiffusionMatrix{T}, x, i, j) where T = begin
     if i < j
-        _i = Int(i/2*(2*size(a,1)-1-i)) + (j-i-1)
+        _i = Int((i-1)*size(a,1) - i*(i+1)/2 + j)
         setindex!(a.val, x, _i)
     elseif i > j
         setindex!(a, x, j, i)
