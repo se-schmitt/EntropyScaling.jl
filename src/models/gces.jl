@@ -13,7 +13,6 @@ struct GCESParams{P,T} <: AbstractEntropyScalingParam{P}
 end
 
 struct GCES{E,P} <: GCESModel
-
     components::Vector{<:AbstractString}
     groups::CL.GroupParam{Float64}
     params::P
@@ -69,25 +68,20 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
         _groups = setindex!(copy(groups.groups), ["CH3_eth"], idx_eth)
         _N_groups_old = length(groups.flattenedgroups)
         _flattenedgroups = vcat(copy(groups.flattenedgroups), "CH3_eth")
-        _n_flattenedgroups = [i == idx_eth ? vcat(zeros(_N_groups_old), 2.0) : vcat(v, 0.0) for (i, v) in enumerate(groups.n_flattenedgroups)]
+        _n_flattenedgroups = [i == idx_eth ? vcat(zeros(_N_groups_old), 2.0) : vcat(v, 0.0) for (i,v) in enumerate(groups.n_flattenedgroups)]
         _i_groups = findall.(.!iszero.(v) for v in _n_flattenedgroups)
         groups = CL.GroupParam(_components, _groups, :gcPCPSAFT_ES, groups.n_groups, groups.n_intergroups, _i_groups, _flattenedgroups, _n_flattenedgroups, groups.sourcecsvs)
     end
 
     params_dict = _get_empty_params_dict()
-    for prop in [Viscosity(), ThermalConductivity()] #TC hinzugefügt
+    for prop in [Viscosity(), ThermalConductivity()]
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
-        _params = try
-        CL.getparams(groups, [get_db_path(GCES, prop, nothing)]; userlocations=_userlocations)
-    catch
-        verbose && @info "No GCES $(name(prop)) parameters found."
-        continue
-    end
-    components_missing = [all(_v.ismissingvalues[i] for (_, _v) in _params) for i in eachindex(_components)]
+        _params = CL.getparams(groups, [get_db_path(GCES, prop, nothing)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_GCES)
+        components_missing = [all(_v.ismissingvalues[i] for (_, _v) in _params) for i in eachindex(_components)]
 
-    if any(components_missing)
-        verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
-    else
+        if any(components_missing)
+            verbose && @info "No RefpropRES $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
+        else
             Aₐ = _params["A"]
             Bₐ = _params["B"]
             Cₐ = _params["C"]
@@ -98,7 +92,7 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
             Cᵢ = CL.SingleParam("C", _components, zeros(length(_components)))
             Dᵢ = CL.SingleParam("D", _components, zeros(length(_components)))
 
-            for (i, (n_i, grps_i, grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
+            for (i,(n_i,grps_i,grps_eos_i)) in enumerate(zip(groups.n_groups, groups.groups, groups_eos.groups,))
                 Vᵢ = 0
                 n_total = sum(n_i)
                 for (count, group, group_eos) in zip(n_i, grps_i, grps_eos_i)
@@ -111,8 +105,11 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
                     end
 
                     Cᵢ[i] += count * Cₐ[group]
-                    Dᵢ[i] += n_total * Dₐ[group]
-
+                    if prop isa AbstractViscosity
+                        Dᵢ[i] += count * Dₐ[group]
+                    elseif prop isa AbstractThermalConductivity
+                        Dᵢ[i] += n_total * Dₐ[group]
+                    end
                     Vᵢ += count * mₐ[group_eos] * (σₐ[group_eos] .* 1e10)^3
                 end
 
@@ -124,7 +121,7 @@ function GCES(components, eos=nothing; userlocations=Dict(), verbose=false)
 
             ce = ChapmanEnskog(_eos; collision_integral=KimMonroe())
 
-            params_dict[prop] = GCESParams(Aᵢ, Bᵢ, Cᵢ, Dᵢ, mᵢ, ce, prop)
+            params_dict[prop] = GCESParams(Aᵢ,Bᵢ,Cᵢ,Dᵢ,mᵢ,ce,prop)
         end
     end
 
@@ -151,7 +148,7 @@ function scaling_model(param::GCESParams{<:AbstractViscosity,T}, sˢ, x=Z1) wher
     C = _dot(param.C, mx)
     D = _dot(param.D, mx)
 
-    ηˢ = exp(A + B * sˢ + C * (sˢ^2) + D * (sˢ^3))
+    ηˢ = exp(A + B*sˢ + C*(sˢ^2) + D*(sˢ^3))
     return ηˢ
 end
 
@@ -163,14 +160,14 @@ function scaling_model(param::GCESParams{<:AbstractThermalConductivity,T}, sˢ, 
     C = _dot(param.C, mx)
     D = _dot(param.D, mx)
 
-    λˢ = exp(A + B * sˢ + C * (1 - exp(sˢ)) + D * sˢ^2)
+    λˢ = exp(A + B*sˢ + C*(1 - exp(sˢ)) + D*sˢ^2)
     return λˢ
 end
 
 function scaling(param::GCESParams, eos, Yˢ, T, ϱ, s, z; inverse=true)
     k = inverse ? 1 : -1
     prop = transport_property(param)
-    Y₀ = property_CE(prop, param.ce, T, z)  #! Skalierung anpassen
+    Y₀ = property_CE(prop, param.ce, T, z)
     return Yˢ * Y₀^k
 end
 
@@ -203,4 +200,3 @@ function scaling_variable(param::GCESParams, s, x=Z1)
     m_mix = _dot(param.m, x)
     return s / R / m_mix
 end
-
