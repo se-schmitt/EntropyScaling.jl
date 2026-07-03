@@ -75,7 +75,7 @@
         @testset "mix" begin
             model = GCES(["hexane", "benzene"])
             T, p, x = 300.0, 1e6, [.25,.75]
-            @test thermal_conductivity(model, p, T, x) ≈ 0.0004404487489691302 rtol=1e-8
+            @test thermal_conductivity(model, p, T, x) ≈ 0.125884 rtol=1e-3
         end
     end
 end

@@ -23,7 +23,7 @@ end
 """
     GCESModel
 
-Group contribution model for the viscosity from Löterging-Lin and Gross (2015) [lotgering-lin_group_2015](@cite).
+Group contribution model for the viscosity [lotgering-lin_group_2015](@cite) and the thermal conductivity [hopp_thermal_2019](@cite).
 The model is based on the homosegmented GC-PCP-SAFT EOS.
 
 # Parameters
@@ -42,6 +42,7 @@ component = get_groups_from_smiles("CCCO", gcPCPSAFTGroups)
 model = GCES(component, HomogcPCPSAFT(component))
 
 η = viscosity(model, 0.1e6, 300.)
+λ = thermal_conductivity(model, 0.1e6, 300.)
 ```
 """
 GCES
