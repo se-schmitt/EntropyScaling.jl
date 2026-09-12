@@ -169,22 +169,20 @@ function inf_diffusion_coefficient(model::AbstractTransportPropertyModel, p, T;
     idx_solute = isnothing(solute) ? (1:N) : match_comp(solute, model.components)
     idx_solvent = isnothing(solvent) ? (1:N) : match_comp(solvent, model.components)
    
-    if all(length.([idx_solute,idx_solvent]) .== 1)
+    if length(idx_solute) == 1 && length(idx_solvent) == 1
         idx_i, idx_j = only(idx_solute), only(idx_solvent)
         Dij = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
     else
         Dij = zeros(TYPE, length(idx_solute), length(idx_solvent))
         for (i,idx_i) in enumerate(idx_solute), (j,idx_j) in enumerate(idx_solvent)
-            if i != j
-                Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
-            end
+            Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
         end
     end
     return Dij
 end
 
-match_comp(comp::AbstractString, components) = findall(comp .== components)
-match_comp(comp::Int, components) = [comp]
+match_comp(comp::AbstractString, components) = findfirst(comp .== components)
+match_comp(comp::Int, components) = comp
 
 function _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
 end
