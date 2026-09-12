@@ -12,7 +12,7 @@ where
 - `x` is the mole fraction (`[x] = mol mol⁻¹`), and
 - `phase` is the desired phase (`liquid` or `gas`) used in the volume solver.
 
-Internally, the density is always calculated first and then the function `EntropyScaling.ϱT_transport_property(model, ϱ, T, x)` is called (with `[ϱ] = mol m⁻³`).
+Internally, the molar volume is always calculated first and then the function `EntropyScaling.VT_transport_property(model, V, T, x)` is called (with `[V] = m³`).
 
 ```@docs
 EntropyScaling.viscosity

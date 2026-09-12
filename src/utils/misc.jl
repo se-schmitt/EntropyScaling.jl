@@ -1,7 +1,3 @@
-export cite_model
-
-cite_model(::Any) = "No citation available for this model."
-
 const SAMPLE_PATH = normpath(Base.pkgdir(EntropyScaling),"test","data")
 
 function load_sample_data(;prop="eta")
@@ -22,5 +18,15 @@ function load_sample_data(;prop="eta")
     return [dat[:,i] for i in 1:3]
 end
 
+# Function for Jutul extension
 function EStoJD end
 export EStoJD
+
+# _build_eos
+function _build_eos(components, ::Type{EOS}) where {EOS<:CL.EoSModel}
+    return EOS(components)
+end
+
+function _build_eos(components, eos::EOS) where {EOS<:CL.EoSModel}
+    return eos
+end

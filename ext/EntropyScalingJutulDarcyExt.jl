@@ -18,13 +18,13 @@ ES.EStoJD(model::ES.AbstractEntropyScalingModel) = JDEntropyScalingModel(model)
     l, v = JD.phase_indices(sys)
 
     @inbounds for i in ix
-        Mwl = es.model.params[1].base.Mw' * FlashResults[i].liquid.mole_fractions
-        Mwv = es.model.params[1].base.Mw' * FlashResults[i].vapor.mole_fractions
-        ϱl = PhaseMassDensities[l,i] / Mwl
-        ϱv = PhaseMassDensities[v,i] / Mwv
+        Mwl = es.model.params[1].base.Mw.values' * FlashResults[i].liquid.mole_fractions
+        Mwv = es.model.params[1].base.Mw.values' * FlashResults[i].vapor.mole_fractions
+        Vl = Mwl / FD.value(PhaseMassDensities[l,i])
+        Vv = Mwv / FD.value(PhaseMassDensities[v,i])
 
-        mu[l,i] = ES.ϱT_viscosity(es.model, FD.value(ϱl), FD.value(Temperature[i]), FD.value.(FlashResults[i].liquid.mole_fractions))
-        mu[v,i] = ES.ϱT_viscosity(es.model, FD.value(ϱv), FD.value(Temperature[i]), FD.value.(FlashResults[i].vapor.mole_fractions))
+        mu[l,i] = ES.VT_viscosity(es.model, Vl, FD.value(Temperature[i]), FD.value.(FlashResults[i].liquid.mole_fractions))
+        mu[v,i] = ES.VT_viscosity(es.model, Vv, FD.value(Temperature[i]), FD.value.(FlashResults[i].vapor.mole_fractions))
     end
     
     return nothing

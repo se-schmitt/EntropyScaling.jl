@@ -19,16 +19,16 @@ Viscosity `η(p,T,x)` (`[η] = Pa s`).
 viscosity
 
 function viscosity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
-    ϱ = molar_density(model.eos, p, T, z; phase=phase)
-    return ϱT_viscosity(model, ϱ, T, z)
+    V = CL.volume(model.eos, p, T, z; phase=phase)
+    return VT_viscosity(model, V, T, z)
 end
 
-function ϱT_viscosity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
-    param = model[Viscosity()]
-    s = entropy_conf(model.eos, ϱ, T, z)
+function VT_viscosity(model::AbstractEntropyScalingModel, V, T, z::AbstractVector=Z1)
+    param = model[Viscosity()]          
+    s = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
     ηˢ = scaling_model(param, sˢ, z)
-    return scaling(param, model.eos, ηˢ, T, ϱ, s, z; inv=true)
+    return scaling(param, model.eos, ηˢ, T, sum(z)/V, s, z; inverse=true)
 end
 
 
@@ -40,16 +40,16 @@ Thermal conductivity `λ(p,T,x)` (`[λ] = W m⁻¹ K⁻¹`).
 thermal_conductivity
 
 function thermal_conductivity(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
-    ϱ = molar_density(model.eos, p, T, z; phase=phase)
-    return ϱT_thermal_conductivity(model, ϱ, T, z)
+    V = CL.volume(model.eos, p, T, z; phase=phase)
+    return VT_thermal_conductivity(model, V, T, z)
 end
 
-function ϱT_thermal_conductivity(model::AbstractEntropyScalingModel, ϱ, T, z::AbstractVector=Z1)
+function VT_thermal_conductivity(model::AbstractEntropyScalingModel, V, T, z::AbstractVector=Z1)
     param = model[ThermalConductivity()]
-    s = entropy_conf(model.eos, ϱ, T, z)
+    s = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
     λˢ = scaling_model(param, sˢ, z)
-    return scaling(param, model.eos, λˢ, T, ϱ, s, z; inv=true)
+    return scaling(param, model.eos, λˢ, T, sum(z)/V, s, z; inverse=true)
 end
 
 """
@@ -59,21 +59,31 @@ Self-diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
 """
 self_diffusion_coefficient
 
-function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z=Z1; phase=:unknown)
-    ϱ = molar_density(model.eos, p, T, z; phase=phase)
-    if length(model) == 1
-        return ϱT_self_diffusion_coefficient(model, ϱ, T)
-    else
-        return ϱT_self_diffusion_coefficient(model, ϱ, T, z)
-    end
+function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T; phase=:unknown)
+    V = CL.volume(model.eos, p, T; phase=phase)
+    return only(VT_self_diffusion_coefficient(model, V, T))
 end
 
-function ϱT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T)
-    param = model[SelfDiffusionCoefficient()]
-    s = entropy_conf(model.eos, ϱ, T)
-    sˢ = scaling_variable(param, s)
-    Dˢ = scaling_model(param, sˢ)
-    return scaling(param, model.eos, Dˢ, T, ϱ, s; inv=true)
+function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
+    V = CL.volume(model.eos, p, T, z; phase=phase)
+    return VT_self_diffusion_coefficient(model, V, T, z)
+end
+
+function VT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z::AbstractVector=Z1)
+    params_diff = model.params[DiffusionCoefficient()]
+    param = _init_selfdiff_param(params_diff)
+    s  = CL.VT_entropy_res(model.eos, V, T, z)
+    sˢ = scaling_variable(param, s, z)
+
+    N = length(z)
+    D = zeros(N)
+    for i in eachindex(z)
+        _set_selfdiff_param!(param, params_diff, i)
+        Dˢ = scaling_model(param, sˢ, z)
+        D[i] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inverse=true)
+    end
+    
+    return D
 end
 
 """
@@ -84,21 +94,22 @@ Maxwell-Stefan diffusion coefficient `Ð(p,T,x)` (`[Ð] = m² s⁻¹`).
 MS_diffusion_coefficient
 
 function MS_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
-    ϱ = molar_density(model.eos, p, T, z; phase=phase)
-    return ϱT_MS_diffusion_coefficient(model, ϱ, T, z)
+    V = CL.volume(model.eos, p, T, z; phase=phase)
+    return VT_MS_diffusion_coefficient(model, V, T, z)
 end
 
-function ϱT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
+function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z)
     N = length(model)
-    param = model[InfDiffusionCoefficient()]
+    params_diff = model.params[DiffusionCoefficient()]
+    param = _init_msdiff_param(params_diff)
     
     Ðᵢⱼ = zero(MSDiffusionMatrix, N)
     for i in 1:N, j in i+1:N
-        #TODO extend to multicomponent mixtures
-        s = entropy_conf(model.eos, ϱ, T, z)
+        _set_msdiff_param!(param, params_diff, i, j)
+        s = CL.VT_entropy_res(model.eos, V, T, z)
         sˢ = scaling_variable(param, s, z)
         Dˢ = scaling_model(param, sˢ, z)
-        Ðᵢⱼ[i,j] = scaling(param, model.eos, Dˢ, T, ϱ, s, z; inv=true)
+        Ðᵢⱼ[i,j] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inverse=true)
     end
     return Ðᵢⱼ
 end
@@ -111,18 +122,18 @@ Fickian diffusion coefficient `D(p,T,x)` (`[D] = m² s⁻¹`).
 fick_diffusion_coefficient
 
 function fick_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; phase=:unknown)
-    ϱ = molar_density(model.eos, p, T, z; phase=phase)
-    return ϱT_fick_diffusion_coefficient(model, ϱ, T, z)
+    V = CL.volume(model.eos, p, T, z; phase=phase)
+    return VT_fick_diffusion_coefficient(model, V, T, z)
 end
 
-function ϱT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, T, z)
+function VT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z)
     N = length(model)
     _rng = 1:N-1
     x = z ./ sum(z)
-    Ð = ϱT_MS_diffusion_coefficient(model, ϱ, T, z)     #TODO multicomponent MS diffusion coefficient
+    Ð = VT_MS_diffusion_coefficient(model, V, T, z)     #TODO multicomponent MS diffusion coefficient
     _Ð = inv.(Ð)
     setindex!.(Ref(_Ð), 0, 1:N, 1:N)
-    Γ = thermodynamic_factor(model.eos, ϱ, T, z)
+    Γ = CL.VT_thermodynamic_factor(model.eos, V, T, z)
     B = [
         i == j ? 
         x[i]*_Ð[i,N] + sum(i == k ? 0 : x[k]*_Ð[i,k] for k in 1:N) :
@@ -134,7 +145,7 @@ function ϱT_fick_diffusion_coefficient(model::AbstractEntropyScalingModel, ϱ, 
 end
 
 """
-    inf_diffusion_coefficient(model::EntropyScalingModel, p, T, z; phase=:unknown, solute=nothing, solvent=nothing)
+    inf_diffusion_coefficient(model::EntropyScalingModel, p, T; phase=:unknown, solute=nothing, solvent=nothing)
 
 Returns all diffusion coefficients at infinite dilution of the system (if parameters are available):
 

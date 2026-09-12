@@ -1,0 +1,4 @@
+Clapeyron Database File,,,,,,,
+ESFramework_thermalconductivity_sCPA Like Parameters,,,,,,,
+species,α0,α1,α2,α3,αln,source,
+methanol,2.147,7.385,-2.678,1.007,-3.268,10.1016/j.molliq.2023.123811,

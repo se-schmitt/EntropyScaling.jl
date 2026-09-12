@@ -7,7 +7,8 @@ import Unitful: Pa, K, W, m, J, mol, s
 const ES = EntropyScaling
 Z1 = ES.Z1
 
-const ACEM = ES.AbstractChapmanEnskogModel
+const CL = EntropyScaling.Clapeyron
+const ACEM = ES.ChapmanEnskogModel
 const AESM = ES.AbstractEntropyScalingModel
 const _tph = Union{Symbol,Vector{Symbol}}
 
@@ -60,10 +61,8 @@ end
 for (fn,unit) in [
         (:viscosity, Pa*s),
         (:thermal_conductivity, W/K/m),
-        (:self_diffusion_coefficient, m^2/s),
-        (:MS_diffusion_coefficient, m^2/s)
     ]
-    ϱT_fn = Symbol(:ϱT_,fn)
+    VT_fn = Symbol(:VT_,fn)
     @eval begin
         # Entropy Scaling models
         function ES.$fn(model::AESM, p::Unitful.Pressure, T::Unitful.Temperature, z=Z1; phase=:unknown, output=$unit)
@@ -73,8 +72,9 @@ for (fn,unit) in [
         end
         function ES.$fn(model::AESM, ϱ::__DensityKind, T::Unitful.Temperature, z=Z1; output=$unit)
             x = z./sum(z)
-            _ϱ, _T = ustrip_ϱ(ϱ, x, ES.get_Mw(model.eos)), ustrip(K, T)
-            _Y = ES.$ϱT_fn(model, _ϱ, _T, x)*$unit
+            _ϱ, _T = ustrip_ϱ(ϱ, x, CL.mw(model.eos).*1e-3), ustrip(K, T)
+            _V = inv(_ϱ)
+            _Y = ES.$VT_fn(model, _V, _T, x)*$unit
             return uconvert(output, _Y)
         end
 
@@ -83,6 +83,59 @@ for (fn,unit) in [
             _T = ustrip(K, T)
             _Y = ES.$fn(model, NaN, _T, z)*$unit
             return uconvert(output, _Y)
+        end
+    end
+end
+# Diffusion coefficients
+for (fn,unit) in [
+        (:self_diffusion_coefficient, m^2/s),
+        (:MS_diffusion_coefficient, m^2/s)
+    ]
+    VT_fn = Symbol(:VT_,fn)
+    @eval begin
+        # Entropy Scaling models
+        function ES.$fn(model::AESM, p::Unitful.Pressure, T::Unitful.Temperature, z; phase=:unknown, output=$unit)
+            _p, _T = ustrip(Pa, p), ustrip(K, T)
+            _Y = ES.$fn(model, _p, _T, z; phase).*$unit
+            return uconvert.(output, _Y)
+        end
+        function ES.$fn(model::AESM, ϱ::__DensityKind, T::Unitful.Temperature, z; output=$unit)
+            x = z./sum(z)
+            _ϱ, _T = ustrip_ϱ(ϱ, x, CL.mw(model.eos).*1e-3), ustrip(K, T)
+            _V = inv(_ϱ)
+            _Y = ES.$VT_fn(model, _V, _T, x).*$unit
+            return uconvert.(output, _Y)
+        end
+
+        # Chapman-Enskog models
+        function ES.$fn(model::ACEM, p, T::Unitful.Temperature, z; output=$unit)
+            _T = ustrip(K, T)
+            _Y = ES.$fn(model, NaN, _T, z).*$unit
+            return uconvert.(output, _Y)
+        end
+    end
+    if fn == :self_diffusion_coefficient
+        @eval begin
+            # Entropy Scaling models
+            function ES.$fn(model::AESM, p::Unitful.Pressure, T::Unitful.Temperature; phase=:unknown, output=$unit)
+                _p, _T = ustrip(Pa, p), ustrip(K, T)
+                _Y = ES.$fn(model, _p, _T; phase)*$unit
+                return uconvert(output, _Y)
+            end
+            function ES.$fn(model::AESM, ϱ::__DensityKind, T::Unitful.Temperature; output=$unit)
+                x = z./sum(z)
+                _ϱ, _T = ustrip_ϱ(ϱ, x, CL.mw(model.eos).*1e-3), ustrip(K, T)
+                _V = inv(_ϱ)
+                _Y = ES.$VT_fn(model, _V, _T, x)*$unit
+                return uconvert(output, _Y)
+            end
+
+            # Chapman-Enskog models
+            function ES.$fn(model::ACEM, p, T::Unitful.Temperature; output=$unit)
+                _T = ustrip(K, T)
+                _Y = ES.$fn(model, NaN, _T, z)*$unit
+                return uconvert.(output, _Y)
+            end
         end
     end
 end

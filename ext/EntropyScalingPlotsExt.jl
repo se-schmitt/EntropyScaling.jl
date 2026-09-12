@@ -56,7 +56,7 @@ function _plots_plot(p::Plots.Plot, model::ES.AESM, data; kwargs...)
 end
 
 # Define plot methods for Plots.jl
-function Plots.plot(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling(model::ES.AESM, data; kwargs...)
     p = plot()
     if !isnothing(data)
         yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
@@ -66,7 +66,7 @@ function Plots.plot(model::ES.AESM, data; kwargs...)
     return p
 end
 
-function Plots.plot!(p::Plots.Plot, model::ES.AESM, data; kwargs...)
+function ES.plot_scaling!(p::Plots.Plot, model::ES.AESM, data; kwargs...)
     if !isnothing(data)
         yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
         plot!(p, yscale=yscale)
@@ -76,7 +76,7 @@ function Plots.plot!(p::Plots.Plot, model::ES.AESM, data; kwargs...)
 end
 
 # Define a standalone plot! method that works with the current plot
-function Plots.plot!(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling!(model::ES.AESM, data; kwargs...)
     p = current()
     if !isnothing(data)
         yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10

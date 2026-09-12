@@ -54,7 +54,7 @@ function _makie_plot(fig::MK.Figure, ax::MK.Axis, model::ES.AESM, data; kwargs..
 end
 
 # Define plot methods for Makie
-function MK.plot(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling(model::ES.AESM, data; kwargs...)
     fig = Figure()
     prop = isnothing(data) ? kwargs[:prop] : data.prop 
     yscale = (prop == ThermalConductivity()) ? identity : log10
@@ -63,7 +63,7 @@ function MK.plot(model::ES.AESM, data; kwargs...)
     return fig
 end
 
-function MK.plot!(ax, model::ES.AESM, data; kwargs...)
+function ES.plot_scaling!(ax, model::ES.AESM, data; kwargs...)
     fig = ax.parent
     _makie_plot(fig, ax, model, data; kwargs...)
     prop = isnothing(data) ? kwargs[:prop] : data.prop 
@@ -72,7 +72,7 @@ function MK.plot!(ax, model::ES.AESM, data; kwargs...)
 end
 
 # Define a standalone plot! method that works with the current axis
-function MK.plot!(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling!(model::ES.AESM, data; kwargs...)
     ax = current_axis()
     if isnothing(ax)
         fig = current_figure()

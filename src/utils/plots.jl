@@ -1,7 +1,9 @@
+export plot_scaling, plot_scaling!
+
 """
-    plot(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
-    plot!(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
-    plot!(axis, model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
+    plot_scaling(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
+    plot_scaling!(model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
+    plot_scaling!(axis, model::AbstractEntropyScalingModel, dat::TransportPropertyData; kwargs...)
 
 Plots the scaled transport property as a function of the entropy-scaling variable (e.g. the reduced entropy).
 The entropy scaling model as well as the scaled transport property data are shown.
@@ -47,43 +49,69 @@ T, p = rand(200.:500.,200), 10.0.^(rand(200).*4 .+ 4)
 
 # Create data and model
 ηdat = ViscosityData(T,p,nothing,η)
-model_A = FrameworkModel(PCSAFT(sub), [ηdat])
-model_B = FrameworkModel(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
+model_A = ESFramework(PCSAFT(sub), [ηdat])
+model_B = ESFramework(PCSAFT(sub), [ηdat]; opts=FitOptions(what_fit=Dict(Viscosity() => Bool[0,1,0,1,0])))
 
 # Plot 
-fig = plot(model_A, ηdat; cprop=:T, linewidth=3, linecolor=:blue, label="model A (4 parameters)")
-plot!(model_B, nothing; slims=(0,3), prop=Viscosity(), linestyle=:dash, label="model B (2 parameters)")
+fig = plot_scaling(model_A, ηdat; cprop=:T, linewidth=3, linecolor=:blue, label="model A (4 parameters)")
+plot_scaling!(model_B, nothing; slims=(0,3), prop=Viscosity(), linestyle=:dash, label="model B (2 parameters)")
 axislegend(position=:lt, framevisible=false)
 ax2 = Axis(fig[2,1])
-plot!(ax2, model_A, ηdat; marker=:star5, markercolor=:red, label="model A again")
+plot_scaling!(ax2, model_A, ηdat; marker=:star5, markercolor=:red, label="model A again")
 axislegend(position=:lt, framevisible=false)
 ax2.yscale = identity
 fig
 ```
 ![Plot example](./assets/plot_example.svg)
 """
-plot
-plot() = nothing
+plot_scaling
+
+plot_scaling() = error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)")
+plot_scaling!() = error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)")
 
 function calc_plot_data(model::AESM, data; slims, prop)
     param = model[prop]
 
+    if prop isa InfDiffusionCoefficient
+        _param = _init_param(param, prop; idx=prop.solvent:prop.solvent)
+        _set_ij_diff_param!(_param, param, prop.solute, prop.solvent)
+        _eos_pure = CL.split_model(model.eos)[prop.solvent]
+    elseif prop isa SelfDiffusionCoefficient
+        _param = _init_param(param, prop; idx=prop.component:prop.component)
+        _set_ij_diff_param!(_param, param, prop.component, prop.component)
+        _eos_pure = CL.split_model(model.eos)[prop.component]
+    else
+        _param = param
+        _eos_pure = model.eos
+    end
+
     if !isnothing(data)
         ϱdat = deepcopy(data.ϱ)
         what_ϱ_nan = isnan.(ϱdat)
-        ϱdat[what_ϱ_nan] = [molar_density(model.eos, data.p[i], data.T[i]; phase=data.phase[i]) 
+        if length(model) == 1
+            z = Z1
+        elseif prop isa SelfDiffusionCoefficient
+            z = zeros(length(model))
+            z[prop.component] = 1
+        elseif prop isa InfDiffusionCoefficient
+            z = zeros(length(model))
+            z[prop.solvent] = 1
+        else
+            error("Case not implemented. Report a bug!")
+        end
+        ϱdat[what_ϱ_nan] = [inv(CL.volume(model.eos, data.p[i], data.T[i], z; phase=data.phase[i])) 
                             for i in findall(what_ϱ_nan)]
-        sdat = entropy_conf.(model.eos, ϱdat, data.T)
-        sˢdata = scaling_variable.(param, sdat)
-        Yˢdata = scaling.(param, model.eos, data.Y, data.T, ϱdat, sdat)
+        sdat = CL.VT_entropy_res.(model.eos, inv.(ϱdat), data.T, Ref(z))
+        sˢdata = scaling_variable.(_param, sdat)
+        Yˢdata = scaling.(_param, _eos_pure, data.Y, data.T, ϱdat, sdat)
     else
         (sˢdata, Yˢdata) = (nothing, nothing)
     end
     
-    @assert !(isnothing(slims) && isnothing(sˢdata)) "Please provide `slims` if `data == nothing`"
+    isnothing(slims) && isnothing(sˢdata) && error("Please provide `slims` if `data == nothing`")
     slims = isnothing(slims) ? extrema(sˢdata) : slims
     sˢx = [range(slims..., length=100);]
-    Yˢx = scaling_model.(param, sˢx)
+    Yˢx = scaling_model.(_param, sˢx)
     
     return (sˢdata, Yˢdata), (sˢx, Yˢx)
 end 

@@ -37,8 +37,8 @@ using EntropyScaling
 ```julia
 julia> using EntropyScaling
 
-julia> model = ChapmanEnskogModel("methane")
-ChapmanEnskogModel{methane}
+julia> model = ChapmanEnskog("methane")
+ChapmanEnskog{methane}
  σ: [3.758] Å
  ε: [148.6] K
  M: [0.01604] kg/m³
@@ -66,8 +66,8 @@ PCSAFT{BasicIdeal, Float64} with 1 component:
  "butane"
 Contains parameters: Mw, segment, sigma, epsilon, epsilon_assoc, bondvol
 
-julia> model = FrameworkModel(eos_model, [data])        # Fit model parameters
-FrameworkModel with 1 component:
+julia> model = ESFramework(eos_model, [data])           # Fit model parameters
+ESFramework with 1 component:
  "butane"
  Available properties: viscosity
  Equation of state: Clapeyron.EoSVectorParam{PCSAFT{BasicIdeal, Float64}}("butane")
