@@ -1,0 +1,7 @@
+[deps]
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
+EntropyScaling = "36a13073-9e6e-4b19-b12b-cb530e79ee8e"
+
+[sources]
+EntropyScaling = {path = ".."}
