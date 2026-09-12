@@ -45,15 +45,50 @@ Through `EntropyScaling.jl`, those methods for modeling transport properties are
 Through Julia's excellent extensibility, the package can easily be coupled with the wider modeling ecosystem.
 Moreover, using the strong interoperability with other programming languages (in particular Python), the methods from `EntropySclaing.jl` can also be used in a large number of different applications.
 
+# Key features
+
+## Scope
+
+
+
+## Available Models
+
+
+
+## Examples
+
+
+
 # State of the field                                                                                                                  
 
-
+There are few packages that implement methods for modeling transport properties.
+CoolProp [@bell_pure_2014] implements highly accurate correlations for the viscosity and thermal conductivity of few fluids for which a large number of experimental exist.
+FeOS [@rehner_feos_2023] is Rust package with a Python frontend for thermodynamic calculations based on molecular equations of state like PC-SAFT EOS [@gross_perturbed_2001].
+Additionally, it provides methods for calculating the viscosity, thermal conductivity, and self-diffusion coefficients based on entropy scaling.
+Thermo [@bell_thermo_2016] is a general thermodynamic dynamic library written in Python that implements, besides other models for static thermodynamic property prediction, some simple correlations for the viscosity and thermal conductivity as well as the Joback group-contribution model [@joback_estimation_1987].
+In Clapeyron.jl [@walker_clapeyronjl_2022], only the Joback group contribution is available for predicting the viscosity.
 
 # Software design
 
-
+- extension of clapeyron / tight integration + similar syntax
+- easy to implement new models -> ES models only need few new functions 
 
 # Research impact statement
+
+- used in publications [@schmitt_entropy_2025]
+- integrated in MLThermoProperties package (link)
+
+# AI usage disclosure
+
+The authors used generative AI tools in the preparation of both this manuscript and the EntropyScaling.jl package.
+
+For the manuscript, AI tools were used to improve the initial draft. All AI-generated text was subsequently reviewed, edited, and integrated by the human authors.
+
+For the software, AI tools provided supporting assistance only: code review, minor tasks, and testing. The design and the main body of the code were written by the authors, and any AI-generated contribution was inspected and tested before inclusion in the repository.
+
+The authors are able to trace and justify all AI-assisted output and are responsible for the final content and its accuracy.
+
+# Acknowledgement
 
 
 
