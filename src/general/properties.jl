@@ -175,7 +175,7 @@ function inf_diffusion_coefficient(model::AbstractTransportPropertyModel, p, T;
     else
         Dij = zeros(TYPE, length(idx_solute), length(idx_solvent))
         for (i,idx_i) in enumerate(idx_solute), (j,idx_j) in enumerate(idx_solvent)
-            if i != j
+            if idx_i != idx_j
                 Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
             end
         end
