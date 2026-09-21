@@ -175,9 +175,7 @@ function inf_diffusion_coefficient(model::AbstractTransportPropertyModel, p, T;
     else
         Dij = zeros(TYPE, length(idx_solute), length(idx_solvent))
         for (i,idx_i) in enumerate(idx_solute), (j,idx_j) in enumerate(idx_solvent)
-            if idx_i != idx_j
-                Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
-            end
+            Dij[i,j] = _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
         end
     end
     return Dij
@@ -186,5 +184,8 @@ end
 match_comp(comp::AbstractString, components) = findall(comp .== components)
 match_comp(comp::Int, components) = [comp]
 
-function _inf_diffusion_coefficient(model, p, T, (idx_i, idx_j); phase)
+function _inf_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, (idx_i, idx_j); phase=:unknown)
+    _z = zeros(Base.promote_eltype(p,T),length(model))
+    _z[idx_j] = 1
+    return self_diffusion_coefficient(model, p, T, _z; phase)[idx_i]
 end

@@ -4,3 +4,5 @@ docs/build/
 scripts/
 *.cov
 debug*
+paper.pdf
+jats/
