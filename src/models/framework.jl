@@ -119,7 +119,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
             α3 = _params["α3"]
             αln = _params["αln"]
 
-            m = _eos.params.segment
+            m = get_segment(_eos.params)
 
             ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral)
             if prop isa AbstractDiffusionCoefficient
@@ -136,6 +136,17 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
     ismissing(params) && error("No parameters found for components: $(join(components, ", ")).")
 
     return ESFramework(_components, params, _eos, REF_FRAMEWORK)
+end
+
+function get_segment(params)
+    if hasfield(typeof(params), :segment)
+        return params.segment
+    else
+        @warn "Using segment=1 for entropy scaling!"
+        _T = eltype(params) == Any ? Float64 : eltype(params)
+        _components = params.Mw.components
+        return CL.SingleParam("segment", _components, ones(_T,length(_components)))
+    end
 end
 
 # Fitting function
