@@ -97,5 +97,5 @@ julia> η = viscosity(model, 1u"bar", 26.85u"°C", phase=:liquid, output = u"cP"
 [build-img]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml/badge.svg?branch=main
 [build-url]: https://github.com/se-schmitt/EntropyScaling.jl/actions/workflows/CI.yml?query=branch%3Amain
 
-[zenodo-img]: https://zenodo.org/badge/723050048.svg
-[zenodo-url]: https://zenodo.org/badge/latestdoi/723050048
+[zenodo-img]: https://zenodo.org/badge/DOI/10.5281/zenodo.14674113.svg
+[zenodo-url]: https://doi.org/10.5281/zenodo.14674113
