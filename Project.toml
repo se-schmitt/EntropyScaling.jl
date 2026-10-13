@@ -5,20 +5,15 @@ authors = ["Sebastian Schmitt"]
 
 [deps]
 ADTypes = "47edcb42-4c32-4615-8424-f2b9edc5f35b"
-CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 Clapeyron = "7c7805af-46cc-48c9-995b-ed0ed2dc909a"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 FillArrays = "1a297f60-69ca-5386-bcde-b61e274b549b"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
-GLMakie = "e9467ef8-e4e7-5192-8a1a-b1aee30e663a"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LogExpFunctions = "2ab3a3ac-af41-5b50-aa03-7779005ae688"
 LsqFit = "2fda8390-95c7-5789-9bda-21331edee243"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-TernaryDiagramsMakie = "1e5bab7a-4bec-4b66-a611-bcd45925a74a"
-XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [weakdeps]
 Jutul = "2b460a1a-8a2b-45b2-b125-b5c536396eb9"
@@ -37,13 +32,10 @@ EntropyScalingUnitfulExt = "Unitful"
 
 [compat]
 ADTypes = "1.21.0"
-CSV = "0.10.16"
 Clapeyron = "0.6.20"
-DataFrames = "1.8.2"
 DelimitedFiles = "1.9.1"
 FillArrays = "1"
 ForwardDiff = "0.10,1"
-GLMakie = "0.13.12"
 Jutul = "0.4"
 JutulDarcy = "0.2, 0.3"
 LinearAlgebra = "1.10"
@@ -54,9 +46,7 @@ Optim = "1.13.3"
 Plots = "1"
 StatsBase = "0.34"
 Symbolics = "6,7"
-TernaryDiagramsMakie = "0.1.0"
 Unitful = "1.22"
-XLSX = "0.11.10"
 julia = "1.10"
 
 [extras]
