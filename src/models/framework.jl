@@ -35,8 +35,8 @@ end
 """
     ESFramework{E,P} <: ESFrameworkModel
 
-    ESFramework(components, eos=nothing; userlocations=String[], collision_integral=KimMonroe(), verbose=false)
-    ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; opts::FitOptions=FitOptions(), solute=nothing, verbose=false)
+    ESFramework(components, eos=nothing; userlocations=Dict(), collision_integral=KimMonroe(), σε_ce=(), verbose=false)
+    ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), α_initial=nothing, collision_integral=KimMonroe(), σε_ce=(), verbose=false)
 
 Entropy scaling framework [schmitt_entropy_2024,schmitt_entropy_2025](@cite).
 
@@ -51,6 +51,21 @@ It enables fitting new models using only a few experimental data.
 - `α2::CL.SingleParam`
 - `α3::CL.SingleParam`
 - `αln::CL.SingleParam`
+
+# Keywords
+
+**Model construction:**
+
+- `userlocations`: provide custom parameters
+- `collision_integral`: method to calculate the collision integral
+- `σε_ce`: Chapman-Enskog parameter given as `((σ₁,ε₁),(σ₂,ε₂),...)` ([σ] = Å, [ε] = K)
+
+**Fit:**
+
+- `tofit`: parameters to be fitted
+- `α_initial`: initial values for fit
+- `collision_integral`: method to calculate the collision integral
+- `σε_ce`: Chapman-Enskog parameter given as `((σ₁,ε₁),(σ₂,ε₂),...)` ([σ] = Å, [ε] = K)
 
 # Example
 
