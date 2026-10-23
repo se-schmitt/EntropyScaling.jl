@@ -35,8 +35,8 @@ end
 """
     ESFramework{E,P} <: ESFrameworkModel
 
-    ESFramework(components, eos=nothing; userlocations=String[], collision_integral=KimMonroe(), verbose=false)
-    ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; opts::FitOptions=FitOptions(), solute=nothing, verbose=false)
+    ESFramework(components, eos=nothing; userlocations=Dict(), collision_integral=KimMonroe(), σε_ce=(), verbose=false)
+    ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), α_initial=nothing, collision_integral=KimMonroe(), σε_ce=(), verbose=false)
 
 Entropy scaling framework [schmitt_entropy_2024,schmitt_entropy_2025](@cite).
 
@@ -51,6 +51,21 @@ It enables fitting new models using only a few experimental data.
 - `α2::CL.SingleParam`
 - `α3::CL.SingleParam`
 - `αln::CL.SingleParam`
+
+# Keywords
+
+**Model construction:**
+
+- `userlocations`: provide custom parameters
+- `collision_integral`: method to calculate the collision integral
+- `σε_ce`: Chapman-Enskog parameter given as `((σ₁,ε₁),(σ₂,ε₂),...)` ([σ] = Å, [ε] = K)
+
+**Fit:**
+
+- `tofit`: parameters to be fitted
+- `α_initial`: initial values for fit
+- `collision_integral`: method to calculate the collision integral
+- `σε_ce`: Chapman-Enskog parameter given as `((σ₁,ε₁),(σ₂,ε₂),...)` ([σ] = Å, [ε] = K)
 
 # Example
 
@@ -78,7 +93,7 @@ const PARAMS_FRAMEWORK = ["α0","α1","α2","α3","αln"]
 const REF_FRAMEWORK = ["10.1016/j.molliq.2023.123811","10.1038/s41467-025-57780-z"]
 
 # Parameter function
-function ESFramework(components, eos; userlocations=Dict(), collision_integral=KimMonroe(), verbose=false)
+function ESFramework(components, eos; userlocations=Dict(), collision_integral=KimMonroe(), σε_ce=(), verbose=false)
     _components = CL.format_components(components)
     _eos = _build_eos(_components, eos)
     
@@ -121,7 +136,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
 
             m = get_segment(_eos.params)
 
-            ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral)
+            ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral, σε=σε_ce)
             if prop isa AbstractDiffusionCoefficient
                 param = ESFrameworkDiffParam(α0,α1,α2,α3,αln,m,Y₀⁺min,ce)
             else
@@ -150,7 +165,7 @@ function get_segment(params)
 end
 
 # Fitting function
-function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), α_initial=nothing, collision_integral=KimMonroe(), verbose=false)
+function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData}; tofit=Dict(), α_initial=nothing, collision_integral=KimMonroe(), σε_ce=(), verbose=false)
     _components = CL.format_components(components)
     _eos = _build_eos(_components, eos)
 
@@ -181,7 +196,7 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
         end
 
         if !(prop isa AbstractDiffusionCoefficient) || ismissing(params_dict[DiffusionCoefficient()])
-            ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral)
+            ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral, σε=σε_ce)
             α0, α1, α2, α3, αln = get_α0(prop, _components)
             m = _eos.params.segment
             if prop isa AbstractDiffusionCoefficient
@@ -280,14 +295,13 @@ get_α0(::AbstractDiffusionCoefficient, components) = begin
     return (CL.PairParam(_n,components,zeros(N,N)) for _n in ("α0","α1","α2","α3","αln"))
 end
 
-function init_framework_params(eos, prop; collision_integral)
+function init_framework_params(eos, prop; collision_integral, σε)
     N = length(eos)
+    _σε = isempty(σε) ? ntuple(_ -> (), Val(N)) : σε
 
     eos_pure = CL.split_model(eos)
-    cs = CL.crit_pure.(eos_pure)
-    (Tc, pc) = (getindex.(cs, 1), getindex.(cs, 2))
-    σε = correspondence_principle.(Tc, pc)
-    (σ, ε) = (getindex.(σε, 1), getindex.(σε, 2))
+    _σεTc = correspondence_principle.(eos_pure, _σε)
+    (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3))
 
     Mw = CL.mw(eos)
     _components = get_components(eos)
@@ -305,14 +319,13 @@ function init_framework_params(eos, prop; collision_integral)
     return ce, Y₀⁺min
 end
 
-function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_integral)
+function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_integral, σε)
     N = length(eos)
+    _σε = isempty(σε) ? ntuple(_ -> (), Val(N)) : σε
 
     eos_pure = CL.split_model(eos)
-    cs = CL.crit_pure.(eos_pure)
-    (Tc, pc) = (getindex.(cs, 1), getindex.(cs, 2))
-    σε = correspondence_principle.(Tc, pc)
-    (σ, ε) = (getindex.(σε, 1), getindex.(σε, 2))
+    _σεTc = correspondence_principle.(eos_pure, _σε)
+    (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3))
 
     Mw = CL.mw(eos)
     _components = get_components(eos)

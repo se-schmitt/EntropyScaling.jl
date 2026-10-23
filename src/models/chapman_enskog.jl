@@ -295,19 +295,22 @@ function Ω_11_neufeld(T_red)
     return 1.0548*(T_red)^(-0.15504) + 0.54762*exp(-0.77320*T_red) + 2.16178*exp(-2.43787*T_red)
 end
 
+const Tc_LJ = 1.321
+const pc_LJ = 0.129
+
 # Correspondence principle
-function correspondence_principle(Tc, pc)
-    Tc_LJ = 1.321
-    pc_LJ = 0.129
+function correspondence_principle(eos, ::Tuple{})
+    Tc,pc,_ = CL.crit_pure(eos)
 
     ε = Tc/Tc_LJ
     σ = cbrt(pc_LJ/pc*ε*kB)/1e-10
-    return σ, ε
+    return σ, ε, Tc
 end
 
-function correspondence_principle(eos)
-    Tc,pc,_ = CL.crit_pure(eos)
-    return correspondence_principle(Tc, pc)
+function correspondence_principle(::Any, σε::Tuple{T,T}) where {T<:Number}
+    σ, ε = σε
+    Tc = ε * Tc_LJ
+    return σ, ε, Tc
 end
 
 # Viscosity, thermal conductivity: Wilke and Mason and Saxena
