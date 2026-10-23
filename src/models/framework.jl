@@ -301,12 +301,12 @@ function init_framework_params(eos, prop; collision_integral, σε)
 
     eos_pure = CL.split_model(eos)
     _σεTc = correspondence_principle.(eos_pure, _σε)
-    (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3))
+    (σ, ε, Tc) = _diag.((getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3)))
 
     Mw = CL.mw(eos)
     _components = get_components(eos)
-    
-    ce = ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral)
+
+    ce =ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral)
 
     _Y₀⁺min = zeros(N)
     for i in 1:N
