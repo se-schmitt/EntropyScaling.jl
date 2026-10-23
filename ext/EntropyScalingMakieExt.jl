@@ -6,6 +6,8 @@ using Makie
 const ES = EntropyScaling
 const MK = Makie
 
+__init__() = push!(ES.PLOT_BACKENDS, :makie)
+
 # Helper function for plotting with the Makie interface
 function _makie_plot(fig::MK.Figure, ax::MK.Axis, model::ES.AESM, data; kwargs...)
     slims = get(kwargs, :slims, nothing)
@@ -54,7 +56,7 @@ function _makie_plot(fig::MK.Figure, ax::MK.Axis, model::ES.AESM, data; kwargs..
 end
 
 # Define plot methods for Makie
-function ES.plot_scaling(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling(::Val{:makie}, model::ES.AESM, data; kwargs...)
     fig = Figure()
     prop = isnothing(data) ? kwargs[:prop] : data.prop 
     yscale = (prop == ThermalConductivity()) ? identity : log10
@@ -72,7 +74,7 @@ function ES.plot_scaling!(ax, model::ES.AESM, data; kwargs...)
 end
 
 # Define a standalone plot! method that works with the current axis
-function ES.plot_scaling!(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling!(::Val{:makie}, model::ES.AESM, data; kwargs...)
     ax = current_axis()
     if isnothing(ax)
         fig = current_figure()

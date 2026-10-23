@@ -3,6 +3,8 @@ module EntropyScalingPlotsExt
 using EntropyScaling
 using Plots
 
+__init__() = push!(ES.PLOT_BACKENDS, :plots)
+
 const ES = EntropyScaling
 
 # Helper function for plotting with the Plots.jl interface
@@ -56,7 +58,7 @@ function _plots_plot(p::Plots.Plot, model::ES.AESM, data; kwargs...)
 end
 
 # Define plot methods for Plots.jl
-function ES.plot_scaling(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling(::Val{:plots}, model::ES.AESM, data; kwargs...)
     p = plot()
     if !isnothing(data)
         yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
@@ -76,7 +78,7 @@ function ES.plot_scaling!(p::Plots.Plot, model::ES.AESM, data; kwargs...)
 end
 
 # Define a standalone plot! method that works with the current plot
-function ES.plot_scaling!(model::ES.AESM, data; kwargs...)
+function ES.plot_scaling!(::Val{:plots}, model::ES.AESM, data; kwargs...)
     p = current()
     if !isnothing(data)
         yscale = (data.prop == ES.ThermalConductivity()) ? :identity : :log10
