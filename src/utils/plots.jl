@@ -28,6 +28,7 @@ The entropy scaling model as well as the scaled transport property data are show
 - `linewidth`: Width of the model line (default: `2`)
 - `linestyle`: Style of the model line (default: `:solid`)
 - `label`: Label for legend entries (default: `nothing`)
+- `backend`: Plotting package to use if both are loaded (`:makie` or `:plots`, default: last loaded; not available when an axis is passed)
 
 # Supported Plot Packages
 
@@ -66,8 +67,16 @@ fig
 """
 plot_scaling
 
-plot_scaling() = error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)")
-plot_scaling!() = error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)")
+const PLOT_BACKENDS = Symbol[]
+
+_default_backend() = isempty(PLOT_BACKENDS) ?
+    error("Only works if a plotting package is loaded (either a Makie.jl backend or Plots.jl)") :
+    last(PLOT_BACKENDS)
+
+plot_scaling(model::AESM, data; backend=_default_backend(), kwargs...) =
+    plot_scaling(Val(backend), model, data; kwargs...)
+plot_scaling!(model::AESM, data; backend=_default_backend(), kwargs...) =
+    plot_scaling!(Val(backend), model, data; kwargs...)
 
 function calc_plot_data(model::AESM, data; slims, prop)
     param = model[prop]

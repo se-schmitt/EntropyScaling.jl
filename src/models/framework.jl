@@ -301,12 +301,12 @@ function init_framework_params(eos, prop; collision_integral, σε)
 
     eos_pure = CL.split_model(eos)
     _σεTc = correspondence_principle.(eos_pure, _σε)
-    (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3))
+    (σ, ε, Tc) = _diag.((getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3)))
 
     Mw = CL.mw(eos)
     _components = get_components(eos)
-    
-    ce = ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral)
+
+    ce =ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral)
 
     _Y₀⁺min = zeros(N)
     for i in 1:N
@@ -325,7 +325,7 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
 
     eos_pure = CL.split_model(eos)
     _σεTc = correspondence_principle.(eos_pure, _σε)
-    (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3))
+    (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), _diag(getindex.(_σεTc, 3)))
 
     Mw = CL.mw(eos)
     _components = get_components(eos)
@@ -335,12 +335,12 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
 
     for i in 1:N, j = 1:N 
         if i == j
-            _ul = (; sigma=σ[i:j], epsilon=ε[i:j], Mw=Mw[i:j])
+            _ul = (; sigma=_get_σε_ce(σ,i,j), epsilon=_get_σε_ce(ε,i,j), Mw=Mw[i:j])
             _ce = ChapmanEnskog(_components[i]; userlocations=_ul, collision_integral)
             _prop = SelfDiffusionCoefficient(i)
             _eos = only(CL.split_model(eos, [i]))
         else
-            _ul = (; sigma=[mean(σ[[i,j]])], epsilon=[geomean(ε[[i,j]])], Mw=[calc_M_CE(Mw[[j,i]])])
+            _ul = (; sigma=[_calc_σ_ce(σ,i,j)], epsilon=[_calc_ε_ce(ε,i,j)], Mw=[calc_M_CE(_get_Mw_ce(Mw,j,i))])
             _ce = ChapmanEnskog("$(_components[i]) in $(_components[j])"; userlocations=_ul, collision_integral)
             _prop = InfDiffusionCoefficient(i => j)
             _eos = eos
@@ -353,6 +353,17 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
 
     return ce, Y₀⁺min
 end
+
+_diag(x::Vector) = x
+_diag(x::Matrix) = diag(x)
+_get_σε_ce(y::Vector, i, j) = y[i:j]
+_get_σε_ce(y::Matrix, i, j) = y[i,j]
+_get_Mw_ce(M::Vector, i, j) = M[[i,j]]
+_get_Mw_ce(M::Matrix, i, j) = M[i,j]
+_calc_σ_ce(σ::Vector, i, j) = mean(σ[[i,j]])
+_calc_σ_ce(σ::Matrix, i, j) = σ[i,j]
+_calc_ε_ce(ε::Vector, i, j) = geomean(ε[[i,j]])
+_calc_ε_ce(ε::Matrix, i, j) = ε[i,j]
 
 # Scaling model (correlation: Yˢ = Yˢ(sˢ,α,g))
 function scaling_model(param::ESFrameworkParam{<:AbstractViscosity}, s, x=[1.])
