@@ -310,9 +310,9 @@ function init_framework_params(eos, prop; collision_integral, σε)
 
     _Y₀⁺min = zeros(N)
     for i in 1:N
-        optf(x) = property_CE_plus(prop, ce, eos, x[1]; i)
-        sol = optimize(optf, [2*Tc[i]], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
-        _Y₀⁺min[i] = Optim.minimum(sol)[1]
+        optf(x) = property_CE_plus(prop, ce, eos, exp(x[1]); i)
+        sol = optimize(optf, [log(2*Tc[i])], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
+        _Y₀⁺min[i] = Optim.minimum(sol)
     end
     Y₀⁺min = CL.SingleParam("minimum(Y₀⁺)", _components, _Y₀⁺min)
 
@@ -345,10 +345,10 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
             _prop = InfDiffusionCoefficient(i => j)
             _eos = eos
         end
-        optf(x) = property_CE_plus(_prop, _ce, _eos, x[1]; i=j)
-        sol = optimize(optf, [2*Tc[j]], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
+        optf(x) = property_CE_plus(_prop, _ce, _eos, exp(x[1]); i=j)
+        sol = optimize(optf, [log(2*Tc[j])], LBFGS(), Optim.Options(f_reltol=1e-8); autodiff=AutoForwardDiff())
         ce[i,j] = _ce
-        Y₀⁺min.values[i,j] = Optim.minimum(sol)[1]
+        Y₀⁺min.values[i,j] = Optim.minimum(sol)
     end
 
     return ce, Y₀⁺min
