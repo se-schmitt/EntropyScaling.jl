@@ -465,6 +465,13 @@ function _set_msdiff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiffP
         getproperty(param.ce, k).values[1] = vals[j,i]
         getproperty(param.ce, k).values[2] = vals[j,i]
     end
+
+    pair_names = [param_all.α0.components[i], param_all.α0.components[j]]
+    # overwrite component names with the right component pair
+    for k in (:Mw, :sigma, :epsilon)
+        getproperty(param.ce, k).components .= pair_names
+    end
+
     return nothing
 end
 
