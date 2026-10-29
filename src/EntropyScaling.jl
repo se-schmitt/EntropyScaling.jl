@@ -24,20 +24,6 @@ function _dot(a, b)
     return res
 end
 
-# function _dot(a, b)
-#     res = zero(Base.promote_eltype(a, b))
-#     print("a = $a, b = $b")
-#     for i in 1:length(a)
-#         print("Rechne mit $(a[i]) und $(b[i])")
-
-#         # pseudo binary converting
-#         _b[i] = b[i] / 
-#         res += a[i] * b[i]
-#     end
-#     return res
-# end
-
-
 # General
 include("general/types.jl")
 include("general/scalings.jl")
