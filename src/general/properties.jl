@@ -98,22 +98,6 @@ function MS_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z; p
     return VT_MS_diffusion_coefficient(model, V, T, z)
 end
 
-# function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z)
-#     N = length(model)
-#     params_diff = model.params[DiffusionCoefficient()]
-#     param = _init_msdiff_param(params_diff)
-    
-#     Ðᵢⱼ = zero(MSDiffusionMatrix, N)
-#     for i in 1:N, j in i+1:N
-#         _set_msdiff_param!(param, params_diff, i, j)
-#         s = CL.VT_entropy_res(model.eos, V, T, z)
-#         sˢ = scaling_variable(param, s, z)
-#         Dˢ = scaling_model(param, sˢ, z)
-#         Ðᵢⱼ[i,j] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inverse=true)
-#     end
-#     return Ðᵢⱼ
-# end
-
 function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z)
     N = length(model)
     params_diff = model.params[DiffusionCoefficient()]
@@ -134,7 +118,7 @@ function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z
 
         Dˢ = scaling_model(param, sˢ, x_pseudo)
 
-        # new scaling approach for defined use of pseudo-bin and complete mixture
+        # use of pseudo-binary subsystem
         prop = EntropyScaling.transport_property(param)
         # split model for pseudo-binary eos
         eos_bin = CL.split_model(model.eos, [[i, j]])
@@ -142,13 +126,12 @@ function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z
         Y₀⁺min = mix_CE(prop, param.ce, param.Y₀⁺min.values, x_pseudo)
         Ws  = W(sˢ)
         base = BaseParam(prop,param.ce.Mw)
-        # needs pseudo-binary x
+
         Ðᵢⱼ[i,j]  = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^(-1) * plus_scaling(base, Dˢ, T, sum(z)/V, s, x_pseudo; inverse=true)
     end
     
     return Ðᵢⱼ
 end
-
 
 
 """
