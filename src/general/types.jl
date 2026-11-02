@@ -34,7 +34,9 @@ abstract type AbstractDiffusionCoefficient <: AbstractTransportProperty end
 struct BaseParam{P} <: AbstractParam
     prop::P
     Mw::CL.SingleParam{Float64}
+    units::typeof(SI_UNITS)
 end
+BaseParam(prop, Mw::CL.SingleParam) = BaseParam(prop, Mw, SI_UNITS)
 
 function BaseParam(prop::P, components::Vector{String}, Mw::Vector{Float64};
                    sources=nothing) where {P <: AbstractTransportProperty}
