@@ -44,8 +44,9 @@ The entropy scaling framework provides a physical way to model transport propert
 (viscosity, thermal conductivity, diffusion coefficients) based on molecular-based EOS.
 It enables fitting new models using only a few experimental data.
 
-If `eos` is a Clapeyron potential model (e.g. `Thol2016LJ()`), all inputs and outputs are in
-Lennard-Jones units and `σε_ce` defaults to σ* = ε* = 1 (see [`ChapmanEnskog`](@ref)).
+If `eos` is in molecular units (a Clapeyron potential model like `Thol2016LJ()`, or a mixture
+model like `KolafaNezbeda(comps; molecular_units=true)`), all inputs and outputs are in
+Lennard-Jones units (see [`ChapmanEnskog`](@ref)); `σε_ce` is then given in reduced units.
 
 # Parameters
 

@@ -33,6 +33,30 @@
         @test ES.VT_self_diffusion_coefficient(es_si, V, TK)[1] / (σm*sqrt(εJ/m)) ≈ Y[3] rtol=1e-10
     end
 
+    @testset "Mixture (molecular units) equals SI in reduced units" begin
+        σs, εs, ms = [1., 1.1], [1., .85], [1., 2.]
+        σ, ε, M = 3.4, 120.0, 39.948                # Å, K, g/mol
+        cmix = Dict(
+            Viscosity() => (; α0=[0.,0.], α1=[1.5,1.4], α2=[.3,.3], α3=[0.,0.], αln=[0.,0.]),
+            ThermalConductivity() => (; α0=[1.,1.], α1=[1.2,1.1], α2=[.2,.2], α3=[0.,0.], αln=[0.,0.]),
+            DiffusionCoefficient() => (; α0=zeros(2,2), α1=[-1. -1.1; -.9 -1.05], α2=fill(-.2,2,2), α3=zeros(2,2), αln=zeros(2,2)))
+        mix = KolafaNezbeda(["A","B"]; molecular_units=true, userlocations=(; sigma=σs, epsilon=εs, Mw=ms))
+        mix_si = KolafaNezbeda(["A","B"]; userlocations=(; sigma=σs.*σ, epsilon=εs.*ε, Mw=ms.*M))
+        es = ESFramework(["A","B"], mix; userlocations=cmix)
+        es_si = ESFramework(["A","B"], mix_si; userlocations=cmix)
+
+        T, ϱ, z = 2.0, 0.6, [.3, .7]
+        σm, εJ, m = σ*1e-10, ε*ES.kB, M*1e-3/ES.NA
+        V, TK = ES.NA*σm^3/ϱ, T*ε
+        ηu, λu, Du = sqrt(m*εJ)/σm^2, ES.kB/σm^2*sqrt(εJ/m), σm*sqrt(εJ/m)
+        @test ES.VT_viscosity(es_si, V, TK, z)/ηu ≈ ES.VT_viscosity(es, 1/ϱ, T, z) rtol=1e-10
+        @test ES.VT_thermal_conductivity(es_si, V, TK, z)/λu ≈ ES.VT_thermal_conductivity(es, 1/ϱ, T, z) rtol=1e-10
+        @test ES.VT_self_diffusion_coefficient(es_si, V, TK, z)./Du ≈ ES.VT_self_diffusion_coefficient(es, 1/ϱ, T, z) rtol=1e-10
+        @test ES.VT_MS_diffusion_coefficient(es_si, V, TK, z)[1,2]/Du ≈ ES.VT_MS_diffusion_coefficient(es, 1/ϱ, T, z)[1,2] rtol=1e-10
+        @test viscosity(ChapmanEnskog(mix_si), NaN, TK, z)/ηu ≈ viscosity(ChapmanEnskog(mix), NaN, T, z) rtol=1e-10
+        @test viscosity(es, pressure(mix, 1/ϱ, T, z), T, z; phase=:liquid) ≈ ES.VT_viscosity(es, 1/ϱ, T, z)
+    end
+
     @testset "Fit" begin
         es = ESFramework("LJ", eos; userlocations=coeffs)
         T = [1.5, 2.0, 3.0, 4.0]

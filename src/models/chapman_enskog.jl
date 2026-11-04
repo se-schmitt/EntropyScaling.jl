@@ -19,8 +19,8 @@ ChapmanEnskog(components, sigma, epsilon, Mw, collision, sources) =
 
 Chapman-Enskog transport properties for the zero-density limit.
 
-Built on a Clapeyron potential model (`Thol2016LJ()`, `PeTSLJ()`, `Pohl2023Mie6(12.)`, ...),
-the model works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B T/ε`
+Built on an EoS in molecular units (a Clapeyron potential model like `Thol2016LJ()`, or a
+mixture model like `KolafaNezbeda(comps; molecular_units=true)`), the model works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B T/ε`
 and the results are `η* = η σ²/√(mε)`, `λ* = λ σ² k_B⁻¹ √(m/ε)` and `(ϱD)* = ϱD σ²/√(mε)`.
 
 # Parameters
@@ -78,10 +78,11 @@ end
 function ChapmanEnskog(eos::CL.EoSModel; collision_integral=KimMonroe())
     components = eos.components
     σ = CL.SingleParam("sigma", components, diag(eos.params.sigma.values))
-    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*kB)
+    u = unit_constants(eos)
+    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*u.kB)
     Mw = eos.params.Mw
-    ref = eos.references
-    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref)
+    ref = hasfield(typeof(eos), :references) ? eos.references : String[]
+    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref, u)
 end
 
 function ChapmanEnskog(eos::CL.HomogcPCPSAFTModel; collision_integral=KimMonroe())
@@ -318,9 +319,10 @@ const pc_LJ = 0.129
 # Correspondence principle
 function correspondence_principle(eos, ::Tuple{})
     Tc,pc,_ = CL.crit_pure(eos)
+    u = unit_constants(eos)
 
     ε = Tc/Tc_LJ
-    σ = cbrt(pc_LJ/pc*ε*kB)/1e-10
+    σ = cbrt(pc_LJ/pc*ε*u.kB)/u.σ
     return σ, ε, Tc
 end
 
