@@ -14,14 +14,12 @@ ChapmanEnskog(components, sigma, epsilon, Mw, collision, sources) =
 
 """
     ChapmanEnskog <: ChapmanEnskogModel
-    ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
-    ChapmanEnskog(eos::EoSModel; collision_integral=KimMonroe())
+    ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe(), units=EntropyScaling.SI_UNITS)
 
 Chapman-Enskog transport properties for the zero-density limit.
 
-Built on an EoS in molecular units (a Clapeyron potential model like `Thol2016LJ()`, or a
-mixture model like `KolafaNezbeda(comps; molecular_units=true)`), the model works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B T/ε`
-and the results are `η* = η σ²/√(mε)`, `λ* = λ σ² k_B⁻¹ √(m/ε)` and `(ϱD)* = ϱD σ²/√(mε)`.
+With `units=EntropyScaling.LJ_UNITS`, the parameters are the reduced σ*, ε* and m* and the model
+works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B T/ε` and the results are `η* = η σ²/√(mε)`, `λ* = λ σ² k_B⁻¹ √(m/ε)` and `(ϱD)* = ϱD σ²/√(mε)`.
 
 # Parameters
 - `σ::SingleParam{T}`: Lennard-Jones size parameter (`[σ] = Å`)
@@ -68,21 +66,6 @@ function ChapmanEnskog(components; userlocations=String[], collision_integral=Ki
     ref = ["978-0-07-011682-5"]
     
     return ChapmanEnskog(_components, σ, ε, Mw, collision_integral, ref, units)
-end
-
-function ChapmanEnskog(eos::CL.PotentialModel; collision_integral=KimMonroe())
-    ul = (; sigma=[1.], epsilon=[1.], Mw=[1.])
-    return ChapmanEnskog(get_components(eos); userlocations=ul, collision_integral, units=LJ_UNITS)
-end
-
-function ChapmanEnskog(eos::CL.EoSModel; collision_integral=KimMonroe())
-    components = eos.components
-    σ = CL.SingleParam("sigma", components, diag(eos.params.sigma.values))
-    u = unit_constants(eos)
-    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*u.kB)
-    Mw = eos.params.Mw
-    ref = hasfield(typeof(eos), :references) ? eos.references : String[]
-    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref, u)
 end
 
 function ChapmanEnskog(eos::CL.HomogcPCPSAFTModel; collision_integral=KimMonroe())
@@ -325,9 +308,6 @@ function correspondence_principle(eos, ::Tuple{})
     σ = cbrt(pc_LJ/pc*ε*u.kB)/u.σ
     return σ, ε, Tc
 end
-
-# potential models are already reduced by their own σ and ε
-correspondence_principle(eos::CL.PotentialModel, ::Tuple{}) = (1.0, 1.0, first(CL.crit_pure(eos)))
 
 function correspondence_principle(::Any, σε::Tuple{T,T}) where {T<:Number}
     σ, ε = σε

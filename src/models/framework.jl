@@ -44,9 +44,9 @@ The entropy scaling framework provides a physical way to model transport propert
 (viscosity, thermal conductivity, diffusion coefficients) based on molecular-based EOS.
 It enables fitting new models using only a few experimental data.
 
-If `eos` is in molecular units (a Clapeyron potential model like `Thol2016LJ()`, or a mixture
-model like `KolafaNezbeda(comps; molecular_units=true)`), all inputs and outputs are in
-Lennard-Jones units (see [`ChapmanEnskog`](@ref)); `σε_ce` is then given in reduced units.
+If `eos` is built with `molecular_units=true` (e.g. `KolafaNezbeda(components; molecular_units=true)`),
+all inputs and outputs are in Lennard-Jones units (see [`ChapmanEnskog`](@ref)); `σε_ce` is then
+given in reduced units.
 
 # Parameters
 
@@ -141,7 +141,7 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
             α3 = _params["α3"]
             αln = _params["αln"]
 
-            m = get_segment(_eos)
+            m = get_segment(_eos.params)
 
             ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral, σε=σε_ce)
             if prop isa AbstractDiffusionCoefficient
@@ -159,9 +159,6 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
 
     return ESFramework(_components, params, _eos, REF_FRAMEWORK)
 end
-
-get_segment(eos::CL.EoSModel) = get_segment(eos.params)
-get_segment(eos::CL.PotentialModel) = CL.SingleParam("segment", get_components(eos), [1.])
 
 function get_segment(params)
     if hasfield(typeof(params), :segment)
@@ -189,10 +186,10 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
             idx = 1
         elseif prop isa SelfDiffusionCoefficient
             idx = (prop.component, prop.component)
-            _eos_pure = _split(_eos)[prop.component]
+            _eos_pure = CL.split_model(_eos)[prop.component]
         elseif prop isa InfDiffusionCoefficient
             idx = (prop.solute, prop.solvent)
-            _eos_pure = _split(_eos)[prop.solvent]
+            _eos_pure = CL.split_model(_eos)[prop.solvent]
         end
         data = collect_data(datasets, prop)
 
@@ -208,7 +205,7 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
         if !(prop isa AbstractDiffusionCoefficient) || ismissing(params_dict[DiffusionCoefficient()])
             ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral, σε=σε_ce)
             α0, α1, α2, α3, αln = get_α0(prop, _components)
-            m = get_segment(_eos)
+            m = get_segment(_eos.params)
             if prop isa AbstractDiffusionCoefficient
                 param = ESFrameworkDiffParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce)
             else
@@ -309,11 +306,11 @@ function init_framework_params(eos, prop; collision_integral, σε)
     N = length(eos)
     _σε = isempty(σε) ? ntuple(_ -> (), Val(N)) : σε
 
-    eos_pure = _split(eos)
+    eos_pure = CL.split_model(eos)
     _σεTc = correspondence_principle.(eos_pure, _σε)
     (σ, ε, Tc) = _diag.((getindex.(_σεTc, 1), getindex.(_σεTc, 2), getindex.(_σεTc, 3)))
 
-    Mw = _mw(eos)
+    Mw = CL.mw(eos)
     _components = get_components(eos)
 
     ce = ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral, units=unit_constants(eos))
@@ -333,11 +330,11 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
     N = length(eos)
     _σε = isempty(σε) ? ntuple(_ -> (), Val(N)) : σε
 
-    eos_pure = _split(eos)
+    eos_pure = CL.split_model(eos)
     _σεTc = correspondence_principle.(eos_pure, _σε)
     (σ, ε, Tc) = (getindex.(_σεTc, 1), getindex.(_σεTc, 2), _diag(getindex.(_σεTc, 3)))
 
-    Mw = _mw(eos)
+    Mw = CL.mw(eos)
     _components = get_components(eos)
 
     ce = Matrix{ChapmanEnskog}(undef,N,N)
@@ -348,7 +345,7 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
             _ul = (; sigma=_get_σε_ce(σ,i,j), epsilon=_get_σε_ce(ε,i,j), Mw=Mw[i:j])
             _ce = ChapmanEnskog(_components[i]; userlocations=_ul, collision_integral, units=unit_constants(eos))
             _prop = SelfDiffusionCoefficient(i)
-            _eos = only(_split(eos, [i]))
+            _eos = only(CL.split_model(eos, [i]))
         else
             _ul = (; sigma=[_calc_σ_ce(σ,i,j)], epsilon=[_calc_ε_ce(ε,i,j)], Mw=[calc_M_CE(_get_Mw_ce(Mw,j,i))])
             _ce = ChapmanEnskog("$(_components[i]) in $(_components[j])"; userlocations=_ul, collision_integral, units=unit_constants(eos))

@@ -71,25 +71,26 @@ model = ESFramework(eos_model, [data])                          # Fit model para
 
 ### Lennard-Jones units
 
-If the equation of state is in molecular units, all calculations are done in Lennard-Jones units (σ = ε = m = k_B = 1).
-This holds for Clapeyron potential models (`Thol2016LJ()`, `Johnson1993LJ()`, `KolafaNezbedaLJ()`, `PeTSLJ()`, `Pohl2023Mie6(ν)`, `FeANNMie(ν)`, ...) and for mixtures of Lennard-Jones particles built with `molecular_units = true` (`KolafaNezbeda`, `LJRef`, `PeTS`), where `sigma`, `epsilon` and `Mw` are the reduced σᵢ*, εᵢ* and mᵢ*.
+If the equation of state is built with `molecular_units = true` (Lennard-Jones models `KolafaNezbeda`, `LJRef`, `PeTS`), all calculations are done in Lennard-Jones units (σ = ε = m = k_B = 1).
+The parameters `sigma`, `epsilon` and `Mw` of the EoS are then the reduced σᵢ*, εᵢ* and mᵢ* of each component.
 Inputs are the reduced pressure `p*`, temperature `T*` and density `ϱ*` (or volume `v* = 1/ϱ*`), and the transport properties are returned in reduced form, `η* = η σ²/√(mε)`, `λ* = λ σ² k_B⁻¹ √(m/ε)` and `D* = D σ⁻¹ √(m/ε)`.
-The Chapman-Enskog part uses σ* = ε* = 1 by default (custom values can be passed via `σε_ce` in reduced units).
+Custom Chapman-Enskog parameters (`σε_ce`) are given in reduced units as well.
 
 ```julia
 using EntropyScaling, Clapeyron
 
-eos = Thol2016LJ()
-model = ESFramework("LJ", eos; userlocations=Dict(Viscosity() => (; α0=0., α1=1.5, α2=0.3, α3=0., αln=0.)))
+# binary Lennard-Jones mixture
+eos = KolafaNezbeda(["A", "B"]; molecular_units=true,
+    userlocations=(; sigma=[1., 1.1], epsilon=[1., 0.85], Mw=[1., 2.]))
+model = ESFramework(["A", "B"], eos;
+    userlocations=Dict(Viscosity() => (; α0=[0.,0.], α1=[1.5,1.4], α2=[0.3,0.3], α3=[0.,0.], αln=[0.,0.])))
 
-viscosity(model, 0.5, 2.0; phase=:liquid)           # η*(p* = 0.5, T* = 2.0)
-EntropyScaling.VT_viscosity(model, 1/0.6, 2.0)      # η*(ϱ* = 0.6, T* = 2.0)
-viscosity(ChapmanEnskog(eos), NaN, 2.0)             # zero-density limit η₀*(T* = 2.0)
+viscosity(model, 3.0, 2.0, [0.3, 0.7]; phase=:liquid)          # η*(p* = 3, T* = 2, x)
+EntropyScaling.VT_viscosity(model, 1/0.6, 2.0, [0.3, 0.7])      # η*(ϱ* = 0.6, T* = 2, x)
 
-# binary LJ mixture
-mix = KolafaNezbeda(["A", "B"]; molecular_units=true, userlocations=(; sigma=[1., 1.1], epsilon=[1., 0.85], Mw=[1., 2.]))
-model_mix = ESFramework(["A", "B"], mix; userlocations=Dict(Viscosity() => (; α0=[0.,0.], α1=[1.5,1.4], α2=[0.3,0.3], α3=[0.,0.], αln=[0.,0.])))
-EntropyScaling.VT_viscosity(model_mix, 1/0.6, 2.0, [0.3, 0.7])
+# zero-density limit
+ce = ChapmanEnskog("A"; userlocations=(; sigma=1., epsilon=1., Mw=1.), units=EntropyScaling.LJ_UNITS)
+viscosity(ce, NaN, 2.0)                                         # η₀*(T* = 2)
 ```
 
 ## Visualization
