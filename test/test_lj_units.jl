@@ -59,5 +59,6 @@
         @test ES.VT_self_diffusion_coefficient(es_si, V, TK, z)./Du ≈ ES.VT_self_diffusion_coefficient(es, v, T, z) rtol=1e-10
         @test ES.VT_MS_diffusion_coefficient(es_si, V, TK, z)[1,2]/Du ≈ ES.VT_MS_diffusion_coefficient(es, v, T, z)[1,2] rtol=1e-10
         @test viscosity(es, pressure(eos, v, T, z), T, z; phase=:liquid) ≈ η
+        @test viscosity(ChapmanEnskog(eos_si), NaN, TK, z)/ηu ≈ viscosity(ChapmanEnskog(eos), NaN, T, z) rtol=1e-10
     end
 end

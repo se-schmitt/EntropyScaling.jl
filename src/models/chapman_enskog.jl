@@ -68,6 +68,16 @@ function ChapmanEnskog(components; userlocations=String[], collision_integral=Ki
     return ChapmanEnskog(_components, σ, ε, Mw, collision_integral, ref, units)
 end
 
+function ChapmanEnskog(eos::CL.EoSModel; collision_integral=KimMonroe())
+    components = eos.components
+    σ = CL.SingleParam("sigma", components, diag(eos.params.sigma.values))
+    u = unit_constants(eos)
+    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*u.kB)
+    Mw = eos.params.Mw
+    ref = hasfield(typeof(eos), :references) ? eos.references : String[]
+    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref, u)
+end
+
 function ChapmanEnskog(eos::CL.HomogcPCPSAFTModel; collision_integral=KimMonroe())
     components = eos.components
     σ = CL.SingleParam("sigma", components, diag(eos.pcpmodel.params.sigma.values))
