@@ -121,6 +121,9 @@ function ESFramework(components, eos; userlocations=Dict(), collision_integral=K
             _params = CL.getparams(_components, filepaths; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_FRAMEWORK)
             components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
         end
+        for k in keys(_params)
+            _params[k] = convert(_params[k] isa CL.PairParam ? CL.PairParam{Float64} : CL.SingleParam{Float64}, _params[k])
+        end
 
         if any(components_missing)
             verbose && @info "No $(name(prop)) parameters found for components: $(join(_components[components_missing],','))."
