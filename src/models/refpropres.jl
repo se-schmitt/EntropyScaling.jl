@@ -139,15 +139,21 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
     V = inv(ϱ)
     tp = transport_property(param)
 
+    
     if tp == ThermalConductivity()
-        each_ind = eachindex(z)
-        λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
-        η₀   = [viscosity(param.ce, T; i) for i in each_ind]
-        pure_eos = CL.split_model(eos)
-        cₚ₀  = CL.VT_isobaric_heat_capacity.(pure_eos, 1e10, T)
-        λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
-        Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
-        Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
+        if typeof(param) <: RefpropRESParam
+            each_ind = eachindex(z)
+            λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
+            η₀   = [viscosity(param.ce, T; i) for i in each_ind]
+            pure_eos = CL.split_model(eos)
+            cₚ₀  = CL.VT_isobaric_heat_capacity.(pure_eos, 1e10, T)
+            λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
+            Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
+            Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
+        end
+        if typeof(param) <: RefpropRES2025Param
+            # TODO calculation of the parameters for the thermal conductivity model
+        end
     else
         Y₀ = property_CE(tp, param.ce, T, z)
     end

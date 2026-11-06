@@ -59,7 +59,7 @@ function RefpropRES2025(components, eos=nothing; userlocations=String[], ce_user
     _eos = _build_multifluid(_components, eos)
     
     params = RefpropRES2025Param[]
-    for prop in [Viscosity()]
+    for prop in [Viscosity(), ThermalConductivity()]
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
         _params = CL.getparams(_components, [get_db_path(RefpropRES2025, prop, nothing)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_REFPROPRES)
         components_missing = [all(_v.ismissingvalues[i] for (_,_v) in _params) for i in eachindex(_components)]
@@ -82,9 +82,9 @@ function RefpropRES2025(components, eos=nothing; userlocations=String[], ce_user
 
     isempty(params) && error("No parameters found for components: $(join(components, ',')).")
 
-    ref = ["10.1021/acs.jced.4c00451"]
+    ref = ["10.1021/acs.jced.4c00451", "10.1021/acs.iecr.4c02946"]
 
-    return RefpropRES(_components, params, _eos, ref)
+    return RefpropRES2025(_components, params, _eos, ref)
 end
 
 function scaling_model(param::RefpropRES2025Param, s, x=Z1)
