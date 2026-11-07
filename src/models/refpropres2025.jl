@@ -6,6 +6,8 @@ struct RefpropRES2025Param{P,T} <: AbstractRefpropRESParam{P,T}
     n3::CL.SingleParam{T}
     n4::CL.SingleParam{T}
     ξ::CL.SingleParam{T}
+    crit::CritTCNParam{T}
+    dg::PolynomialDiluteGas
     ce::ChapmanEnskog
     prop::P
 end
@@ -58,7 +60,7 @@ function RefpropRES2025(components, eos=nothing; userlocations=String[], ce_user
 
     _eos = _build_multifluid(_components, eos)
     
-    params = RefpropRES2025Param[]
+    params_dict = _get_empty_params_dict()
     for prop in [Viscosity(), ThermalConductivity()]
         _userlocations = prop in keys(userlocations) ? userlocations[prop] : String[]
         _params = CL.getparams(_components, [get_db_path(RefpropRES2025, prop, nothing)]; userlocations=_userlocations, ignore_missing_singleparams=PARAMS_REFPROPRES)
@@ -75,12 +77,15 @@ function RefpropRES2025(components, eos=nothing; userlocations=String[], ce_user
 
             _ce_userlocations = isempty(ce_userlocations) ? CE_YANG2021_PATH : ce_userlocations 
             ce = ChapmanEnskog(_components; userlocations=_ce_userlocations, collision_integral=KimMonroe())
+            crit = CritTCNParam(_params["φ0"], _params["Γ"], _params["qD"], _params["Tref"])
+            dg = PolynomialDiluteGas(_components; userlocations=_userlocations, prop=prop)
 
-            push!(params, RefpropRES2025Param(n1,n2,n3,n4,ξ,ce,prop))
+            params_dict[prop] = RefpropRES2025Param(n1,n2,n3,n4,ξ,crit,dg,ce,prop)
         end
     end
 
-    isempty(params) && error("No parameters found for components: $(join(components, ',')).")
+    params = ParamVector(params_dict)
+    ismissing(params) && error("No parameters found for components: $(join(components, ',')).")
 
     ref = ["10.1021/acs.jced.4c00451", "10.1021/acs.iecr.4c02946"]
 
@@ -89,4 +94,20 @@ end
 
 function scaling_model(param::RefpropRES2025Param, s, x=Z1)
     return exp(powerseries_scaling_model(param, s, x, (1.8, 2.4, 2.8, 0.0))) - 1.0
+end
+
+function scaling_model(param::RefpropRESParam{<:ThermalConductivity}, s, x=Z1)
+    return powerseries_scaling_model(param, s, x, (1.0, 1.5, 2.0, 2.5))
+end
+
+function thermal_conductivity_residual(param::RefpropRES2025Param, eos, λˢ, T, ρ, s, x)
+    sˢ = scaling_variable(param, s, x)
+    ρₙ = ρ*NA
+    Mw = CL.mw(eos)
+    m = Mw * 1e-3 / NA
+    y = (x .* Mw) / sum(x .* Mw)
+    mₘᵢₓ = sum(y .* sqrt.(m))^2
+
+    λᵣₑₛ = λˢ * kB * ρₙ^(2/3) * sqrt(kB*T/mₘᵢₓ) / sˢ^(2/3)
+    return λᵣₑₛ
 end

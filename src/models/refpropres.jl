@@ -138,10 +138,9 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
     k  = !inverse ? 1 : -1
     V = inv(ϱ)
     tp = transport_property(param)
-
-    
+   
     if tp == ThermalConductivity()
-        if typeof(param) <: RefpropRESParam
+        if param isa RefpropRESParam
             each_ind = eachindex(z)
             λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
             η₀   = [viscosity(param.ce, T; i) for i in each_ind]
@@ -151,8 +150,11 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
             Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
             Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
         end
-        if typeof(param) <: RefpropRES2025Param
+        if param isa RefpropRES2025Param
             # TODO calculation of the parameters for the thermal conductivity model
+            each_ind = eachindex(z)
+            λ₀   = thermal_conductivity(param.dg, NaN, T, z)
+            λ_res = thermal_conductivity_residual(param, eos, Y, T, ϱ, s, z)
         end
     else
         Y₀ = property_CE(tp, param.ce, T, z)

@@ -1,5 +1,5 @@
-Clapeyron Database File,,,,,,,,,,
-RefpropRES_thermal_conductivity Like Parameters,,,,,,,,,,
+Clapeyron Database File,,,,,,,,,,,
+RefpropRES2025_thermal_conductivity Like Parameters,,,,,,,,,,,
 species,ξ,n1,n2,n3,n4,φ0,Γ,qD,Tref,source
 "butadiene~|~1,3-butadiene",1.0,0.000000,5.379592,-3.515631,1.143689,2.07e-10,0.057,1.686341e9,637.7,10.1021/acs.iecr.4c02946
 butene~|~1-butene,1.0,0.000000,4.218309,-2.607745,0.973758,2.11e-10,0.057,1.647446e9,628.94,10.1021/acs.iecr.4c02946
