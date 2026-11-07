@@ -96,18 +96,18 @@ function scaling_model(param::RefpropRES2025Param, s, x=Z1)
     return exp(powerseries_scaling_model(param, s, x, (1.8, 2.4, 2.8, 0.0))) - 1.0
 end
 
-function scaling_model(param::RefpropRESParam{<:ThermalConductivity}, s, x=Z1)
+function scaling_model(param::RefpropRES2025Param{<:ThermalConductivity}, s, x=Z1)
     return powerseries_scaling_model(param, s, x, (1.0, 1.5, 2.0, 2.5))
 end
 
-function thermal_conductivity_residual(param::RefpropRES2025Param, eos, λˢ, T, ρ, s, x)
-    sˢ = scaling_variable(param, s, x)
-    ρₙ = ρ*NA
+function thermal_conductivity_residual2025(param::RefpropRES2025Param{<:ThermalConductivity}, eos, s, λ, T, ϱ, z = Z1; inverse=false)
+    k = !inverse ? 1 : -1
+    
+    sˢ = scaling_variable(param, s, z)
     Mw = CL.mw(eos)
     m = Mw * 1e-3 / NA
-    y = (x .* Mw) / sum(x .* Mw)
+    y = (z .* Mw) / sum(z .* Mw)
     mₘᵢₓ = sum(y .* sqrt.(m))^2
 
-    λᵣₑₛ = λˢ * kB * ρₙ^(2/3) * sqrt(kB*T/mₘᵢₓ) / sˢ^(2/3)
-    return λᵣₑₛ
+    return λ / ((ϱ*NA)^(2/3) * kB)^k * sqrt(mₘᵢₓ/(kB*T))^k * sˢ^(k*2/3)
 end

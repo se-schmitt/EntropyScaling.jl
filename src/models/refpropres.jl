@@ -149,12 +149,16 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
             λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
             Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
             Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
-        end
-        if param isa RefpropRES2025Param
-            # TODO calculation of the parameters for the thermal conductivity model
-            each_ind = eachindex(z)
+        elseif param isa RefpropRES2025Param
             λ₀   = thermal_conductivity(param.dg, NaN, T, z)
-            λ_res = thermal_conductivity_residual(param, eos, Y, T, ϱ, s, z)
+            Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
+            Y₀    = λ₀ + Δλ_c
+
+            if inverse
+                return thermal_conductivity_residual2025(param, eos, s, Y, T, ϱ, z; inverse=true) + Y₀
+            else
+                return thermal_conductivity_residual2025(param, eos, s, Y - Y₀, T, ϱ, z; inverse=false)
+            end
         end
     else
         Y₀ = property_CE(tp, param.ce, T, z)
@@ -169,7 +173,7 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
     end
 end
 
-function VT_thermal_conductivity(model::RefpropRES, V, T, z::AbstractVector=Z1)
+function VT_thermal_conductivity(model::RefpropRESModel, V, T, z::AbstractVector=Z1)
     param = model[ThermalConductivity()]
     s  = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
