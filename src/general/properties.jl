@@ -109,7 +109,7 @@ function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z
         
         # get all segments of the mixture
         m_full = get_segment(model.eos.params)
-        sˢ = -s / (CL.Rgas() * sum(z.* m_full))
+        sˢ = -s / (CL.Rgas(model.eos) * sum(z.* m_full))
 
         # pseudo binary approach with muggianu projection
         xi_ij = (1+z[i]-z[j]) / 2
@@ -125,7 +125,7 @@ function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z
         Y₀⁺    = property_CE_plus(prop, param.ce, eos_bin[1], T, x_pseudo)
         Y₀⁺min = mix_CE(prop, param.ce, param.Y₀⁺min.values, x_pseudo)
         Ws  = W(sˢ)
-        base = BaseParam(prop,param.ce.Mw)
+        base = BaseParam(prop,param.ce.Mw,param.ce.units)
 
         Ðᵢⱼ[i,j]  = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^(-1) * plus_scaling(base, Dˢ, T, sum(z)/V, s, x_pseudo; inverse=true)
     end

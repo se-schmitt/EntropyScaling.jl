@@ -10,8 +10,12 @@ const CL = Clapeyron
 const Z1 = FillArrays.Fill(1, 1)
 
 # Definition of constants
-get_kBNAR() = (kB=1.380649e-23; NA=6.02214076e23; return (kB, NA, kB*NA))
-const (kB, NA, R) = get_kBNAR()
+const kB, NA = 1.380649e-23, 6.02214076e23
+const R = kB*NA
+
+const SI_UNITS = (kB=kB, NA=NA, R=R, σ=1e-10, Mw=1e-3)
+const LJ_UNITS = (kB=1.0, NA=1.0, R=1.0, σ=1.0, Mw=1.0)
+unit_constants(eos) = hasfield(typeof(eos), :molecular_units) && eos.molecular_units ? LJ_UNITS : SI_UNITS
 
 const DB_PATH = normpath(Base.pkgdir(EntropyScaling), "database")
 

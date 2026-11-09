@@ -49,10 +49,12 @@ function Base.show(io::IO, model::ChapmanEnskogModel)
 end
 
 function Base.show(io::IO, ::MIME"text/plain", model::ChapmanEnskogModel)
-    print(io, "ChapmanEnskog{$(join(model.components,','))}")
-    print(io, "\n σ: [$(join(round.(model.sigma.values/1e-10,digits=5),", "))] Å")
-    print(io, "\n ε: [$(join(round.(model.epsilon.values/kB,digits=3),", "))] K")
-    print(io, "\n M: [$(join(round.(model.Mw.values,digits=5),", "))] g/mol")
+    u = model.units
+    lj = u === LJ_UNITS
+    print(io, "ChapmanEnskog{$(join(model.components,','))}", lj ? " in LJ units" : "")
+    print(io, "\n σ: [$(join(round.(model.sigma.values/u.σ,digits=5),", "))]", lj ? "" : " Å")
+    print(io, "\n ε: [$(join(round.(model.epsilon.values/u.kB,digits=3),", "))]", lj ? "" : " K")
+    print(io, "\n M: [$(join(round.(model.Mw.values,digits=5),", "))]", lj ? "" : " g/mol")
     print(io, "\n Collision integral: $(typeof(model.collision).name.name)")
 end
 

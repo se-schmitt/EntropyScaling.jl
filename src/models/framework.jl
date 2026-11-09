@@ -44,6 +44,10 @@ The entropy scaling framework provides a physical way to model transport propert
 (viscosity, thermal conductivity, diffusion coefficients) based on molecular-based EOS.
 It enables fitting new models using only a few experimental data.
 
+If `eos` is built with `molecular_units=true` (e.g. `KolafaNezbeda(components; molecular_units=true)`),
+all inputs and outputs are in Lennard-Jones units (see [`ChapmanEnskog`](@ref)); `σε_ce` is then
+given in reduced units.
+
 # Parameters
 
 - `α0::CL.SingleParam`
@@ -201,7 +205,7 @@ function ESFramework(components, eos, datasets::Vector{<:TransportPropertyData};
         if !(prop isa AbstractDiffusionCoefficient) || ismissing(params_dict[DiffusionCoefficient()])
             ce, Y₀⁺min = init_framework_params(_eos, prop; collision_integral, σε=σε_ce)
             α0, α1, α2, α3, αln = get_α0(prop, _components)
-            m = _eos.params.segment
+            m = get_segment(_eos.params)
             if prop isa AbstractDiffusionCoefficient
                 param = ESFrameworkDiffParam(α0, α1, α2, α3, αln, m, Y₀⁺min, ce)
             else
@@ -309,7 +313,7 @@ function init_framework_params(eos, prop; collision_integral, σε)
     Mw = CL.mw(eos)
     _components = get_components(eos)
 
-    ce =ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral)
+    ce = ChapmanEnskog(_components; userlocations=(; sigma=σ, epsilon=ε, Mw=Mw), collision_integral, units=unit_constants(eos))
 
     _Y₀⁺min = zeros(N)
     for i in 1:N
@@ -339,12 +343,12 @@ function init_framework_params(eos, ::AbstractDiffusionCoefficient; collision_in
     for i in 1:N, j = 1:N 
         if i == j
             _ul = (; sigma=_get_σε_ce(σ,i,j), epsilon=_get_σε_ce(ε,i,j), Mw=Mw[i:j])
-            _ce = ChapmanEnskog(_components[i]; userlocations=_ul, collision_integral)
+            _ce = ChapmanEnskog(_components[i]; userlocations=_ul, collision_integral, units=unit_constants(eos))
             _prop = SelfDiffusionCoefficient(i)
             _eos = only(CL.split_model(eos, [i]))
         else
             _ul = (; sigma=[_calc_σ_ce(σ,i,j)], epsilon=[_calc_ε_ce(ε,i,j)], Mw=[calc_M_CE(_get_Mw_ce(Mw,j,i))])
-            _ce = ChapmanEnskog("$(_components[i]) in $(_components[j])"; userlocations=_ul, collision_integral)
+            _ce = ChapmanEnskog("$(_components[i]) in $(_components[j])"; userlocations=_ul, collision_integral, units=unit_constants(eos))
             _prop = InfDiffusionCoefficient(i => j)
             _eos = eos
         end
@@ -410,14 +414,17 @@ function scaling(param::ESFrameworkParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; inverse=
 
     sˢ  = scaling_variable(param, s, z)
     Ws  = W(sˢ)
-    base = BaseParam(P(),param.ce.Mw)
+    base = BaseParam(P(),param.ce.Mw,param.ce.units)
     Yˢ  = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^k * plus_scaling(base, Y, T, ϱ, s, z; inverse)
     return Yˢ
 end
 
 function scaling_variable(param::Union{ESFrameworkParam, ESFrameworkDiffParam}, s, z=Z1)
-    return -s / R / _dot(param.m, z)
+    (; kB, NA) = _units(param.ce)
+    return -s / (kB*NA) / _dot(param.m, z)
 end
+_units(ce) = ce.units
+_units(ce::AbstractArray) = first(ce).units
 
 _init_selfdiff_param(params::ESFrameworkDiffParam) = _init_param(params, SelfDiffusionCoefficient())
 _init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient(); idx=1:2)
@@ -440,7 +447,8 @@ function _init_param(params::ESFrameworkDiffParam, prop; idx=nothing)
             CL.SingleParam("epsilon", components, zeros(N)),
             CL.SingleParam("Mw", components, zeros(N)),
             params.ce[1,1].collision,
-            String[]
+            String[],
+            params.ce[1,1].units
         ),
         prop
     )
