@@ -43,5 +43,5 @@ plus_scaling
 
 function plus_scaling(param::BaseParam, Y, T, ϱ, s, z = Z1; inverse=false)
     k = !inverse ? 1 : -1
-    return rosenfeld_scaling(param, Y, T, ϱ, z; inverse) * (-s/(param.units.kB*param.units.NA))^(k*2/3)
+    return rosenfeld_scaling(param, Y, T, ϱ, z; inverse) * (-s/(param.units.R))^(k*2/3)
 end
