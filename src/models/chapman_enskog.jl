@@ -7,13 +7,19 @@ struct ChapmanEnskog{T,C} <: ChapmanEnskogModel
     Mw::CL.SingleParam{T}
     collision::C
     sources::Vector{String}
+    units::typeof(SI_UNITS)
 end
+ChapmanEnskog(components, sigma, epsilon, Mw, collision, sources) =
+    ChapmanEnskog(components, sigma, epsilon, Mw, collision, sources, SI_UNITS)
 
 """
     ChapmanEnskog <: ChapmanEnskogModel
-    ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
+    ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe(), units=EntropyScaling.SI_UNITS)
 
 Chapman-Enskog transport properties for the zero-density limit.
+
+With `units=EntropyScaling.LJ_UNITS`, the parameters are the reduced σ*, ε* and m* and the model
+works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B T/ε` and the results are `η* = η σ²/√(mε)`, `λ* = λ σ² k_B⁻¹ √(m/ε)` and `(ϱD)* = ϱD σ²/√(mε)`.
 
 # Parameters
 - `σ::SingleParam{T}`: Lennard-Jones size parameter (`[σ] = Å`)
@@ -46,29 +52,30 @@ ChapmanEnskog
 
 db_model_path(::Type{ChapmanEnskogModel}) = joinpath("ChapmanEnskog", "ChapmanEnskog.csv")
 
-function ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe())
+function ChapmanEnskog(components; userlocations=String[], collision_integral=KimMonroe(), units=SI_UNITS)
     _components = CL.format_components(components)
 
     params = CL.getparams(_components, [get_db_path(ChapmanEnskogModel, nothing, nothing)]; userlocations)
 
     σ = params["sigma"]
-    σ.values .*= 1e-10
+    σ.values .*= units.σ
     ε = params["epsilon"]
-    ε.values .*= kB
+    ε.values .*= units.kB
     Mw = params["Mw"]
 
     ref = ["978-0-07-011682-5"]
     
-    return ChapmanEnskog(_components, σ, ε, Mw, collision_integral, ref)
+    return ChapmanEnskog(_components, σ, ε, Mw, collision_integral, ref, units)
 end
 
 function ChapmanEnskog(eos::CL.EoSModel; collision_integral=KimMonroe())
     components = eos.components
     σ = CL.SingleParam("sigma", components, diag(eos.params.sigma.values))
-    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*kB)
+    u = unit_constants(eos)
+    ε = CL.SingleParam("epsilon", components, diag(eos.params.epsilon.values).*u.kB)
     Mw = eos.params.Mw
-    ref = eos.references
-    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref)
+    ref = hasfield(typeof(eos), :references) ? eos.references : String[]
+    return ChapmanEnskog(components, σ, ε, Mw, collision_integral, ref, u)
 end
 
 function ChapmanEnskog(eos::CL.HomogcPCPSAFTModel; collision_integral=KimMonroe())
@@ -88,19 +95,20 @@ function viscosity(model::ChapmanEnskogModel, p, T, z=Z1)
 end
 function viscosity(model::ChapmanEnskogModel, T; i=1)
     σ = model.sigma.values
-    Mw = model.Mw.values .* 1e-3
+    (; kB, NA) = model.units
+    Mw = model.Mw.values .* model.units.Mw
     return 5/16 * √(Mw[i]*kB*T/NA/π) / (σ[i]^2*Ω(Viscosity(),model,T;i=i))
 end
 
 function viscosity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     σ = model.sigma.values
     if length(eos) == 1
-        dBdT = second_virial_coefficient_dT(eos,T)/NA
-        B = CL.second_virial_coefficient(eos,T)/NA
+        dBdT = second_virial_coefficient_dT(eos,T)/model.units.NA
+        B = CL.second_virial_coefficient(eos,T)/model.units.NA
     else
         x = zeros(Int64,length(model)); x[i] = 1
-        dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-        B = CL.second_virial_coefficient(eos,T,x)/NA
+        dBdT = second_virial_coefficient_dT(eos,T,x)/model.units.NA
+        B = CL.second_virial_coefficient(eos,T,x)/model.units.NA
     end
     return 5/16/√π / (σ[i]^2*Ω(Viscosity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
@@ -111,19 +119,20 @@ function thermal_conductivity(model::ChapmanEnskogModel, p, T, z=Z1)
 end
 function thermal_conductivity(model::ChapmanEnskogModel, T; i=1)
     σ = model.sigma.values
-    Mw = model.Mw.values .* 1e-3
-    return 75/64 * kB * √(R*T/Mw[i]/π) / (σ[i]^2*Ω(ThermalConductivity(),model,T;i=i))
+    (; kB, NA) = model.units
+    Mw = model.Mw.values .* model.units.Mw
+    return 75/64 * kB * √(kB*NA*T/Mw[i]/π) / (σ[i]^2*Ω(ThermalConductivity(),model,T;i=i))
 end
 
 function thermal_conductivity_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     σ = model.sigma.values
     if length(eos) == 1
-        dBdT = second_virial_coefficient_dT(eos,T)/NA
-        B = CL.second_virial_coefficient(eos,T)/NA
+        dBdT = second_virial_coefficient_dT(eos,T)/model.units.NA
+        B = CL.second_virial_coefficient(eos,T)/model.units.NA
     else
         x = zeros(Int64,length(model)); x[i] = 1
-        dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-        B = CL.second_virial_coefficient(eos,T,x)/NA
+        dBdT = second_virial_coefficient_dT(eos,T,x)/model.units.NA
+        B = CL.second_virial_coefficient(eos,T,x)/model.units.NA
     end
     return 75/64/√π / (σ[i]^2*Ω(ThermalConductivity(),model,T;i=i)) * (T*dBdT+B)^(2/3)
 end
@@ -134,21 +143,22 @@ function self_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z=Z1)
 end
 function self_diffusion_coefficient(model::ChapmanEnskogModel, T; i=1)
     σ = model.sigma.values
-    Mw = model.Mw.values .* 1e-3
+    (; kB, NA) = model.units
+    Mw = model.Mw.values .* model.units.Mw
     return 3/8 * √(Mw[i]*kB*T/NA/π) / (σ[i]^2*Ω(SelfDiffusionCoefficient(),model,T;i=i))
 end
 
 function self_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T; i=1)
     if length(eos) == 1
-        dBdT = second_virial_coefficient_dT(eos,T)/NA
-        B = CL.second_virial_coefficient(eos,T)/NA
+        dBdT = second_virial_coefficient_dT(eos,T)/model.units.NA
+        B = CL.second_virial_coefficient(eos,T)/model.units.NA
         σ = only(model.sigma.values)
         _i = 1
     else
         x = zeros(Int64,length(model))
         x[i] = 1
-        dBdT = second_virial_coefficient_dT(eos,T,x)/NA
-        B = CL.second_virial_coefficient(eos,T,x)/NA
+        dBdT = second_virial_coefficient_dT(eos,T,x)/model.units.NA
+        B = CL.second_virial_coefficient(eos,T,x)/model.units.NA
         σ = model.sigma.values[i]
         _i = i
     end
@@ -161,7 +171,8 @@ function MS_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z)
 end
 function MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=Z1)
     σ = model.sigma.values
-    Mw = model.Mw.values .* 1e-3
+    (; kB, NA) = model.units
+    Mw = model.Mw.values .* model.units.Mw
     length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
     return 3/8 * √(Mw[1]*kB*T/NA/π) / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1))
 end
@@ -173,8 +184,8 @@ function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z =
     end
 
     σ = model.sigma.values
-    dBdT = second_virial_coefficient_dT(eos,T,z)/NA
-    B = CL.second_virial_coefficient(eos,T,z)/NA
+    dBdT = second_virial_coefficient_dT(eos,T,z)/model.units.NA
+    B = CL.second_virial_coefficient(eos,T,z)/model.units.NA
     return 3/8/√π / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1)) * (T*dBdT+B)^(2/3)
 end
 
@@ -240,7 +251,7 @@ Two methods are implemented:
 - `KimMonroe()` [kim_high-accuracy_2014](@cite)
 - `Neufeld()` [neufeld_empirical_1972](@cite)
 """
-Ω(prop::AbstractTransportProperty, model::ChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*kB/model.epsilon[i])
+Ω(prop::AbstractTransportProperty, model::ChapmanEnskogModel, T; i) = Ω(prop,model.collision,T*model.units.kB/model.epsilon[i])
 
 # Ω_22
 function Ω_22(T_red)
@@ -301,9 +312,10 @@ const pc_LJ = 0.129
 # Correspondence principle
 function correspondence_principle(eos, ::Tuple{})
     Tc,pc,_ = CL.crit_pure(eos)
+    u = unit_constants(eos)
 
     ε = Tc/Tc_LJ
-    σ = cbrt(pc_LJ/pc*ε*kB)/1e-10
+    σ = cbrt(pc_LJ/pc*ε*u.kB)/u.σ
     return σ, ε, Tc
 end
 

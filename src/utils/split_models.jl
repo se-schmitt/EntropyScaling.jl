@@ -5,7 +5,7 @@ CL.is_splittable(::AbstractCollisionIntegralMethod) = false
 const SPLIT_TYPES = Union{AbstractEntropyScalingModel,AbstractParam,ChapmanEnskogModel,AbstractParamVector}
 
 function CL._each_split_model(param::T, field, fieldname, group, Ic, Ig) where {T<:SPLIT_TYPES}
-    if !CL.is_splittable(field) || fieldname == :sources
+    if !CL.is_splittable(field) || fieldname in (:sources, :units)
         return field
     elseif isnothing(group) || field isa CL.EoSModel
         return CL.each_split_model(field, Ic)

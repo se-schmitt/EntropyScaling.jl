@@ -69,6 +69,30 @@ model = ESFramework(eos_model, [data])                          # Fit model para
 # 0.16058971694885213 cP
 ```
 
+### Lennard-Jones units
+
+If the equation of state is built with `molecular_units = true` (Lennard-Jones models `KolafaNezbeda`, `LJRef`, `PeTS`), all calculations are done in Lennard-Jones units (σ = ε = m = k_B = 1).
+The parameters `sigma`, `epsilon` and `Mw` of the EoS are then the reduced σᵢ*, εᵢ* and mᵢ* of each component.
+Inputs are the reduced pressure `p*`, temperature `T*` and density `ϱ*` (or volume `v* = 1/ϱ*`), and the transport properties are returned in reduced form, `η* = η σ²/√(mε)`, `λ* = λ σ² k_B⁻¹ √(m/ε)` and `D* = D σ⁻¹ √(m/ε)`.
+Custom Chapman-Enskog parameters (`σε_ce`) are given in reduced units as well.
+
+```julia
+using EntropyScaling, Clapeyron
+
+# binary Lennard-Jones mixture
+eos = KolafaNezbeda(["A", "B"]; molecular_units=true,
+    userlocations=(; sigma=[1., 1.1], epsilon=[1., 0.85], Mw=[1., 2.]))
+model = ESFramework(["A", "B"], eos;
+    userlocations=Dict(Viscosity() => (; α0=[0.,0.], α1=[1.5,1.4], α2=[0.3,0.3], α3=[0.,0.], αln=[0.,0.])))
+
+viscosity(model, 3.0, 2.0, [0.3, 0.7]; phase=:liquid)          # η*(p* = 3, T* = 2, x)
+EntropyScaling.VT_viscosity(model, 1/0.6, 2.0, [0.3, 0.7])      # η*(ϱ* = 0.6, T* = 2, x)
+
+# zero-density limit
+ce = ChapmanEnskog("A"; userlocations=(; sigma=1., epsilon=1., Mw=1.), units=EntropyScaling.LJ_UNITS)
+viscosity(ce, NaN, 2.0)                                         # η₀*(T* = 2)
+```
+
 ## Visualization
 
 Plotting functionality is available through extensions to [`Makie.jl`](https://docs.makie.org/stable/) and [`Plots.jl`](https://github.com/JuliaPlots/Plots.jl).
