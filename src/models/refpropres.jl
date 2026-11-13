@@ -138,30 +138,37 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
     k  = !inverse ? 1 : -1
     V = inv(ϱ)
     tp = transport_property(param)
-
-    if tp == ThermalConductivity()
-        each_ind = eachindex(z)
-        λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
-        η₀   = [viscosity(param.ce, T; i) for i in each_ind]
-        pure_eos = CL.split_model(eos)
-        cₚ₀  = CL.VT_isobaric_heat_capacity.(pure_eos, 1e10, T)
-        λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
-        Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
-        Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
+   
+    if tp == ThermalConductivity() && param isa RefpropRESParam
+            each_ind = eachindex(z)
+            λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
+            η₀   = [viscosity(param.ce, T; i) for i in each_ind]
+            pure_eos = CL.split_model(eos)
+            cₚ₀  = CL.VT_isobaric_heat_capacity.(pure_eos, 1e10, T)
+            λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
+            Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
+            Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
+            mass_frac_weighted_mixing = false
+    elseif tp == ThermalConductivity() && param isa RefpropRES2025Param
+            λ₀   = thermal_conductivity(param.dg, NaN, T, z)
+            Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
+            Y₀    = λ₀ + Δλ_c
+            mass_frac_weighted_mixing = true
     else
         Y₀ = property_CE(tp, param.ce, T, z)
+        mass_frac_weighted_mixing = false
     end
 
     base = BaseParam(P(),param.ce.Mw)
 
     if inverse
-        return plus_scaling(base, Y, T, ϱ, s, z; inverse=true) + Y₀
+        return plus_scaling(base, Y, T, ϱ, s, z; inverse=true, mass_frac_weighted_mixing=mass_frac_weighted_mixing) + Y₀
     else
-        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inverse=false)
+        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inverse=false, mass_frac_weighted_mixing=mass_frac_weighted_mixing)
     end
 end
 
-function VT_thermal_conductivity(model::RefpropRES, V, T, z::AbstractVector=Z1)
+function VT_thermal_conductivity(model::RefpropRESModel, V, T, z::AbstractVector=Z1)
     param = model[ThermalConductivity()]
     s  = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
