@@ -139,8 +139,7 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
     V = inv(ϱ)
     tp = transport_property(param)
    
-    if tp == ThermalConductivity()
-        if param isa RefpropRESParam
+    if tp == ThermalConductivity() && param isa RefpropRESParam
             each_ind = eachindex(z)
             λ₀   = [thermal_conductivity(param.ce, T; i) for i in each_ind]
             η₀   = [viscosity(param.ce, T; i) for i in each_ind]
@@ -149,27 +148,23 @@ function scaling(param::AbstractRefpropRESParam{P,TT}, eos, Y, T, ϱ, s, z=Z1; i
             λ_int = thermal_conductivity_internal.(η₀, cₚ₀, CL.mw(eos))
             Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
             Y₀    = mix_CE(MasonSaxena(), param.ce, λ₀ .+ λ_int, z; YΦ=λ₀) + Δλ_c
-        elseif param isa RefpropRES2025Param
+            mass_frac_weighted_mixing = false
+    elseif tp == ThermalConductivity() && param isa RefpropRES2025Param
             λ₀   = thermal_conductivity(param.dg, NaN, T, z)
             Δλ_c  = thermal_conductivity_critical(param.crit, eos, V, T, η, z)
             Y₀    = λ₀ + Δλ_c
-
-            if inverse
-                return thermal_conductivity_residual2025(param, eos, s, Y, T, ϱ, z; inverse=true) + Y₀
-            else
-                return thermal_conductivity_residual2025(param, eos, s, Y - Y₀, T, ϱ, z; inverse=false)
-            end
-        end
+            mass_frac_weighted_mixing = true
     else
         Y₀ = property_CE(tp, param.ce, T, z)
+        mass_frac_weighted_mixing = false
     end
 
     base = BaseParam(P(),param.ce.Mw)
 
     if inverse
-        return plus_scaling(base, Y, T, ϱ, s, z; inverse=true) + Y₀
+        return plus_scaling(base, Y, T, ϱ, s, z; inverse=true, mass_frac_weighted_mixing=mass_frac_weighted_mixing) + Y₀
     else
-        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inverse=false)
+        return plus_scaling(base, Y - Y₀, T, ϱ, s, z; inverse=false, mass_frac_weighted_mixing=mass_frac_weighted_mixing)
     end
 end
 
