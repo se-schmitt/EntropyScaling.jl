@@ -29,6 +29,8 @@ works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B
 
 Currently, parameters from [poling_properties_2001](@citet) and [yang_linking_2022](@citet) are in the database.
 Mixture properties are calculated according to the models from [wilke_viscosity_1950](@citet) (viscosity), [mason_approximate_1958](@citet) (thermal conductivity), and [miller_self-diffusion_1961](@citet) (self-diffusion).
+Maxwell-Stefan diffusion coefficients of mixtures are calculated for each pair with `σᵢⱼ = (σᵢ+σⱼ)/2`, `εᵢⱼ = √(εᵢεⱼ)` and `Mᵢⱼ = 2MᵢMⱼ/(Mᵢ+Mⱼ)`.
+Diffusion coefficients are returned as `ϱD` (independent of pressure).
 
 # Example
 

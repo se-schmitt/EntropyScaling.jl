@@ -74,6 +74,22 @@
             @test MS_diffusion_coefficient(model_2, 0.1e6, 298.15, [.6,.4])[1,2] ≈ 1.912959e-9 rtol=1e-5
             @test self_diffusion_coefficient(model_2, 0.1e6, 298.15, [0.,1.])[1] ≈ MS_diffusion_coefficient(model_2, 0.1e6, 298.15, [0.,1.])[1,2]
             @test fick_diffusion_coefficient(model_2, 0.1e6, 298.15, [.6,.4])[1,1] ≈ 1.967921e-9 rtol=1e-5
+            @test occursin("DiffusionCoefficient", sprint(show, ESFramework(["hexane", "dodecane"], PCSAFT(["hexane", "dodecane"]))))
+
+            comps = ["hexane","dodecane","toluene"]
+            model_3 = ESFramework(comps, PCSAFT(comps); userlocations=Dict(DiffusionCoefficient() => (;
+                α2=[-2.5414 -4.0610 -3.0; -2.5463 -4.6610 -3.2; -2.7 -3.9 -2.9],
+                α3=[-1.9186 -3.4267 -2.0; -1.8070 -3.2021 -2.1; -1.9 -3.0 -2.2])))
+            z3 = [.2,.5,.3]
+            Ð = MS_diffusion_coefficient(model_3, 0.1e6, 298.15, z3)
+            @test [Ð[1,2], Ð[1,3], Ð[2,3]] ≈ [1.4725124621813784e-9, 2.4527417948263092e-9, 1.4571568300802952e-9] rtol=1e-10
+            @test self_diffusion_coefficient(model_3, 0.1e6, 298.15, z3) ≈ [1.8060886619988236e-9, 1.1126797547053795e-9, 1.9835982944210468e-9] rtol=1e-10
+
+            V3 = volume(model_3.eos, 0.1e6, 298.15, z3)
+            f_MS(T) = EntropyScaling.VT_MS_diffusion_coefficient(model_3, V3, T, z3)[1,2]
+            @test EntropyScaling.ForwardDiff.derivative(f_MS, 298.15) ≈ (f_MS(298.15+1e-3) - f_MS(298.15-1e-3))/2e-3 rtol=1e-6
+            f_D(z) = sum(EntropyScaling.VT_self_diffusion_coefficient(model_3, V3, 298.15, z))
+            @test all(isfinite, EntropyScaling.ForwardDiff.gradient(f_D, z3))
         end
     end
 end
