@@ -66,6 +66,15 @@
         # Test against Yang et al. (2021) (10.1021/acs.iecr.1c02154)
         @test thermal_conductivity(model_hex, 0.101e6, 183.16) ≈ 0.1571 atol=1e-4
         @test thermal_conductivity(model_r13, 0.109e6, 193.10) ≈ 0.0886 atol=1e-4
+
+        # Test against Li et al. (2024) (10.1021/acs.iecr.4c02946)
+        model_amm = RefpropRES2025("ammonia")
+        model_D2 = RefpropRES2025("deuterium")
+        model_R1233ZDE = RefpropRES2025("R1233ZDE")
+
+        @test thermal_conductivity(model_amm, 23050e3, 206.195) ≈ 0.6495 atol=1e-5
+        @test thermal_conductivity(model_D2, 101.1e3, 338.15) ≈ 0.14403 atol=1e-4
+        @test thermal_conductivity(model_R1233ZDE, 7100e3, 242.54) ≈ 0.10332 atol=1e-5
     end
 
     @testset "Mix Th. Cond." begin
@@ -73,5 +82,10 @@
 
         # Test against Yang et al. (2021) (10.1021/acs.iecr.1c02154)
         @test thermal_conductivity(model_mix, 1.01e6, 254.86, [0.504,0.496]) ≈ 0.0879 atol=1e-3
+
+        # Test against Li et al. (2024) (10.1021/acs.iecr.4c02946)
+        model_mix = RefpropRES2025(["ethanol","water"])
+
+        @test thermal_conductivity(model_mix, 101e3, 284.143, [0.28111,0.71889]) ≈ 0.28867 atol=1e-4
     end
 end
