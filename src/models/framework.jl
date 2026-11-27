@@ -381,25 +381,33 @@ function scaling_model(param::ESFrameworkParam{<:AbstractThermalConductivity}, s
     g = (-1.9107, 1.0725)
     return generic_scaling_model(param, s, x, g)
 end
+const G_DIFF = (0.6632, 9.4714)
 function scaling_model(param::ESFrameworkParam{<:AbstractDiffusionCoefficient}, s, x=[1.])
-    g = (0.6632, 9.4714)
-    return exp(generic_scaling_model(param, s, x, g))
-end
-function scaling_model(param::ESFrameworkDiffParam, s, x=[1.])
-    g = (0.6632, 9.4714)
-    return exp.(generic_scaling_model(param, s, x, g))
+    return exp(generic_scaling_model(param, s, x, G_DIFF))
 end
 
 function generic_scaling_model(param::ESFrameworkParam, s, x, g)
-    num = _dot(param.α0,x) + _dot(param.αln,x)*log1p(s) + _dot(param.α1,x)*s + _dot(param.α2,x)*s^2 + _dot(param.α3,x)*s^3
+    α = map(p -> _dot(p, x), (param.α0, param.α1, param.α2, param.α3, param.αln))
+    return _scaling_poly(α, s, g)
+end
+
+function _scaling_poly((α0, α1, α2, α3, αln), s, g)
+    num = α0 + αln*log1p(s) + α1*s + α2*s^2 + α3*s^3
     denom = 1 + g[1]*log1p(s) + g[2]*s
     return num / denom
 end
 
-function generic_scaling_model(param::ESFrameworkDiffParam, s, x, g)
-    num = param.α0.values*x .+ (param.αln.values*x).*log1p(s) .+ (param.α1.values*x).*s .+ (param.α2.values*x).*s^2 .+ (param.α3.values*x).*s^3
-    denom = 1 + g[1]*log1p(s) + g[2]*s
-    return num ./ denom
+# diffusion coefficient from the pair parameters at indices `I` mixed with weights `w`
+function _diffusion_ES(param::ESFrameworkDiffParam, I, w, s, sˢ, T, ϱ, Y₀⁺)
+    wsum(f) = sum(wk*f(Ik) for (Ik, wk) in zip(I, w))
+    α = map(p -> wsum(Ik -> p.values[Ik]), (param.α0, param.α1, param.α2, param.α3, param.αln))
+    Dˢ = exp(_scaling_poly(α, sˢ, G_DIFF))
+    Y₀⁺min = inv(wsum(Ik -> inv(param.Y₀⁺min.values[Ik])))
+    Mw = wsum(Ik -> only(param.ce[Ik].Mw.values))
+    units = _units(param.ce)
+    Ws = W(sˢ)
+    D⁺ = _rosenfeld_diffusion(Dˢ, Mw, T, ϱ, units; inverse=true) * (-s/units.R)^(-2/3)
+    return D⁺ / (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)
 end
 
 #sigmoid function with bias
@@ -426,20 +434,16 @@ end
 _units(ce) = ce.units
 _units(ce::AbstractArray) = first(ce).units
 
-_init_selfdiff_param(params::ESFrameworkDiffParam) = _init_param(params, SelfDiffusionCoefficient())
-_init_msdiff_param(params::ESFrameworkDiffParam) = _init_param(params, MaxwellStefanDiffusionCoefficient(); idx=1:2)
-
-function _init_param(params::ESFrameworkDiffParam, prop; idx=nothing)
-    _idx = isnothing(idx) ? (1:length(params)) : idx
-    N = length(_idx)
-    components = params.α0.components[_idx]
+function _init_param(params::ESFrameworkDiffParam, prop; idx)
+    N = length(idx)
+    components = params.α0.components[idx]
     params_new = ESFrameworkParam(
         CL.SingleParam("α0", components, zeros(N)),
         CL.SingleParam("α1", components, zeros(N)),
         CL.SingleParam("α2", components, zeros(N)),
         CL.SingleParam("α3", components, zeros(N)),
         CL.SingleParam("αln", components, zeros(N)),
-        CL.SingleParam(params.m.name, components, getindex.(Ref(params.m), _idx)),
+        CL.SingleParam(params.m.name, components, getindex.(Ref(params.m), idx)),
         CL.SingleParam("Y₀⁺min", components, zeros(N)),
         ChapmanEnskog(
             components, 
@@ -453,37 +457,6 @@ function _init_param(params::ESFrameworkDiffParam, prop; idx=nothing)
         prop
     )
     return params_new
-end
-
-function _set_selfdiff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiffParam, i)
-    for k in (:α0, :α1, :α2, :α3, :αln, :Y₀⁺min)
-        getproperty(param, k).values .= getproperty(param_all, k).values[i,:]
-    end
-    for k in (:Mw, :sigma, :epsilon)
-        getproperty(param.ce, k).values .= first.(getproperty.(getproperty.(param_all.ce[i,:], k), :values))
-    end
-    return nothing
-end
-
-function _set_msdiff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiffParam, i, j)
-    for k in (:α0, :α1, :α2, :α3, :αln, :Y₀⁺min)
-        vals = getproperty(param_all, k).values
-        getproperty(param, k).values[1] = vals[j,i]
-        getproperty(param, k).values[2] = vals[i,j]
-    end
-    for k in (:Mw, :sigma, :epsilon)
-        vals = first.(getproperty.(getproperty.(param_all.ce, k), :values))
-        getproperty(param.ce, k).values[1] = vals[j,i]
-        getproperty(param.ce, k).values[2] = vals[j,i]
-    end
-
-    pair_names = [param_all.α0.components[i], param_all.α0.components[j]]
-    # overwrite component names with the right component pair
-    for k in (:Mw, :sigma, :epsilon)
-        getproperty(param.ce, k).components .= pair_names
-    end
-
-    return nothing
 end
 
 function _set_ij_diff_param!(param::ESFrameworkParam, param_all::ESFrameworkDiffParam, i, j)

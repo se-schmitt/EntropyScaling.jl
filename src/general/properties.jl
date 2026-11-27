@@ -70,20 +70,18 @@ function self_diffusion_coefficient(model::AbstractEntropyScalingModel, p, T, z;
 end
 
 function VT_self_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z::AbstractVector=Z1)
-    params_diff = model.params[DiffusionCoefficient()]
-    param = _init_selfdiff_param(params_diff)
+    param = model.params[DiffusionCoefficient()]
     s  = CL.VT_entropy_res(model.eos, V, T, z)
     sˢ = scaling_variable(param, s, z)
+    ϱ = sum(z)/V
 
     N = length(z)
-    D = zeros(N)
-    for i in eachindex(z)
-        _set_selfdiff_param!(param, params_diff, i)
-        Dˢ = scaling_model(param, sˢ, z)
-        D[i] = scaling(param, model.eos, Dˢ, T, sum(z)/V, s, z; inverse=true)
+    NA = _units(param.ce).NA
+    B⁺ = [_virial_CE_plus(model.eos, T, [Float64(l == k) for l in 1:N], NA) for k in 1:N]
+    return map(1:N) do i
+        Y₀⁺ = inv(sum(z[k] / _diffusion_CE_plus(param.ce[i,k], T, B⁺[k]) for k in 1:N))
+        _diffusion_ES(param, (CartesianIndex(i,k) for k in 1:N), z, s, sˢ, T, ϱ, Y₀⁺)
     end
-    
-    return D
 end
 
 """
@@ -100,37 +98,19 @@ end
 
 function VT_MS_diffusion_coefficient(model::AbstractEntropyScalingModel, V, T, z)
     N = length(model)
-    params_diff = model.params[DiffusionCoefficient()]
-    param = _init_msdiff_param(params_diff) 
-    Ðᵢⱼ = zero(MSDiffusionMatrix, N)
-    for i in 1:N, j in i+1:N
-        _set_msdiff_param!(param, params_diff, i, j)
-        s = CL.VT_entropy_res(model.eos, V, T, z)
-        
-        # get all segments of the mixture
-        m_full = get_segment(model.eos.params)
-        sˢ = -s / (CL.Rgas(model.eos) * sum(z.* m_full))
+    param = model.params[DiffusionCoefficient()]
+    s = CL.VT_entropy_res(model.eos, V, T, z)
+    sˢ = scaling_variable(param, s, z)
+    ϱ = sum(z)/V
 
-        # pseudo binary approach with muggianu projection
-        xi_ij = (1+z[i]-z[j]) / 2
-        xj_ij = (1+z[j]-z[i]) / 2
-        x_pseudo = [xi_ij, xj_ij]
-
-        Dˢ = scaling_model(param, sˢ, x_pseudo)
-
-        # use of pseudo-binary subsystem
-        prop = EntropyScaling.transport_property(param)
-        # split model for pseudo-binary eos
-        eos_bin = CL.split_model(model.eos, [[i, j]])
-        Y₀⁺    = property_CE_plus(prop, param.ce, eos_bin[1], T, x_pseudo)
-        Y₀⁺min = mix_CE(prop, param.ce, param.Y₀⁺min.values, x_pseudo)
-        Ws  = W(sˢ)
-        base = BaseParam(prop,param.ce.Mw,param.ce.units)
-
-        Ðᵢⱼ[i,j]  = (Ws/Y₀⁺ + (1-Ws)/Y₀⁺min)^(-1) * plus_scaling(base, Dˢ, T, sum(z)/V, s, x_pseudo; inverse=true)
+    # pseudo-binary approach with Muggianu projection
+    function Ð_pair(i, j)
+        xᵢ, xⱼ = (1+z[i]-z[j])/2, (1+z[j]-z[i])/2
+        z_pair = [k == i ? xᵢ : k == j ? xⱼ : zero(xᵢ) for k in 1:N]
+        Y₀⁺ = MS_diffusion_coefficient_CE_plus(param.ce[j,i], model.eos, T, z_pair)
+        return _diffusion_ES(param, (CartesianIndex(j,i), CartesianIndex(i,j)), (xᵢ, xⱼ), s, sˢ, T, ϱ, Y₀⁺)
     end
-    
-    return Ðᵢⱼ
+    return MSDiffusionMatrix([Ð_pair(i, j) for i in 1:N for j in i+1:N])
 end
 
 

@@ -29,6 +29,8 @@ works in Lennard-Jones units (σ = ε = m = k_B = 1): temperatures are `T* = k_B
 
 Currently, parameters from [poling_properties_2001](@citet) and [yang_linking_2022](@citet) are in the database.
 Mixture properties are calculated according to the models from [wilke_viscosity_1950](@citet) (viscosity), [mason_approximate_1958](@citet) (thermal conductivity), and [miller_self-diffusion_1961](@citet) (self-diffusion).
+Maxwell-Stefan diffusion coefficients of mixtures are calculated for each pair with `σᵢⱼ = (σᵢ+σⱼ)/2`, `εᵢⱼ = √(εᵢεⱼ)` and `Mᵢⱼ = 2MᵢMⱼ/(Mᵢ+Mⱼ)`.
+Diffusion coefficients are returned as `ϱD` (independent of pressure).
 
 # Example
 
@@ -170,11 +172,18 @@ function MS_diffusion_coefficient(model::ChapmanEnskogModel, p, T, z)
     return MS_diffusion_coefficient(model, T, z)
 end
 function MS_diffusion_coefficient(model::ChapmanEnskogModel, T, z=Z1)
-    σ = model.sigma.values
+    σ, ε, Mw = model.sigma.values, model.epsilon.values, model.Mw.values
+    N = length(model)
+    N == 1 && return _MS_diffusion_CE(model, T, σ[1], ε[1], Mw[1])
+    return MSDiffusionMatrix([
+        _MS_diffusion_CE(model, T, _calc_σ_ce(σ,i,j), _calc_ε_ce(ε,i,j), calc_M_CE(Mw[[i,j]]))
+    for i in 1:N for j in i+1:N])
+end
+
+function _MS_diffusion_CE(model::ChapmanEnskogModel, T, σ, ε, Mw)
     (; kB, NA) = model.units
-    Mw = model.Mw.values .* model.units.Mw
-    length(model) > 2 && throw(error("Currently only applicable to binary mixtures."))
-    return 3/8 * √(Mw[1]*kB*T/NA/π) / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1))
+    Ω11 = Ω(MaxwellStefanDiffusionCoefficient(), model.collision, T*kB/ε)
+    return 3/8 * √(Mw*model.units.Mw*kB*T/NA/π) / (σ^2*Ω11)
 end
 
 function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z = Z1; i=0)
@@ -182,12 +191,12 @@ function MS_diffusion_coefficient_CE_plus(model::ChapmanEnskogModel, eos, T, z =
         z = zeros(Int64,length(eos))
         z[i] = 1
     end
-
-    σ = model.sigma.values
-    dBdT = second_virial_coefficient_dT(eos,T,z)/model.units.NA
-    B = CL.second_virial_coefficient(eos,T,z)/model.units.NA
-    return 3/8/√π / (σ[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1)) * (T*dBdT+B)^(2/3)
+    return _diffusion_CE_plus(model, T, _virial_CE_plus(eos, T, z, model.units.NA))
 end
+
+_virial_CE_plus(eos, T, z, NA) = ((T*second_virial_coefficient_dT(eos,T,z) + CL.second_virial_coefficient(eos,T,z))/NA)^(2/3)
+_diffusion_CE_plus(model::ChapmanEnskogModel, T, B⁺) =
+    3/8/√π / (model.sigma.values[1]^2*Ω(MaxwellStefanDiffusionCoefficient(),model,T;i=1)) * B⁺
 
 MS_diffusion_coefficient_CE(model, T) = MS_diffusion_coefficient(model, T)
 

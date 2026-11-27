@@ -10,7 +10,7 @@ Base.getindex(x::AbstractParamVector, ::ThermalConductivity) = x.thermal_conduct
 Base.getindex(x::AbstractParamVector, ::AbstractDiffusionCoefficient) = x.diffusion
 Base.ismissing(::ParamVector{E,L,D}) where {E,L,D} = _is_Missing(E) && _is_Missing(L) && _is_Missing(D)
 _is_Missing(x) = x == Missing
-Base.length(::ParamVector{E,L,D}) where {E,L,D} = _is_Missing(E) + _is_Missing(L) + _is_Missing(D)
+Base.length(::ParamVector{E,L,D}) where {E,L,D} = !_is_Missing(E) + !_is_Missing(L) + !_is_Missing(D)
 get_props(params::AbstractParamVector) = begin
     props = AbstractTransportProperty[]
     for field in fieldnames(ParamVector)
@@ -79,8 +79,8 @@ function Base.show(io::IO, model::AbstractEntropyScalingModel)
     print(io, "(")
     print(io, typeof(model.eos))
     print(io, ", ")
-    types = map(x -> transport_property(x), model.params)
-    print(io, types)
+    print(io, get_props(model.params))
+    print(io, ")")
 end
 
 #transport_property methods
